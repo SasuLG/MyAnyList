@@ -2,7 +2,7 @@
 
 import fetch from "node-fetch";
 import https from "node:https";
-import { ImportSeries } from "@/tmdb/types/series.type";
+import { ImportSeries } from "../types/series.type";
 
 export async function getSeriesBySearch(){//TODO mettre en parametre avec un query
     const data = await fetch("https://api.themoviedb.org/3/search/multi?query=attack%20on%20titan&include_adult=false&language=fr-FR&page=1", {

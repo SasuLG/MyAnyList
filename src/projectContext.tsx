@@ -1,6 +1,7 @@
 "use client";
 
 import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useUserContext } from "./userContext";
 
 const ProjectContext = createContext<undefined>(undefined);
 /**
@@ -12,6 +13,12 @@ const ProjectContext = createContext<undefined>(undefined);
  * @return {*} 
  */
 export function ProjectContextProvider({ children, params }: { children: ReactNode, params: any }) {
+
+    /**
+     * Variable qui permet d'accéder au context de l'application.
+     */
+    const { userCookie, user } = useUserContext();
+
     return (
         <div></div>
     );

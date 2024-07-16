@@ -1,4 +1,4 @@
-import { ServerError } from "@/lib/api/server.response";
+import { ServerError } from "@/lib/api/response/server.response";
 import { getDetailsSeriesById } from "@/tmdb/requests/tseries.request";
 
 /**

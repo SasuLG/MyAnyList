@@ -31,8 +31,8 @@ export default async function userAsASessionIDMiddleware(req: NextRequest) {
     if (req.url.includes('assets')) { return NextResponse.next(); }
 
     const sessionID = req.cookies.get(SESSION_ID_COOKIE);
-    const isLoginRoute = req.url.includes('auth/login');
-    const isRegisterRoute = req.url.includes('auth/register');
+    const isLoginRoute = req.url.includes('user/login');
+    const isRegisterRoute = req.url.includes('user/register');
     const isHomeRoute = req.url.includes('home');
     const isMentionsRoute = req.url.includes('mentions');
     if (sessionID === undefined) {

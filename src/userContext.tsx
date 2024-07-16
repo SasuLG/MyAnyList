@@ -1,24 +1,17 @@
 "use client";
 
 import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useEffect, useState } from "react";
-type ApiResponse = {
-    message: string;
-    valid: boolean;
-}
+import { User } from "./bdd/model/user";
+import { ApiResponse } from "./types/api/api.response.type";
 
-type User = {
-    id: number;
-    username: string;
-    admin: boolean;
-    password: string;
-    banned: boolean;
-}
 /**
  * Interface qui décrit les éléments accessible depuis le context.
  *
  * @interface UserContextValue
  */
 interface UserContextValue {
+    userCookie: string; // La valeur do cookie de session de la personne.
+    setUserCookie: Dispatch<SetStateAction<string>>; // Permet de modifier la valeur du cookie de session de la personne.
     user: User | undefined; // Contient les informations de l'utilisateur connecté.
     setUser: Dispatch<SetStateAction<User | undefined>>; // Permet de modifier les données de l'utilisateur connecté.
     userAdmin: boolean; // True si l'utilisateur est administrateur du site.
@@ -40,6 +33,11 @@ const UserContext = createContext<UserContextValue | undefined>(undefined);
  * @return {*} 
  */
 export function UserContextProvider({ children }: { children: ReactNode }) {
+
+    /**
+     * React hook qui stock la valeur du token de connexion de l'utilisateur.
+     */
+    const [userCookie, setUserCookie] = useState<string>('');
 
     /**
      * React hook qui stock les informations de l'utilisateur connecté.
@@ -79,7 +77,7 @@ export function UserContextProvider({ children }: { children: ReactNode }) {
     const alertBoxColor = alert?.valid ? 'var(--color-green)' : 'var(--color-red)'; // Variable qui représente une couleur en fonction du status de la réponse.
 
     return (
-        <UserContext.Provider value={{ user, setUser, userAdmin, setUserAdmin, setAlert }}>{/* updateUserInfo */}
+        <UserContext.Provider value={{ userCookie, setUserCookie, user, setUser, userAdmin, setUserAdmin, setAlert }}>{/* updateUserInfo */}
             {children}
         </UserContext.Provider>
     )

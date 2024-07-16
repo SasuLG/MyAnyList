@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react";
 import { ImportSeries } from "@/tmdb/types/series.type";
+import { useState } from "react";
 
 export default function Import() {
     const [series, setSeries] = useState<ImportSeries[]>([]);
