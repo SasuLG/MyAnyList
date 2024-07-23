@@ -3,6 +3,10 @@
 import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useEffect, useState } from "react";
 import { User } from "./bdd/model/user";
 import { ApiResponse } from "./types/api/api.response.type";
+import { SESSION_ID_COOKIE } from "./constants/session.const";
+import { getCookie } from "./lib/cookie";
+import { getUserByToken } from "./bdd/requests/user.request";
+import { getUserInfo } from "./bdd/miidleware/user.middleware";
 
 /**
  * Interface qui décrit les éléments accessible depuis le context.
@@ -17,9 +21,26 @@ interface UserContextValue {
     userAdmin: boolean; // True si l'utilisateur est administrateur du site.
     setUserAdmin: Dispatch<SetStateAction<boolean>>; // Permet de modifier si l'utilisateur est administrateur du site.
     setAlert: Dispatch<SetStateAction<ApiResponse | undefined>>; // Permet de modifier l'alerte affichée.
-    //updateUserInfo: () => Promise<void>; // Fonction qui permet de mettre à jour les informations de l'utilisateur connecté.
+    setSelectedMenu: Dispatch<SetStateAction<MenuList>>; // Permet de modifier le menu sélectionné.
+    updateUserInfo: () => Promise<void>; // Fonction qui permet de mettre à jour les informations de l'utilisateur connecté.
 }
 
+export type MenuList =
+    "membres" |
+    "thermometer" |
+    "dashboard" |
+    "tuleap config" |
+    "link config" |
+    "CAT" |
+    "livraison" |
+    "Scrum Master" |
+    "Daily Scrum" |
+    "AMOA" |
+    "layout config" |
+    "Anomalies" |
+    "sondage" |
+    "retrospective" |
+    "";
 // Création du context de l'application pour les informations d'un utilisateur.
 const UserContext = createContext<UserContextValue | undefined>(undefined);
 
@@ -54,30 +75,38 @@ export function UserContextProvider({ children }: { children: ReactNode }) {
      */
     const [alert, setAlert] = useState<ApiResponse | undefined>();
 
-    // /**
-    //  * Fonction qui permet de mettre à jour les informations de l'utilisateur connecté.
-    //  * 
-    //  */
-    // const updateUserInfo = useCallback(async () => {
-    //     getUserInfo(user?.id).then(userInfo => {
-    //         if (userInfo) {
-    //             setUser(userInfo.user);
-    //             setUserAdmin(userInfo.admin);
-    //         }
-    //     });
-    // }, [user]);
+    /**
+     * React hook qui stock le menu actuellement sélectionné.
+     */
+    const [selectedMenu, setSelectedMenu] = useState<MenuList>("");
 
-    // /**
-    //  * Effect trigger à chaque modification du cookie de session.
-    //  */
-    // useEffect(() => {
-    //     updateUserInfo();
-    // }, [user, updateUserInfo]);
+    /**
+     * Fonction qui permet de mettre à jour les informations de l'utilisateur connecté.
+     * 
+     */
+    const updateUserInfo = useCallback(async () => {
+        getUserInfo(userCookie).then(userInfo => {
+            if (userInfo) {
+                setUser(userInfo);
+                setUserAdmin(userInfo.admin);
+            }else{
+                setUser(undefined);
+            }
+        });
+    }, [userCookie]);
+
+    /**
+     * Effect trigger à chaque modification du cookie de session.
+     */
+    useEffect(() => {
+        setUserCookie(getCookie(SESSION_ID_COOKIE) as string);
+        updateUserInfo();
+    }, [userCookie, updateUserInfo]);
 
     const alertBoxColor = alert?.valid ? 'var(--color-green)' : 'var(--color-red)'; // Variable qui représente une couleur en fonction du status de la réponse.
 
     return (
-        <UserContext.Provider value={{ userCookie, setUserCookie, user, setUser, userAdmin, setUserAdmin, setAlert }}>{/* updateUserInfo */}
+        <UserContext.Provider value={{ userCookie, setUserCookie, user, setUser, userAdmin, setUserAdmin, setAlert, setSelectedMenu, updateUserInfo }}>
             {children}
         </UserContext.Provider>
     )

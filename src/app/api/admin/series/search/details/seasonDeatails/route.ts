@@ -1,11 +1,11 @@
 import { ServerError } from "@/lib/api/response/server.response";
-import { getDetailsSeriesById } from "@/tmdb/requests/tseries.request";
+import { getDetailsSeasonsBySeasonNumber } from "@/tmdb/requests/tseries.request";
 
 /**
- * Route : /api/series/import
+ * Route : /api/admin/series/search/details/seasonDeatails
  * METHOD : GET
  * 
- * Route de l'api 
+ * Route de l'api pour récupérer les détails d'une saison
  * 
  * @param {Request} req - La requête de connexion.
  * @returns {Response} La réponse de la requête de connexion.
@@ -13,7 +13,11 @@ import { getDetailsSeriesById } from "@/tmdb/requests/tseries.request";
 export async function GET(req: Request): Promise<Response> {
     try {
 
-        const response = await getDetailsSeriesById(1429);
+        const url = new URL(req.url);
+        const id = Number(url.searchParams.get('id')) || 0;
+        const season_number = Number(url.searchParams.get('season_number')) || 0;
+
+        const response = await getDetailsSeasonsBySeasonNumber(id, season_number);
         return new Response(JSON.stringify(response), {
             headers: {
                 'Content-Type': 'application/json'

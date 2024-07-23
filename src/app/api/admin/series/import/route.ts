@@ -1,0 +1,60 @@
+import { getSerie, getTmdbIdsSeries, importSerie } from "@/bdd/requests/series.request";
+import { ServerError } from "@/lib/api/response/server.response";
+import { Serie } from "@/tmdb/types/series.type";
+
+/**
+ * Route : /api/amdin/series/import
+ * METHOD : PUT
+ * 
+ * Route de l'api pour insérer une nouvelle série dans la base de données.
+ * 
+ * @returns {Response} La réponse de la requête de modification.
+ * @params {any} [token, name] - Le paramètre dynamique de la route de l'api.
+ * @returns {Response} La réponse de la requête.
+ */
+export async function PUT(req: Request, context: any): Promise<Response> {
+    try {
+        const serieData = await req.json();
+        await importSerie(serieData);
+        return new Response(JSON.stringify({ message: 'Série importée avec succès' }), {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+    } catch (err) {
+        return ServerError('PUT : /api/amdin/series/import', err);
+    }
+}
+
+
+/**
+ * Route : /api/amdin/series/import
+ * METHOD : GET
+ * 
+ * Route de l'api pour récupérer le vote d'une personne d'un sprint.
+ * 
+ * @returns {Response} La réponse de la requête de récupération.
+ * @params {any} [token, name] - Le paramètre dynamique de la route de l'api.
+ * @returns {Response} La réponse de la requête.
+ */
+export async function GET(req: Request, context: any): Promise<Response> {
+    try {
+        const tmdbIds = await getTmdbIdsSeries();
+        if(tmdbIds.length === 0) {
+            return new Response(JSON.stringify({ message: 'Aucune série à importer' }), {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
+        return new Response(JSON.stringify(tmdbIds), {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+    } catch (err) {
+        return ServerError('GET : /api/amdin/series/import', err);
+    }
+}
