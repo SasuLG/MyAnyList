@@ -21,7 +21,8 @@ export async function GET(req: Request): Promise<Response> {
         return new Response(JSON.stringify(response), {
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            status: 200
         });
 
     } catch (err) {

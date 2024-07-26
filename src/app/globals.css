@@ -8,7 +8,7 @@
 
 html, body {
   height: 100%;
-  background-color: var(--var-background);
+  background-color: var(--background-color);
 }
 
 a {
@@ -18,8 +18,8 @@ a {
 
 .button-validate {
   /*background: linear-gradient(135deg, rgba(58, 110, 176, 0.8), rgba(173, 46, 36, 0.8));*/
-  background-color: var(--var-button);
-  color: var(--var-text2);
+  background-color: var(--button-color);
+  color: var(--secondary-text-color);
   border: none;
   border-radius: 4px;
   padding: 0.75rem;
@@ -36,23 +36,27 @@ a {
 /*TODO inverser light et dark*/
 @media (prefers-color-scheme: light) {
   :root {
-    --var-background: #181a1b; /* 2C2C2C*/       /*1F1F1F*/
-    --var-background2: #AD2E24;/*B7410E*/   /*0f9b9d*/    /*4b0082*/
-    --var-button: #B7410E;
-    --var-titre: white;
-    --var-text: white;
-    --var-text2: black;
+    --background-color: #181a1b; /* 2C2C2C*/       /*1F1F1F*/
+    --secondary-background-color: #AD2E24;/*B7410E*/   /*0f9b9d*/    /*4b0082*/
+    --button-color: #B7410E;
+    --titre-color: white;
+    --main-text-color: white;
+    --secondary-text-color: black;
+    --color-green: #0f9b9d;
+    --color-red: #B7410E;
   }
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --var-background: #f0f2f5;
-    --var-background2: #3A6EB0;
-    --var-button: #007bff;
-    --var-titre: black;
-    --var-text: grey;
-    --var-text2: white;
+    --background-color: #f0f2f5;
+    --secondary-background-color: #3A6EB0;
+    --button-color: #007bff;
+    --titre-color: black;
+    --main-text-color: grey;
+    --secondary-text-color: white;
+    --color-green: #0f9b9d;
+    --color-red: #B7410E;
   }
 }
 /*

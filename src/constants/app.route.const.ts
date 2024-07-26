@@ -22,3 +22,8 @@ export const MENTIONS_ROUTE = '/mentions';
  * Variable qui représente la valeur de la route about
  */
 export const ABOUT_ROUTE = '/about';
+
+/**
+ * Variable qui représente la valeur de la route d'erreur
+ */
+export const ERROR_ROUTE = '/404';

@@ -37,7 +37,7 @@ async function AuthRouteResponse(message: string, redirect: string, status: numb
         headers: {
             'Content-Type': 'application/json'
         },
-        status
+        status: 200
     });
 }
 

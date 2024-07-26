@@ -7,6 +7,7 @@ import { SESSION_ID_COOKIE } from "./constants/session.const";
 import { getCookie } from "./lib/cookie";
 import { getUserByToken } from "./bdd/requests/user.request";
 import { getUserInfo } from "./bdd/miidleware/user.middleware";
+import AlertBox from "./components/alert.box";
 
 /**
  * Interface qui décrit les éléments accessible depuis le context.
@@ -107,6 +108,8 @@ export function UserContextProvider({ children }: { children: ReactNode }) {
 
     return (
         <UserContext.Provider value={{ userCookie, setUserCookie, user, setUser, userAdmin, setUserAdmin, setAlert, setSelectedMenu, updateUserInfo }}>
+            {alert && <AlertBox message={alert?.message} color={alertBoxColor} onDelay={() => setAlert(undefined)} />}
+                
             {children}
         </UserContext.Provider>
     )

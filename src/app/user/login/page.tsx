@@ -18,7 +18,7 @@ export default function Login() {
     /**
      * Hook qui permet de gérer l'affichage du mot de passe.
      */
-    const { setUserCookie } = useUserContext();
+    const { setUserCookie, setAlert } = useUserContext();
 
     /**
      * Hook qui permet de gérer l'affichage du mot de passe.
@@ -45,11 +45,11 @@ export default function Login() {
             })
         }).then(async (res) => await res.json() as LoginResponse);
 
+        setAlert(response);
         if(response.valid){
             setUserCookie(response.cookie);
             router.push(response.redirect);
         }
-        //TODO setalert
     };
 
     return (

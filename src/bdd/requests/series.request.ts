@@ -1,18 +1,19 @@
-import { Serie } from '@/tmdb/types/series.type';
+import { Serie, TmdbId } from '@/tmdb/types/series.type';
 import Query from '../postgre.middleware';
 
-export async function importSerie(serieData: any) {
+export async function importSerie(serieData: Serie) {
     const {
         id, name, overview, poster_path, backdrop_path, media_type, original_name, status,
-        first_air_date, last_air_date, number_of_episodes, number_of_seasons, genres,
-        spoken_languages, production_countries, production_companies, seasons, episode_run_time
+        first_air_date, last_air_date, episode_run_time, number_of_seasons, number_of_episodes, genres,
+        spoken_languages, production_countries, production_companies, seasons, vote_average, vote_count, origin_country,
+        popularity, budget, revenue, total_time
     } = serieData;
 
     try {
         // Insertion ou mise à jour de la série
         const { rows: serieRows } = await Query(`
-            INSERT INTO "Serie" ("tmdb_id", "title", "overview", "poster", "backdrop" , "media", "original_name", "status", "first_air_date", "last_air_date", "total_time", "nb_seasons", "nb_episodes", "episode_run_time")
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            INSERT INTO "Serie" ("tmdb_id", "title", "overview", "poster", "backdrop", "media", "original_name", "status", "first_air_date", "last_air_date", "episode_run_time", "nb_seasons", "nb_episodes", "vote_average", "vote_count", "popularity", "budget", "revenue", "total_time")
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
             ON CONFLICT ("tmdb_id") DO UPDATE
             SET "title" = EXCLUDED."title",
                 "overview" = EXCLUDED."overview",
@@ -23,9 +24,16 @@ export async function importSerie(serieData: any) {
                 "status" = EXCLUDED."status",
                 "first_air_date" = EXCLUDED."first_air_date",
                 "last_air_date" = EXCLUDED."last_air_date",
-                "total_time" = EXCLUDED."total_time"
+                "episode_run_time" = EXCLUDED."episode_run_time",
+                "nb_seasons" = EXCLUDED."nb_seasons",
+                "nb_episodes" = EXCLUDED."nb_episodes",
+                "vote_average" = EXCLUDED."vote_average",
+                "vote_count" = EXCLUDED."vote_count",
+                "popularity" = EXCLUDED."popularity",
+                "budget" = EXCLUDED."budget",
+                "revenue" = EXCLUDED."revenue"
             RETURNING "id"
-        `, [id, name, overview, poster_path, backdrop_path, media_type, original_name, status, first_air_date, last_air_date, 0, number_of_seasons, number_of_episodes, episode_run_time]);
+        `, [id, name, overview, poster_path, backdrop_path, media_type, original_name, status, first_air_date, last_air_date, episode_run_time, number_of_seasons, number_of_episodes, vote_average, vote_count, popularity, budget, revenue, total_time]);
 
         const serieId = serieRows[0].id;
 
@@ -51,11 +59,11 @@ export async function importSerie(serieData: any) {
         // Gestion des langues
         for (const language of spoken_languages) {
             const { rows: languageRows } = await Query(`
-                INSERT INTO "Language" ("name")
-                VALUES ($1)
-                ON CONFLICT ("name") DO NOTHING
+                INSERT INTO "Language" ("iso_639_1", "name", "english_name")
+                VALUES ($1, $2, $3)
+                ON CONFLICT ("iso_639_1") DO NOTHING
                 RETURNING "id"
-            `, [language.name]);
+            `, [language.iso_639_1, language.name, language.english_name]);
 
             const languageId = languageRows[0]?.id;
             if (languageId) {
@@ -67,19 +75,27 @@ export async function importSerie(serieData: any) {
             }
         }
 
-        // Gestion des pays
+        // Gestion des pays de production
         for (const country of production_countries) {
             const { rows: countryRows } = await Query(`
-                INSERT INTO "Country" ("name")
-                VALUES ($1)
-                ON CONFLICT ("name") DO NOTHING
+                INSERT INTO "Country" ("name", "iso_3166_1")
+                VALUES ($1, $2)
+                ON CONFLICT ("iso_3166_1") DO NOTHING
                 RETURNING "id"
-            `, [country.name]);
+            `, [country.name, country.iso_3166_1]);
 
             const countryId = countryRows[0]?.id;
             if (countryId) {
                 await Query(`
                     INSERT INTO "ProductionCountry_serie" ("serieId", "countryId")
+                    VALUES ($1, $2)
+                    ON CONFLICT ("serieId", "countryId") DO NOTHING
+                `, [serieId, countryId]);
+            }
+
+            if (countryId && origin_country.includes(country.iso_3166_1)) {
+                await Query(`
+                    INSERT INTO "OriginCountry_serie" ("serieId", "countryId")
                     VALUES ($1, $2)
                     ON CONFLICT ("serieId", "countryId") DO NOTHING
                 `, [serieId, countryId]);
@@ -108,27 +124,29 @@ export async function importSerie(serieData: any) {
         // Gestion des saisons et des épisodes
         for (const season of seasons) {
             const { rows: seasonRows } = await Query(`
-                INSERT INTO "Season" ("tmdb_id", "serie_id", "number", "overview", "poster_path", "air_date", "vote_average", "total_time")
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                INSERT INTO "Season" ("tmdb_id", "serie_id", "number", "overview", "poster_path", "air_date", "vote_average", "total_time", "name")
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                 ON CONFLICT ("tmdb_id") DO UPDATE
                 SET "number" = EXCLUDED."number",
                     "overview" = EXCLUDED."overview",
                     "poster_path" = EXCLUDED."poster_path",
                     "air_date" = EXCLUDED."air_date",
-                    "vote_average" = EXCLUDED."vote_average"
+                    "vote_average" = EXCLUDED."vote_average",
+                    "total_time" = EXCLUDED."total_time",
+                    "name" = EXCLUDED."name"
                 RETURNING "id"
-            `, [season.id, serieId, season.season_number, season.overview, season.poster_path, season.air_date, season.vote_average, 0]);
+            `, [season.id, serieId, season.season_number, season.overview, season.poster_path, season.air_date, season.vote_average, 0, season.name]);
 
             const seasonId = seasonRows[0].id;
 
             for (const episode of season.episodes) {
                 await Query(`
-                    INSERT INTO "Episode" ("tmdb_id", "season_id", "number", "title", "overview", "name", "runtime", "still_path")
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    INSERT INTO "Episode" ("tmdb_id", "season_id", "number", "overview", "name", "runtime", "still_path")
+                    VALUES ($1, $2, $3, $4, $5, $6, $7)
                     ON CONFLICT ("tmdb_id") DO UPDATE
                     SET "runtime" = EXCLUDED."runtime",
                         "still_path" = EXCLUDED."still_path"
-                `, [episode.id, seasonId, episode.episode_number, episode.name, episode.overview, episode.name, episode.runtime, episode.still_path]);
+                `, [episode.id, seasonId, episode.episode_number, episode.overview, episode.name, episode.runtime, episode.still_path]);
             }
         }
     } catch (error) {
@@ -140,164 +158,100 @@ export async function importSerie(serieData: any) {
 export async function getSerie(tmdb_id: number): Promise<Serie> {
     try {
         const result = await Query(`
-            WITH SerieData AS (
+            WITH "SerieData" AS (
                 SELECT
-                    s.id AS "serie_id",
-                    s.tmdb_id,
-                    s.title,
-                    s.overview,
-                    s.poster AS "poster_path",
-                    s.backdrop AS "backdrop_path",
-                    s.media AS "media_type",
-                    s.original_name,
-                    s.status,
-                    s.first_air_date,
-                    s.last_air_date,
-                    s.total_time,
-                    s.nb_seasons,
-                    s.nb_episodes,
-                    s.episode_run_time
-                FROM "Serie" s
-                WHERE s.tmdb_id = $1
+                    "s"."id"::text AS "id",
+                    "s"."tmdb_id"::text AS "tmdb_id",
+                    "s"."title" AS "name",
+                    "s"."overview" AS "overview",
+                    "s"."poster" AS "poster_path",
+                    "s"."backdrop" AS "backdrop_path",
+                    "s"."media" AS "media_type",
+                    "s"."original_name" AS "original_name",
+                    "s"."status" AS "status",
+                    "s"."first_air_date"::text AS "first_air_date",
+                    "s"."last_air_date"::text AS "last_air_date",
+                    "s"."episode_run_time"::int AS "episode_run_time",
+                    "s"."nb_seasons"::int AS "number_of_seasons",
+                    "s"."nb_episodes"::int AS "number_of_episodes",
+                    "s"."vote_average"::float AS "vote_average",
+                    "s"."vote_count"::int AS "vote_count",
+                    "s"."popularity"::float AS "popularity",
+                    "s"."budget"::int AS "budget",
+                    "s"."revenue"::int AS "revenue"
+                FROM "Serie" AS "s"
+                WHERE "s"."tmdb_id" = $1
             ),
-            Genres AS (
-                SELECT
-                    g.id AS "genre_id",
-                    g.name AS "genre_name"
-                FROM "Genre" g
-                JOIN "Genre_serie" gs ON g.id = gs."genreId"
-                WHERE gs."serieId" = (SELECT "serie_id" FROM SerieData)
-                GROUP BY g.id, g.name
+            "Genres" AS (
+                SELECT "g"."name"
+                FROM "Genre_serie" AS "gs"
+                JOIN "Genre" AS "g" ON "gs"."genreId" = "g"."id"
+                WHERE "gs"."serieId" = (SELECT "id" FROM "SerieData")
             ),
-            Languages AS (
-                SELECT
-                    l.id AS "language_id",
-                    l.name AS "language_name"
-                FROM "Language" l
-                JOIN "Language_serie" ls ON l.id = ls."languageId"
-                WHERE ls."serieId" = (SELECT "serie_id" FROM SerieData)
-                GROUP BY l.id, l.name
+            "Languages" AS (
+                SELECT "l"."iso_639_1", "l"."name", "l"."english_name"
+                FROM "Language_serie" AS "ls"
+                JOIN "Language" AS "l" ON "ls"."languageId" = "l"."id"
+                WHERE "ls"."serieId" = (SELECT "id" FROM "SerieData")
             ),
-            Countries AS (
-                SELECT
-                    c.id AS "country_id",
-                    c.name AS "country_name"
-                FROM "Country" c
-                JOIN "ProductionCountry_serie" pc ON c.id = pc."countryId"
-                WHERE pc."serieId" = (SELECT "serie_id" FROM SerieData)
-                GROUP BY c.id, c.name
+            "ProductionCountries" AS (
+                SELECT "c"."name", "c"."iso_3166_1"
+                FROM "ProductionCountry_serie" AS "pcs"
+                JOIN "Country" AS "c" ON "pcs"."countryId" = "c"."id"
+                WHERE "pcs"."serieId" = (SELECT "id" FROM "SerieData")
             ),
-            Companies AS (
-                SELECT
-                    pc.id AS "company_id",
-                    pc.name AS "company_name"
-                FROM "ProductionCompany" pc
-                JOIN "ProductionCompany_serie" pcs ON pc.id = pcs."productionCompanyId"
-                WHERE pcs."serieId" = (SELECT "serie_id" FROM SerieData)
-                GROUP BY pc.id, pc.name
+            "OriginCountries" AS (
+                SELECT "c"."iso_3166_1"
+                FROM "OriginCountry_serie" AS "ocs"
+                JOIN "Country" AS "c" ON "ocs"."countryId" = "c"."id"
+                WHERE "ocs"."serieId" = (SELECT "id" FROM "SerieData")
             ),
-            Seasons AS (
-                SELECT
-                    s.id AS "season_id",
-                    s.tmdb_id,
-                    s.serie_id,
-                    s.number AS "season_number",
-                    s.overview,
-                    s.poster_path,
-                    s.air_date,
-                    s.vote_average,
-                    s.total_time
-                FROM "Season" s
-                WHERE s.serie_id = (SELECT "serie_id" FROM SerieData)
+            "ProductionCompanies" AS (
+                SELECT "pc"."tmdb_id", "pc"."name"
+                FROM "ProductionCompany_serie" AS "pcs"
+                JOIN "ProductionCompany" AS "pc" ON "pcs"."productionCompanyId" = "pc"."id"
+                WHERE "pcs"."serieId" = (SELECT "id" FROM "SerieData")
             ),
-            Episodes AS (
-                SELECT
-                    e.id AS "episode_id",
-                    e.season_id,
-                    e.number AS "episode_number",
-                    e.title,
-                    e.overview,
-                    e.name,
-                    e.runtime,
-                    e.still_path
-                FROM "Episode" e
-                JOIN "Season" s ON e.season_id = s.id
-                WHERE s.serie_id = (SELECT "serie_id" FROM SerieData)
+            "Seasons" AS (
+                SELECT "s"."id"::text AS "id", "s"."tmdb_id"::text AS "tmdb_id", "s"."number"::int AS "season_number", "s"."overview", "s"."poster_path", "s"."air_date", "s"."vote_average", "s"."total_time", "s"."name"
+                FROM "Season" AS "s"
+                WHERE "s"."serie_id" = (SELECT "id" FROM "SerieData")
+            ),
+            "Episodes" AS (
+                SELECT "e"."tmdb_id"::text AS "id", "e"."season_id", "e"."number"::int AS "episode_number", "e"."overview", "e"."name", "e"."runtime", "e"."still_path"
+                FROM "Episode" AS "e"
+                WHERE "e"."season_id" IN (SELECT "id" FROM "Seasons")
             )
             SELECT
-                sd."serie_id",
-                sd.tmdb_id,
-                sd.title,
-                sd.overview,
-                sd."poster_path",
-                sd."backdrop_path",
-                sd."media_type",
-                sd.original_name,
-                sd.status,
-                sd.first_air_date,
-                sd.last_air_date,
-                sd.total_time,
-                sd.nb_seasons,
-                sd.nb_episodes,
-                sd.episode_run_time,
-                (
-                    SELECT json_agg(json_build_object('id', g."genre_id", 'name', g."genre_name"))
-                    FROM Genres g
-                ) AS "genres",
-                (
-                    SELECT json_agg(json_build_object('id', l."language_id", 'name', l."language_name"))
-                    FROM Languages l
-                ) AS "spoken_languages",
-                (
-                    SELECT json_agg(json_build_object('id', c."country_id", 'name', c."country_name"))
-                    FROM Countries c
-                ) AS "production_countries",
-                (
-                    SELECT json_agg(json_build_object('id', p."company_id", 'name', p."company_name"))
-                    FROM Companies p
-                ) AS "production_companies",
-                (
-                    SELECT json_agg(json_build_object(
-                        'id', s."season_id",
-                        'tmdb_id', s.tmdb_id,
-                        'number', s."season_number",
-                        'overview', s.overview,
-                        'poster_path', s.poster_path,
-                        'air_date', s.air_date,
-                        'vote_average', s.vote_average,
-                        'total_time', s.total_time,
-                        'episodes', (
-                            SELECT json_agg(json_build_object(
-                                'id', e."episode_id",
-                                'season_id', e.season_id,
-                                'number', e."episode_number",
-                                'title', e.title,
-                                'overview', e.overview,
-                                'name', e.name,
-                                'runtime', e.runtime,
-                                'still_path', e.still_path
-                            ))
-                            FROM Episodes e
-                            WHERE e.season_id = s."season_id"
-                        )
-                    ))
-                    FROM Seasons s
-                ) AS "seasons"
-            FROM SerieData sd
+                "SerieData".*,
+                ARRAY_AGG(DISTINCT "Genres"."name") AS "genres",
+                ARRAY_AGG(DISTINCT JSON_BUILD_OBJECT('iso_639_1', "Languages"."iso_639_1", 'name', "Languages"."name", 'english_name', "Languages"."english_name")) AS "spoken_languages",
+                ARRAY_AGG(DISTINCT JSON_BUILD_OBJECT('name', "ProductionCountries"."name", 'iso_3166_1', "ProductionCountries"."iso_3166_1")) AS "production_countries",
+                ARRAY_AGG(DISTINCT JSON_BUILD_OBJECT('tmdb_id', "ProductionCompanies"."tmdb_id", 'name', "ProductionCompanies"."name")) AS "production_companies",
+                JSON_AGG(DISTINCT JSON_BUILD_OBJECT('id', "Seasons"."id", 'season_number', "Seasons"."season_number", 'overview', "Seasons"."overview", 'poster_path', "Seasons"."poster_path", 'air_date', "Seasons"."air_date", 'vote_average', "Seasons"."vote_average", 'total_time', "Seasons"."total_time", 'name', "Seasons"."name", 'episodes', JSON_AGG(DISTINCT JSON_BUILD_OBJECT('id', "Episodes"."id", 'episode_number', "Episodes"."episode_number", 'overview', "Episodes"."overview", 'name', "Episodes"."name", 'runtime', "Episodes"."runtime", 'still_path', "Episodes"."still_path")))) AS "seasons"
+            FROM "SerieData"
+            LEFT JOIN "Genres" ON TRUE
+            LEFT JOIN "Languages" ON TRUE
+            LEFT JOIN "ProductionCountries" ON TRUE
+            LEFT JOIN "OriginCountries" ON TRUE
+            LEFT JOIN "ProductionCompanies" ON TRUE
+            LEFT JOIN "Seasons" ON TRUE
+            LEFT JOIN "Episodes" ON "Episodes"."season_id" = "Seasons"."id"
+            GROUP BY "SerieData"."id"
         `, [tmdb_id]);
 
-        if (result.rows.length === 0) {
-            throw new Error(`Aucune série trouvée pour TMDB ID: ${tmdb_id}`);
+        if (!result.rows[0]) {
+            throw new Error('Serie non trouvée');
         }
 
         return result.rows[0] as Serie;
     } catch (error) {
-        console.error('Erreur lors de la récupération des informations de la série:', error);
+        console.error('Erreur lors de la récupération de la série:', error);
         throw error;
     }
 }
 
 export async function getTmdbIdsSeries() {
     const bddResponse = await Query(`select tmdb_id from "Serie"`);
-    return bddResponse.rows[0] as number[];
+    return bddResponse.rows as TmdbId[];
 }

@@ -1,6 +1,6 @@
 import { getSerie, getTmdbIdsSeries, importSerie } from "@/bdd/requests/series.request";
 import { ServerError } from "@/lib/api/response/server.response";
-import { Serie } from "@/tmdb/types/series.type";
+import { Serie, TmdbId } from "@/tmdb/types/series.type";
 
 /**
  * Route : /api/amdin/series/import
@@ -16,10 +16,11 @@ export async function PUT(req: Request, context: any): Promise<Response> {
     try {
         const serieData = await req.json();
         await importSerie(serieData);
-        return new Response(JSON.stringify({ message: 'Série importée avec succès' }), {
+        return new Response(JSON.stringify({ message: 'Série importée avec succès', valid: true }), {
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            status: 200
         });
 
     } catch (err) {
@@ -41,17 +42,19 @@ export async function PUT(req: Request, context: any): Promise<Response> {
 export async function GET(req: Request, context: any): Promise<Response> {
     try {
         const tmdbIds = await getTmdbIdsSeries();
-        if(tmdbIds.length === 0) {
+        if(!tmdbIds || tmdbIds.length <= 0) {
             return new Response(JSON.stringify({ message: 'Aucune série à importer' }), {
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                status: 400
             });
         }
         return new Response(JSON.stringify(tmdbIds), {
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            status: 200
         });
 
     } catch (err) {

@@ -17,19 +17,20 @@ export const Header = memo(()=>{
     /**
      * Hook qui permet de récupérer les informations de l'utilisateur connecté.
      */
-    const {user, updateUserInfo, userCookie} = useUserContext();
+    const {user, updateUserInfo, setAlert} = useUserContext();
 
     /**
      * Fonction qui permet de déconnecter l'utilisateur.
      */
     const logout = async () => {
         const response = await fetch(API_LOGOUT_ROUTE, { method: 'PUT' });
+        const data = await response.json();
+        setAlert(data);
         if (response.ok) {
             updateUserInfo();
             router.push(LOGIN_ROUTE);
         }
-        //TODO alert
-        return await response.json();
+        return data;
     }
     
     return (

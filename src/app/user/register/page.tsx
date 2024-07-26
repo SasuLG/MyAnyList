@@ -6,6 +6,7 @@ import Link from "next/link";
 import { EyeOff, EyeOn } from "@/components/svg/eyes.svg";
 import { LOGIN_ROUTE } from "@/constants/app.route.const";
 import { useRouter } from "next/navigation";
+import { useUserContext } from "@/userContext";
 
 export default function Register() {
 
@@ -13,6 +14,11 @@ export default function Register() {
      * React hook pour permettre la navigation entre les différents endpoints de l'application web.
      */
     const router = useRouter();
+
+    /**
+     * Hook qui permet de gérer l'affichage du mot de passe.
+     */
+    const { setAlert } = useUserContext();
 
     /**
      * Hook qui permet de gérer l'affichage du mot de passe.
@@ -51,8 +57,11 @@ export default function Register() {
                 banned: false
             })
         });
-        router.push(LOGIN_ROUTE);
-        //TODO setalert
+        const data = await response.json();
+        setAlert(data);
+        if(response.ok){
+            router.push(LOGIN_ROUTE);
+        }
     }
 
     return (

@@ -16,7 +16,7 @@ export async function GET(req: Request): Promise<Response> {
         const id = Number(url.searchParams.get('id')) || 0;
         const media_type = url.searchParams.get('media_type') || '';
         let response;
-        if(media_type === "tv"){
+        if(media_type === "movie"){
             response = await getDetailsMovieById(id);
         }else{
             response = await getDetailsSeriesById(id);

@@ -1,0 +1,20 @@
+.alert-box {
+    z-index: 999999;
+    position: absolute;
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 1rem;
+    border-radius: 10px;
+
+    background-color: var(--background-color);
+}
+
+.alert-box-message {
+    font-size: 1rem;
+}

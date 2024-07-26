@@ -13,11 +13,19 @@ create table if not exists "User" (
 /* Création de la table des pays */
 create table if not exists "Country" (
     "id" serial primary key,
+    "iso_3166_1" varchar unique not null, /* L'identifiant ISO 3166-1 du pays */
     "name" varchar unique not null /* Le nom du pays */
 );
 
 /* Création de la table des pays d'une série*/
 create table if not exists "Country_serie" (
+    "serieId" integer not null, /* L'identifiant de la série */
+    "countryId" integer not null, /* L'identifiant du pays */
+    primary key ("serieId", "countryId")
+);
+
+/* Création de la table des pays d'origine d'une série */
+create table if not exists "OriginCountry_serie" (
     "serieId" integer not null, /* L'identifiant de la série */
     "countryId" integer not null, /* L'identifiant du pays */
     primary key ("serieId", "countryId")
@@ -35,19 +43,6 @@ create table if not exists "Genre_serie" (
     "serieId" integer not null, /* L'identifiant de la série */
     "genreId" integer not null, /* L'identifiant du genre */
     primary key ("serieId", "genreId")
-);
-
-/* Création de la table des acteurs */
-create table if not exists "Actor" (
-    "id" serial primary key,
-    "name" varchar unique not null /* Le nom de l'acteur */
-);
-
-/* Création de la table des acteurs d'une série */
-create table if not exists "Actor_serie" (
-    "serieId" integer not null, /* L'identifiant de la série */
-    "actorId" integer not null, /* L'identifiant de l'acteur */
-    primary key ("serieId", "actorId")
 );
 
 /* Création de la table des external rating */
@@ -78,9 +73,14 @@ create table if not exists "Serie" (
     "first_air_date" date, /* La date de première diffusion */
     "last_air_date" date, /* La date de dernière diffusion */
     "episode_run_time" integer, /* La durée d'un épisode */
+    "vote_average" float, /* La note moyenne */
+    "vote_count" integer, /* Le nombre de votes */
     "total_time" integer, /* La durée totale de la série */
     "nb_seasons" integer, /* Le nombre de saisons */
-    "nb_episodes" integer /* Le nombre d'épisodes */
+    "nb_episodes" integer, /* Le nombre d'épisodes */
+    "popularity" float, /* La popularité */
+    "budget" integer, /* Le budget */
+    "revenue" integer /* Les recettes */
 
     /*networks*/
 );
@@ -105,7 +105,9 @@ create table if not exists "ProductionCountry_serie" (
 
 create table if not exists "Language" (
     "id" serial primary key,
-    "name" varchar unique not null /* Le nom de la langue */
+    "iso_639_1" varchar unique not null, /* L'identifiant de la langue */
+    "name" varchar unique not null, /* Le nom de la langue */
+    "english_name" varchar unique not null /* Le nom anglais de la langue */
 );
 
 create table if not exists "Language_serie" (
@@ -120,7 +122,6 @@ create table if not exists "Episode" (
     "tmdb_id" integer unique not null, /* L'identifiant TMDB de l'épisode */
     "season_id" integer not null, /* L'identifiant de la saison */
     "number" integer not null, /* Le numéro de l'épisode */
-    "title" varchar not null, /* Le titre de l'épisode */
     "overview" text not null, /* La description de l'épisode */
     "name" varchar, /* Le nom de l'épisode */
     "runtime" integer, /* La durée de l'épisode */
@@ -135,6 +136,7 @@ create table if not exists "Season" (
     "tmdb_id" integer unique not null, /* L'identifiant TMDB de la saison */
     "serie_id" integer not null, /* L'identifiant de la série */
     "number" integer not null, /* Le numéro de la saison */
+    "name" varchar, /* Le nom de la saison */
     "overview" text not null, /* La description de la saison */
     "poster_path" varchar, /* L'affiche de la saison */
 
@@ -167,8 +169,6 @@ alter table "Country_serie" add constraint fk_Country_serie_serie foreign key ("
 alter table "Country_serie" add constraint fk_Country_serie_country foreign key ("countryId") references "Country" ("id");
 alter table "Genre_serie" add constraint fk_genre_serie_serie foreign key ("serieId") references "Serie" ("id");
 alter table "Genre_serie" add constraint fk_genre_serie_genre foreign key ("genreId") references "Genre" ("id");
-alter table "Actor_serie" add constraint fk_actor_serie_serie foreign key ("serieId") references "Serie" ("id");
-alter table "Actor_serie" add constraint fk_actor_serie_actor foreign key ("actorId") references "Actor" ("id");
 alter table "ExternalRating" add constraint fk_external_rating_serie foreign key ("serie_id") references "Serie" ("id");
 alter table "ExternalRating" add constraint fk_external_rating_source foreign key ("source_id") references "ExternalRatingSource" ("id");
 alter table "ProductionCompany_serie" add constraint fk_production_company_serie_serie foreign key ("serieId") references "Serie" ("id");
@@ -214,6 +214,13 @@ AFTER UPDATE OF "total_time" ON "Season"
 FOR EACH ROW
 EXECUTE FUNCTION update_serie_total_time();
 
+/*
+CREATE TRIGGER trigger_update_serie_total_time_serie
+AFTER INSERT OR UPDATE ON "Serie"
+FOR EACH ROW
+EXECUTE FUNCTION update_serie_total_time();
+*/
+
 
 /* 
  *	Création du rôle d'accès à la bdd
@@ -222,3 +229,42 @@ EXECUTE FUNCTION update_serie_total_time();
 create role "Manyl-User" with login password 'D@*987d7v?YLsEL2_it';
 
 ALTER DATABASE "MyAnyList" OWNER TO "Manyl-User";
+
+
+/*
+
+/* Création de la table des acteurs */
+create table if not exists "Actor" (
+    "id" serial primary key,
+    "name" varchar unique not null /* Le nom de l'acteur */
+);
+
+/* Création de la table des acteurs d'une série */
+create table if not exists "Actor_serie" (
+    "serieId" integer not null, /* L'identifiant de la série */
+    "actorId" integer not null, /* L'identifiant de l'acteur */
+    primary key ("serieId", "actorId")
+);
+
+alter table "Actor_serie" add constraint fk_actor_serie_serie foreign key ("serieId") references "Serie" ("id");
+alter table "Actor_serie" add constraint fk_actor_serie_actor foreign key ("actorId") references "Actor" ("id");
+
+/* Création de la table des crédits */
+create table if not exists "Credit" (
+    "id" serial primary key,
+    "tmdb_id" integer unique not null, /* L'identifiant TMDB du crédit */
+    "credit_id" integer, /* L'identifiant du crédit */
+    "name" varchar not null, /* Le nom du crédit */
+    "profile_path" varchar /* L'image du crédit */
+);
+
+/* Création de la table des crédits d'une série */
+create table if not exists "Credit_serie" (
+    "serieId" integer not null, /* L'identifiant de la série */
+    "creditId" integer not null, /* L'identifiant du crédit */
+    primary key ("serieId", "creditId")
+);
+
++ crew (avec job)
+
+*/
