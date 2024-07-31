@@ -1,7 +1,7 @@
 "use client"
 import { API_REGISTER_ROUTE } from "@/constants/api.route.const";
 import { HashWord } from "@/lib/hash";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { EyeOff, EyeOn } from "@/components/svg/eyes.svg";
 import { LOGIN_ROUTE } from "@/constants/app.route.const";
@@ -18,7 +18,7 @@ export default function Register() {
     /**
      * Hook qui permet de gérer l'affichage du mot de passe.
      */
-    const { setAlert } = useUserContext();
+    const { setAlert, setSelectedMenu } = useUserContext();
 
     /**
      * Hook qui permet de gérer l'affichage du mot de passe.
@@ -63,6 +63,8 @@ export default function Register() {
             router.push(LOGIN_ROUTE);
         }
     }
+
+    useEffect(() => setSelectedMenu("register"), [setSelectedMenu]);
 
     return (
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>

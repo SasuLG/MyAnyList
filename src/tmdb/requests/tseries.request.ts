@@ -26,7 +26,7 @@ export async function getSeriesBySearch(query: string): Promise<ApiSerie[]> {
         overview: result.overview || '',
         poster_path: result.poster_path || '',
         backdrop_path: result.backdrop_path || '',
-        first_air_date: result.first_air_date || '',
+        first_air_date: result.first_air_date || result.release_date || '', // Utiliser `release_date` si `first_air_date` est absent
         original_language: result.original_language || '',
         original_name: result.original_name || result.original_title || '', // Utiliser `original_title` si `original_name` est absent
         media_type: result.media_type || '',

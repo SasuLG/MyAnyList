@@ -45,20 +45,6 @@ create table if not exists "Genre_serie" (
     primary key ("serieId", "genreId")
 );
 
-/* Création de la table des external rating */
-create table if not exists "ExternalRating" (
-    "id" serial primary key,
-    "serie_id" integer not null, /* L'identifiant de la série */
-    "source_id" integer not null, /* L'identifiant de la source */
-    "value" varchar not null, /* La note */
-    "votes" integer not null /* Le nombre de votes */
-);
-/* Création de la table des source external rating*/
-create table if not exists "ExternalRatingSource" (
-    "id" serial primary key,
-    "name" varchar unique not null /* Le nom de la source */
-);
-
 /* Création de la table des séries*/
 create table if not exists "Serie" (
     "id" serial primary key,
@@ -75,6 +61,7 @@ create table if not exists "Serie" (
     "episode_run_time" integer, /* La durée d'un épisode */
     "vote_average" float, /* La note moyenne */
     "vote_count" integer, /* Le nombre de votes */
+    "note" float, /* La note de l'utilisateur */
     "total_time" integer, /* La durée totale de la série */
     "nb_seasons" integer, /* Le nombre de saisons */
     "nb_episodes" integer, /* Le nombre d'épisodes */
@@ -160,17 +147,26 @@ create table if not exists "User_episode"(
     primary key ("user_id", "episode_id")
 );
 
+/* Création de la table user notes */
+create table if not exists "User_note"(
+    "user_id" integer not null, /* L'identifiant de l'utilisateur */
+    "serie_id" integer not null, /* L'identifiant de la série */
+    "note" float not null, /* La note de l'utilisateur */
+    "comment" text, /* Le commentaire de l'utilisateur */
+    primary key ("user_id", "serie_id")
+);
+
 /* Ajout des contraintes de clés étrangères */
 alter table "User_serie" add constraint fk_user_serie_user foreign key ("user_id") references "User" ("id");
 alter table "User_serie" add constraint fk_user_serie_serie foreign key ("serie_id") references "Serie" ("id");
 alter table "User_episode" add constraint fk_user_episode_user foreign key ("user_id") references "User" ("id");
 alter table "User_episode" add constraint fk_user_episode_episode foreign key ("episode_id") references "Episode" ("id");
+alter table "User_note" add constraint fk_user_note_user foreign key ("user_id") references "User" ("id");
+alter table "User_note" add constraint fk_user_note_serie foreign key ("serie_id") references "Serie" ("id");
 alter table "Country_serie" add constraint fk_Country_serie_serie foreign key ("serieId") references "Serie" ("id");
 alter table "Country_serie" add constraint fk_Country_serie_country foreign key ("countryId") references "Country" ("id");
 alter table "Genre_serie" add constraint fk_genre_serie_serie foreign key ("serieId") references "Serie" ("id");
 alter table "Genre_serie" add constraint fk_genre_serie_genre foreign key ("genreId") references "Genre" ("id");
-alter table "ExternalRating" add constraint fk_external_rating_serie foreign key ("serie_id") references "Serie" ("id");
-alter table "ExternalRating" add constraint fk_external_rating_source foreign key ("source_id") references "ExternalRatingSource" ("id");
 alter table "ProductionCompany_serie" add constraint fk_production_company_serie_serie foreign key ("serieId") references "Serie" ("id");
 alter table "ProductionCompany_serie" add constraint fk_production_company_serie_production_company foreign key ("productionCompanyId") references "ProductionCompany" ("id");
 alter table "ProductionCountry_serie" add constraint fk_production_country_serie_serie foreign key ("serieId") references "Serie" ("id");

@@ -95,8 +95,24 @@ type Serie = {
 }
 
 type MinimalSerie = {
+    id: string;
+    tmdb_id: string;
+    name: string;
+    overview: string;
+    poster_path: string;
+    media_type: string;
+    status: string;
+    number_of_episodes: number;
+    genres: Genre[];
+    vote_average: number;
+    popularity: number;//pas sur
+    origin_country: string[];
+    episode_run_time: number;
+    note?: number;
 
+    first_air_date: string;//pas sur
+    last_air_date: string;//pas sur
 }
 
 
-export type { ApiSerie, Genre, Language, ProductionCountry, ProductionCompany, Episode, Season, Serie, MinimalSerie, TmdbId };
+export type { TmdbId, ApiSerie, Genre, Language, ProductionCountry, ProductionCompany, Episode, Season, Serie, MinimalSerie };

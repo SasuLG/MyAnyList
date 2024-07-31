@@ -81,13 +81,18 @@ function isARoute(req: NextRequest) {
     const pathname = url.pathname;
     const isLoginRoute = pathname === "/user/login";
     const isRegisterRoute = pathname === "/user/register";
+    const isUserProfileRoute = pathname === "/user/profile";
     const isHomeRoute = pathname === "/";
     const isMentionsRoute = pathname === "/mentions";
     const isAboutRoute = pathname === "/about";
-    const isImportRoute = pathname === "/admin/import";
     const isSearchRoute = pathname === "/series/search";
+    const isMyListRoute = pathname === "/series/mylist";
+    const isImportRoute = pathname === "/admin/import";
+    const isUserListRoute = pathname === "/admin/users";
+    const isAdminRoute = pathname === "/admin";
+    // quand profil user par admin // et pareil pour les détails des séries
     
-    if(isLoginRoute || isRegisterRoute || isHomeRoute || isMentionsRoute || isAboutRoute || isImportRoute || isSearchRoute){
+    if(isLoginRoute || isRegisterRoute || isHomeRoute || isMentionsRoute || isAboutRoute || isImportRoute || isSearchRoute || isMyListRoute || isUserProfileRoute || isUserListRoute || isAdminRoute){
         return true;
     }
     return false;

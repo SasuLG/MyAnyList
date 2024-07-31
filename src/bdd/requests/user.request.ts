@@ -7,7 +7,7 @@ import Query from "../postgre.middleware";
  * @param {string} password - Le mot de passe
  */
 export async function createUser(login: string,  password: string): Promise<any> {
-    await Query('INSERT INTO "User" ("login", "password", "admin") VALUES ($1, $2, $3)', [login, password, true]);
+    await Query('INSERT INTO "User" ("login", "password") VALUES ($1, $2)', [login, password]);
 }
 
 /**

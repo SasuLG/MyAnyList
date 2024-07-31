@@ -8,6 +8,9 @@ import { getCookie } from "./lib/cookie";
 import { getUserByToken } from "./bdd/requests/user.request";
 import { getUserInfo } from "./bdd/miidleware/user.middleware";
 import AlertBox from "./components/alert.box";
+import { usePathname } from "next/navigation";
+import { Header, MenuList } from "./components/header";
+import { Footer } from "./components/footer";
 
 /**
  * Interface qui décrit les éléments accessible depuis le context.
@@ -26,22 +29,6 @@ interface UserContextValue {
     updateUserInfo: () => Promise<void>; // Fonction qui permet de mettre à jour les informations de l'utilisateur connecté.
 }
 
-export type MenuList =
-    "membres" |
-    "thermometer" |
-    "dashboard" |
-    "tuleap config" |
-    "link config" |
-    "CAT" |
-    "livraison" |
-    "Scrum Master" |
-    "Daily Scrum" |
-    "AMOA" |
-    "layout config" |
-    "Anomalies" |
-    "sondage" |
-    "retrospective" |
-    "";
 // Création du context de l'application pour les informations d'un utilisateur.
 const UserContext = createContext<UserContextValue | undefined>(undefined);
 
@@ -106,12 +93,37 @@ export function UserContextProvider({ children }: { children: ReactNode }) {
 
     const alertBoxColor = alert?.valid ? 'var(--color-green)' : 'var(--color-red)'; // Variable qui représente une couleur en fonction du status de la réponse.
 
+    useEffect(() => {
+        let docTitle = document.title;
+        const handleBlur = () => {
+          document.title = "reviens bebou";
+        };
+        const handleFocus = () => {
+          document.title = docTitle;
+        };
+        window.addEventListener("blur", handleBlur);
+        window.addEventListener("focus", handleFocus);
+        return () => {
+          window.removeEventListener("blur", handleBlur);
+          window.removeEventListener("focus", handleFocus);
+        };
+      }, []);
+      
+      // Utilisation de usePathname pour déterminer le chemin actuel
+      const pathname = usePathname();
+      const shouldShowFooter = pathname ? !pathname.startsWith('/admin') : true;
+      const hide = pathname ? pathname.startsWith('/404') : false;
     return (
-        <UserContext.Provider value={{ userCookie, setUserCookie, user, setUser, userAdmin, setUserAdmin, setAlert, setSelectedMenu, updateUserInfo }}>
-            {alert && <AlertBox message={alert?.message} color={alertBoxColor} onDelay={() => setAlert(undefined)} />}
-                
-            {children}
-        </UserContext.Provider>
+        <>
+            <UserContext.Provider value={{ userCookie, setUserCookie, user, setUser, userAdmin, setUserAdmin, setAlert, setSelectedMenu, updateUserInfo }}>
+                {alert && <AlertBox message={alert?.message} color={alertBoxColor} onDelay={() => setAlert(undefined)} />}
+                    
+                {!hide && <Header selected_menu={selectedMenu}/>}
+                {children}
+
+            </UserContext.Provider>
+            {shouldShowFooter && !hide && <Footer />}
+        </>
     )
 };
 

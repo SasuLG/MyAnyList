@@ -1,5 +1,3 @@
-import styles from "./page.module.css";
-
 /**
  * Fonction qui permet de générer la page d’accueil pour un utilisateur.
  * 

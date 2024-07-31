@@ -3,11 +3,18 @@ import { memo } from "react";
 import Image from "next/image";
 import { useUserContext } from "@/userContext";
 import { API_LOGOUT_ROUTE } from "@/constants/api.route.const";
-import { HOME_ROUTE, LOGIN_ROUTE, REGISTER_ROUTE } from "@/constants/app.route.const";
+import { ADMIN_ROUTE, HOME_ROUTE, LOGIN_ROUTE, MYLIST_ROUTE, REGISTER_ROUTE, SEARCH_ROUTE } from "@/constants/app.route.const";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AdminKey } from "./svg/key.svg";
 
-export const Header = memo(()=>{
+export type MenuList = "search" | "login" | "register" | "myList" | "admin" | "userProfil" | "";
+
+export type HeaderProps = {
+    selected_menu: MenuList;
+}
+
+export const Header = memo((selected_menu : HeaderProps)=>{
 
     /**
      * React hook pour permettre la navigation entre les différents endpoints de l'application web.
@@ -26,6 +33,7 @@ export const Header = memo(()=>{
         const response = await fetch(API_LOGOUT_ROUTE, { method: 'PUT' });
         const data = await response.json();
         setAlert(data);
+
         if (response.ok) {
             updateUserInfo();
             router.push(LOGIN_ROUTE);
@@ -42,18 +50,28 @@ export const Header = memo(()=>{
                     </Link>
                 </div>
                 <div className="header-items">
-                    <Link href="">Search</Link>
+                    <Link href={SEARCH_ROUTE} className={selected_menu.selected_menu === "search" ? "selected" : undefined}>Search</Link>
                     {user && (
-                        <Link href="">My list</Link>
+                        <Link href={MYLIST_ROUTE} className={selected_menu.selected_menu === "myList" ? "selected" : undefined}>My list</Link>
                     )}
                 </div>
                 <div className="header-items">
-                    {user ? (
+                    {user ? (//TODO profil
+                        <>
                         <p onClick={logout} style={{cursor:"pointer"}}>Logout</p>
+                        {user.admin && (
+                            <Link href={ADMIN_ROUTE} className={selected_menu.selected_menu === "admin" ? "selected" : undefined}>
+                                <span style={{ display: 'flex', alignItems: 'center' }}>
+                                    <AdminKey width={20} height={20} />
+                                    Admin
+                                </span>
+                            </Link>
+                        )}
+                        </>
                     ) : (
                         <>
-                        <Link href={LOGIN_ROUTE}>Login</Link>
-                        <Link href={REGISTER_ROUTE}>Sign up</Link>
+                        <Link href={LOGIN_ROUTE} className={selected_menu.selected_menu === "login" ? "selected" : undefined}>Login</Link>
+                        <Link href={REGISTER_ROUTE} className={selected_menu.selected_menu === "register" ? "selected" : undefined}>Sign up</Link>
                         </>
                     )}
                 </div>

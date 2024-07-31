@@ -1,44 +1,27 @@
 "use client";
-
+import Loader from "@/components/loader";
+import { IMG_SRC } from "@/constants/tmdb.consts";
 import { ApiSerie, Serie, TmdbId } from "@/tmdb/types/series.type";
 import { useUserContext } from "@/userContext";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Import() {
 
-    /**
-     * Hook qui permet de gérer l'affichage du mot de passe.
-     */
-    const { setAlert } = useUserContext();
+    const { setAlert, setSelectedMenu } = useUserContext();
 
-    /**
-     * Hooks qui permettent de gérer les séries à importer.
-     */
     const [series, setSeries] = useState<ApiSerie[]>([]);
-
-    /**
-     * Hooks qui permettent de gérer la recherche de séries.
-     */
     const [searchQuery, setSearchQuery] = useState("");
-
-    /**
-     * Hooks qui permettent de gérer le type de style d'affichage des séries.
-     */
     const [styleType, setStyleType] = useState<'grid' | 'list'>('list');
-
-    /**
-     * Hooks qui permettent de gérer les identifiants des séries déjà importées.
-     */
     const [importedSeriesIds, setImportedSeriesIds] = useState<string[]>([]);
+    const [fetchDataFinished, setFetchDataFinished] = useState<Boolean | undefined>(undefined);
 
-    /**
-     * Fonction qui permet de rechercher des séries en fonction d'une requête.
-     */
     const searchSeries = async () => {
+        setFetchDataFinished(false);
         const response = await fetch(`/api/admin/series/search?query=${encodeURIComponent(searchQuery)}`);
         const data = await response.json() as ApiSerie[];
-        console.log(data);
         setSeries(data);
+        setFetchDataFinished(true);
+        console.log(data);
     };
 
     const detailsSeries = async () => {
@@ -53,10 +36,6 @@ export default function Import() {
         console.log(data);
     };
 
-    /**
-     * Fonction qui permet d'importer les détails d'une série dans la base de données.
-     * @param {ApiSerie} serie - La série à importer.
-     */
     const importSerie = async (serie: ApiSerie) => {
         try {
             // Récupérer les détails de la série
@@ -140,7 +119,7 @@ export default function Import() {
             });
             
             setAlert(await response.json());
-
+            getImportedSeriesIds();
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -151,9 +130,6 @@ export default function Import() {
         }
     };
 
-    /**
-     * Fonction qui permet de récupérer les identifiants des séries déjà importées.
-     */
     const getImportedSeriesIds = async () => {
         const response = await fetch(`/api/admin/series/import`, {
             method: "GET",
@@ -163,15 +139,10 @@ export default function Import() {
         });
         if(response.ok) {
             const data = await response.json() as TmdbId[];
-            console.log(data);
-            setImportedSeriesIds(data.map((id) => id.tmdb_id));
+            setImportedSeriesIds(data.map((id) => id.tmdb_id.toString())); 
         }
     }
 
-    /**
-     * Fonction qui permet de gérer l'appui sur la touche "Entrée" pour lancer la recherche.
-     * @param event - L'événement du clavier.
-     */
     const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
             event.preventDefault(); 
@@ -183,6 +154,7 @@ export default function Import() {
         getImportedSeriesIds();
     }, []);
     
+    useEffect(() => setSelectedMenu("admin"), [setSelectedMenu]);
 
     return (
         <div style={{ height: "100%", padding: "2rem", backgroundColor: "var(--background-color)" }}>
@@ -199,52 +171,56 @@ export default function Import() {
                 </div>
             </div>
 
-            {series.length > 0 && (
-                <ul style={{ listStyle: "none", padding: 0, display: styleType === 'grid' ? 'grid' : 'flex', gridTemplateColumns: styleType === 'grid' ? 'repeat(auto-fit, minmax(250px, 1fr))' : 'none', gap: "1rem", flexDirection:"column" }}>
-                    {series.map((serie) => (
-                        serie.media_type !== "person" && (
-                            <li key={serie.id} style={{ display: "flex", flexDirection: styleType === 'grid' ? 'column' : 'row', alignItems: styleType === 'grid' ? 'center' : 'flex-start', padding: "1rem", backgroundColor: "var(--background-color)", borderRadius: "8px", boxShadow: "0 6px 15px rgba(0, 0, 0, 0.3)" }}>
-                            {styleType === 'grid' && (
-                                <>
-                                    <div style={{ marginBottom: "1rem" }}>
-                                        {serie.poster_path && <img src={`https://image.tmdb.org/t/p/w500${serie.poster_path}`} alt={serie.name} style={{ width: "100%", borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)" }} />}
-                                    </div>
-                                    <div style={{ textAlign: "center", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                                        <div>
-                                            <h2 style={{ color: "var(--titre-color)" }}>{serie.name}</h2>
-                                            <p style={{ color: "var(--main-text-color)" }}>{serie.overview}</p>
-                                            <h2 style={{ color: "var(--titre-color)" }}>{serie.media_type}</h2>
-                                        </div>
-                                        <div>
-                                            {!importedSeriesIds.includes(serie.id) ? (
-                                                <button style={{ marginTop: "1rem" }} className="button-validate" onClick={() => importSerie(serie)}>Import</button>
-                                            ) : (
-                                                <button style={{ marginTop: "1rem" }} className="button-validate" onClick={()=>importSerie(serie)}>Update</button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-                            {styleType === 'list' && (
-                                <>
-                                    <div style={{ marginRight: "1rem" }}>
-                                        {serie.poster_path && <img src={`https://image.tmdb.org/t/p/w500${serie.poster_path}`} alt={serie.name} style={{ width: "100px", borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)" }} />}
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <h2 style={{ color: "var(--titre-color)" }}>{serie.name}</h2>
-                                        <p style={{ color: "var(--main-text-color)" }}>{serie.overview}</p>
-                                        <h2 style={{ color: "var(--titre-color)" }}>{serie.media_type}</h2>
-                                        {!importedSeriesIds.includes(serie.id) ? (
-                                            <button style={{ marginTop: "1rem" }} className="button-validate" onClick={()=>importSerie(serie)}>Import</button>
-                                        ) : (
-                                            <button style={{ marginTop: "1rem" }} className="button-validate" onClick={()=>importSerie(serie)}>Update</button>
-                                        )}
-                                    </div>
-                                </>
-                            )}
-                        </li>)
-                    ))}
-                </ul>
+            {fetchDataFinished === false ? (
+                <Loader />
+            ) : (
+                series.length > 0 ? (
+                    <ul style={{ listStyle: "none", padding: 0, display: styleType === 'grid' ? 'grid' : 'flex', gridTemplateColumns: styleType === 'grid' ? 'repeat(auto-fit, minmax(250px, 1fr))' : 'none', gap: "1rem", flexDirection:"column" }}>
+                        {series.map((serie) => {
+                            const isImported = importedSeriesIds.includes(serie.id.toString());
+                            return serie.media_type !== "person" && (
+                                <li key={serie.id} style={{ display: "flex", flexDirection: styleType === 'grid' ? 'column' : 'row', alignItems: styleType === 'grid' ? 'center' : 'flex-start', padding: "1rem", backgroundColor: isImported ? "var(--secondary-background-color)" : "var(--background-color)", borderRadius: "8px", boxShadow: "0 6px 15px rgba(0, 0, 0, 0.3)" }}>
+                                    {styleType === 'grid' && (
+                                        <>
+                                            <div style={{ marginBottom: "1rem" }}>
+                                                {serie.poster_path && <img src={`https://image.tmdb.org/t/p/w500${serie.poster_path}`} alt={serie.name} style={{ width: "100%", borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)" }} />}
+                                            </div>
+                                            <div style={{ textAlign: "center", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                                                <div>
+                                                    <h2 style={{ color: "var(--titre-color)" }}>{serie.name}</h2>
+                                                    <p style={{ color: !isImported?"var(--main-text-color)":"var(--secondary-text-color)" }}>{serie.overview}</p>
+                                                    <h2 style={{ color: "var(--titre-color)" }}>{serie.media_type}</h2>
+                                                </div>
+                                                <div>
+                                                    <button style={{ marginTop: "1rem" }} className="button-validate" onClick={() => importSerie(serie)}>
+                                                        {isImported ? "Update" : "Import"}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                    {styleType === 'list' && (
+                                        <>
+                                            <div style={{ marginRight: "1rem" }}>
+                                                {serie.poster_path && <img src={`${IMG_SRC}${serie.poster_path}`} alt={serie.name} style={{ width: "100px", borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)" }} />}
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <h2 style={{ color: "var(--titre-color)" }}>{serie.name}</h2>
+                                                <p style={{ color: !isImported?"var(--main-text-color)":"var(--secondary-text-color)" }}>{serie.overview}</p>
+                                                <h2 style={{ color: "var(--titre-color)" }}>{serie.media_type}</h2>
+                                                <h2 style={{ color: "var(--titre-color)" }}>{serie.first_air_date.substring(0, 4)}</h2>
+    
+                                                <button style={{ marginTop: "1rem" }} className="button-validate" onClick={() => importSerie(serie)}>
+                                                    {isImported ? "Update" : "Import"}
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                ) : ( fetchDataFinished && <h2 style={{ color: "var(--titre-color)", textAlign: "center", marginTop: "2rem" }}>No series found</h2>)
             )}
         </div>
     );

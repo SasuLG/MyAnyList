@@ -3,7 +3,7 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Noto Sans', sans-serif;
 }
 
 html, body {
@@ -32,6 +32,9 @@ a {
   transform: scale(1.05);
 }
 
+.selected{
+  /*TODO*/
+}
 
 /*TODO inverser light et dark*/
 @media (prefers-color-scheme: light) {
@@ -63,3 +66,13 @@ a {
     background: linear-gradient(135deg, rgba(58, 110, 176, 0.8), rgba(173, 46, 36, 0.8)); 
   peut etre pour le theme sombre
 */
+.main{
+  margin-bottom: -150px;
+  min-height: 100%;
+}
+
+.main::after{
+  content: "";
+  display: block;
+  height: 150px;
+}

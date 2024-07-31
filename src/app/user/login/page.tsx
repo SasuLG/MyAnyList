@@ -6,7 +6,7 @@ import { LoginResponse } from "@/types/api/auth/auth.type";
 import { useUserContext } from "@/userContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 export default function Login() {
 
@@ -18,7 +18,7 @@ export default function Login() {
     /**
      * Hook qui permet de gérer l'affichage du mot de passe.
      */
-    const { setUserCookie, setAlert } = useUserContext();
+    const { setUserCookie, setAlert, setSelectedMenu } = useUserContext();
 
     /**
      * Hook qui permet de gérer l'affichage du mot de passe.
@@ -52,8 +52,10 @@ export default function Login() {
         }
     };
 
+    useEffect(() => setSelectedMenu("login"), [setSelectedMenu]);
+
     return (
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
             <div className="login-container">
                 <h1>Login</h1>
                 <form onSubmit={formSubmit}>

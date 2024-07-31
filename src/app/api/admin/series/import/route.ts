@@ -1,6 +1,5 @@
-import { getSerie, getTmdbIdsSeries, importSerie } from "@/bdd/requests/series.request";
+import { getTmdbIdsSeries, importSerie } from "@/bdd/requests/admin-series.request";
 import { ServerError } from "@/lib/api/response/server.response";
-import { Serie, TmdbId } from "@/tmdb/types/series.type";
 
 /**
  * Route : /api/amdin/series/import
