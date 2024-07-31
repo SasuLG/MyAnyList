@@ -3,6 +3,14 @@
 import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useEffect, useState } from "react";
 import { User } from "./bdd/model/user";
 import { ApiResponse } from "./types/api/api.response.type";
+import { SESSION_ID_COOKIE } from "./constants/session.const";
+import { getCookie } from "./lib/cookie";
+import { getUserByToken } from "./bdd/requests/user.request";
+import { getUserInfo } from "./bdd/miidleware/user.middleware";
+import AlertBox from "./components/alert.box";
+import { usePathname } from "next/navigation";
+import { Header, MenuList } from "./components/header";
+import { Footer } from "./components/footer";
 
 /**
  * Interface qui décrit les éléments accessible depuis le context.
@@ -17,7 +25,8 @@ interface UserContextValue {
     userAdmin: boolean; // True si l'utilisateur est administrateur du site.
     setUserAdmin: Dispatch<SetStateAction<boolean>>; // Permet de modifier si l'utilisateur est administrateur du site.
     setAlert: Dispatch<SetStateAction<ApiResponse | undefined>>; // Permet de modifier l'alerte affichée.
-    //updateUserInfo: () => Promise<void>; // Fonction qui permet de mettre à jour les informations de l'utilisateur connecté.
+    setSelectedMenu: Dispatch<SetStateAction<MenuList>>; // Permet de modifier le menu sélectionné.
+    updateUserInfo: () => Promise<void>; // Fonction qui permet de mettre à jour les informations de l'utilisateur connecté.
 }
 
 // Création du context de l'application pour les informations d'un utilisateur.
@@ -54,32 +63,67 @@ export function UserContextProvider({ children }: { children: ReactNode }) {
      */
     const [alert, setAlert] = useState<ApiResponse | undefined>();
 
-    // /**
-    //  * Fonction qui permet de mettre à jour les informations de l'utilisateur connecté.
-    //  * 
-    //  */
-    // const updateUserInfo = useCallback(async () => {
-    //     getUserInfo(user?.id).then(userInfo => {
-    //         if (userInfo) {
-    //             setUser(userInfo.user);
-    //             setUserAdmin(userInfo.admin);
-    //         }
-    //     });
-    // }, [user]);
+    /**
+     * React hook qui stock le menu actuellement sélectionné.
+     */
+    const [selectedMenu, setSelectedMenu] = useState<MenuList>("");
 
-    // /**
-    //  * Effect trigger à chaque modification du cookie de session.
-    //  */
-    // useEffect(() => {
-    //     updateUserInfo();
-    // }, [user, updateUserInfo]);
+    /**
+     * Fonction qui permet de mettre à jour les informations de l'utilisateur connecté.
+     * 
+     */
+    const updateUserInfo = useCallback(async () => {
+        getUserInfo(userCookie).then(userInfo => {
+            if (userInfo) {
+                setUser(userInfo);
+                setUserAdmin(userInfo.admin);
+            }else{
+                setUser(undefined);
+            }
+        });
+    }, [userCookie]);
+
+    /**
+     * Effect trigger à chaque modification du cookie de session.
+     */
+    useEffect(() => {
+        setUserCookie(getCookie(SESSION_ID_COOKIE) as string);
+        updateUserInfo();
+    }, [userCookie, updateUserInfo]);
 
     const alertBoxColor = alert?.valid ? 'var(--color-green)' : 'var(--color-red)'; // Variable qui représente une couleur en fonction du status de la réponse.
 
+    useEffect(() => {
+        let docTitle = document.title;
+        const handleBlur = () => {
+          document.title = "reviens bebou";
+        };
+        const handleFocus = () => {
+          document.title = docTitle;
+        };
+        window.addEventListener("blur", handleBlur);
+        window.addEventListener("focus", handleFocus);
+        return () => {
+          window.removeEventListener("blur", handleBlur);
+          window.removeEventListener("focus", handleFocus);
+        };
+      }, []);
+      
+      // Utilisation de usePathname pour déterminer le chemin actuel
+      const pathname = usePathname();
+      const shouldShowFooter = pathname ? !pathname.startsWith('/admin') : true;
+      const hide = pathname ? pathname.startsWith('/404') : false;
     return (
-        <UserContext.Provider value={{ userCookie, setUserCookie, user, setUser, userAdmin, setUserAdmin, setAlert }}>{/* updateUserInfo */}
-            {children}
-        </UserContext.Provider>
+        <>
+            <UserContext.Provider value={{ userCookie, setUserCookie, user, setUser, userAdmin, setUserAdmin, setAlert, setSelectedMenu, updateUserInfo }}>
+                {alert && <AlertBox message={alert?.message} color={alertBoxColor} onDelay={() => setAlert(undefined)} />}
+                    
+                {!hide && <Header selected_menu={selectedMenu}/>}
+                {children}
+
+            </UserContext.Provider>
+            {shouldShowFooter && !hide && <Footer />}
+        </>
     )
 };
 

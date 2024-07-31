@@ -1,0 +1,17 @@
+.header-container {
+    background-color: var(--secondary-background-color);
+    overflow: hidden;
+    color: var(--secondary-text-color);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-evenly;
+    overflow: hidden;
+    align-items: center;
+}
+
+.header-items{
+    display: flex;
+    gap: 1rem;
+}

@@ -1,5 +1,3 @@
-import styles from "./page.module.css";
-
 /**
  * Fonction qui permet de générer la page d’accueil pour un utilisateur.
  * 
@@ -7,7 +5,7 @@ import styles from "./page.module.css";
  */
 export default function Home() {
   return (
-    <div>
+    <div style={{height:"100%"}}>
       <h1>Home page</h1>
     </div>
   );
