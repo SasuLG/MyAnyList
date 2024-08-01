@@ -24,6 +24,6 @@ export async function GET(req: Request, context: any): Promise<Response> {
         });
 
     } catch (err) {
-        return ServerError('GET : /api/amdin/series/import', err);
+        return ServerError('GET : /api/series/import', err);
     }
 }

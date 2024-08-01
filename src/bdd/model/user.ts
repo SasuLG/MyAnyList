@@ -2,7 +2,7 @@
  * Type qui décrit la table User présente dans la base de données.
  */
 type User = {
-    id: number;
+    id: string;
     login: string;
     password: string;
     web_token: string;

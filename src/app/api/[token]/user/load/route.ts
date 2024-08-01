@@ -1,4 +1,3 @@
-import { User } from "@/bdd/model/user";
 import { getUserByToken, isUserAdmin } from "@/bdd/requests/user.request";
 import { ServerError } from "@/lib/api/response/server.response";
 

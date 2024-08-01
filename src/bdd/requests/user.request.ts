@@ -102,6 +102,15 @@ export async function banUser(id: number): Promise<void> {
 }
 
 /**
+ * Fonction qui permet de débannir un utilisateur.
+ * 
+ * @param {number} id - L'identifiant de la personne.
+ */
+export async function unbanUser(id: number): Promise<void> {
+    await Query(`update "User" set "banned"=false where "id"=$1;`, [id]);
+}
+
+/**
  * Fonction qui permet de mettre à jour le 'web_token' d'un utilisateur.
  *
  * @param {User} user - L'utilisateur avec le 'web_token' à mettre à jour.
@@ -119,4 +128,72 @@ export async function updateUserWebToken(user: User, webToken: string) {
  */
 export async function deleteWebToken(webToken: string) {
     await Query(`update "User" set "web_token"=null where "web_token"=$1;`, [webToken]);
+}
+
+/**
+ * Fonction qui permet de modifier le nom d'un utilisateur.
+ * @param {number} id - L'identifiant de l'utilisateur
+ * @param {string} name - Le nouveau nom de l'utilisateur
+ */
+export async function editUserName(id: number, name: string) {
+    await Query(`update "User" set "name"=$1 where "id"=$2;`, [name, id]);
+}
+
+/**
+ * Fonction qui permet de modifier le mot de passe d'un utilisateur.
+ * @param {number} id - L'identifiant de l'utilisateur
+ * @param {string} password - Le nouveau mot de passe de l'utilisateur
+ */
+export async function editUserPassword(id: number, password: string) {
+    await Query(`update "User" set "password"=$1 where "id"=$2;`, [password, id]);
+}
+
+/**
+ * Fonction qui permet de mettre un utilisateur en administrateur.
+ * @param {number} userId 
+ */
+export async function setAdmin(userId: number) {
+    await Query(`update "User" set "admin"=true where "id"=$1;`, [userId]);
+}
+
+/**
+ * Fonction qui permet de retirer les droits d'administrateur à un utilisateur.
+ * @param {number} userId 
+ */
+export async function unsetAdmin(userId: number) {
+    await Query(`update "User" set "admin"=false where "id"=$1;`, [userId]);
+}
+
+/**
+ * Fonction qui permet de supprimer un utilisateur.
+ * @param {string} userId 
+ * @returns 
+ */
+export async function deleteUser(userId: string): Promise<boolean> {
+    try {
+        await Query(`
+            DELETE FROM "User_serie"
+            WHERE "user_id" = $1
+        `, [userId]);
+
+        await Query(`
+            DELETE FROM "User_episode"
+            WHERE "user_id" = $1
+        `, [userId]);
+        
+        await Query(`
+            DELETE FROM "User_note"
+            WHERE "user_id" = $1
+        `, [userId]);
+
+        await Query(`
+            DELETE FROM "User"
+            WHERE "id" = $1
+        `, [userId]);
+
+        return true;
+    } catch (error) {
+        console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+        return false;
+    }
 }
