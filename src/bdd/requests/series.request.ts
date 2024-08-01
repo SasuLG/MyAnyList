@@ -212,6 +212,11 @@ export async function getSeriesFollowed(limit: number, page: number, userId: str
                 WHERE "gs"."serieId" IN (SELECT "id" FROM "SerieData")
                 GROUP BY "gs"."serieId"
             ),
+            "User_note" AS (
+                SELECT "n"."serie_id" AS "serieId", "n"."note" AS "note"
+                FROM "User_note" AS "n"
+                WHERE "n"."user_id" = $3 AND "n"."serie_id" IN (SELECT "id" FROM "SerieData")
+                ),
             "OriginCountries" AS (
                 SELECT "ocs"."serieId" AS "serieId", ARRAY_AGG("c"."iso_3166_1") AS "origin_country"
                 FROM "OriginCountry_serie" AS "ocs"
@@ -233,6 +238,11 @@ export async function getSeriesFollowed(limit: number, page: number, userId: str
     }
 }
 
+/**
+ * Fonction qui permet de récupérer les identifiants des séries suivies par un utilisateur.
+ * @param {string} userId - Identifiant de l'utilisateur
+ * @returns 
+ */
 export async function getSeriesIdFollowed(userId: string): Promise<TmdbId[]> {
     try {
         return (await Query(`
@@ -245,5 +255,160 @@ export async function getSeriesIdFollowed(userId: string): Promise<TmdbId[]> {
     } catch (error) {
         console.error('Erreur lors de la récupération des séries suivies:', error);
         throw error;
+    }
+}
+
+/**
+ * Fonction qui permet de suivre une série.
+ * @param {string} userId - Identifiant de l'utilisateur
+ * @param {string} serieId - Identifiant de la série
+ * @returns {Promise<boolean>} - Renvoie true si l'opération s'est bien passée, sinon false.
+ */
+export async function followSerie(userId: string, serieId: string): Promise<boolean> {
+    try {
+        await Query(`
+            INSERT INTO "User_serie" ("user_id", "serie_id")
+            VALUES ($1, $2)
+        `, [userId, serieId]);
+
+        return true;
+    } catch (error) {
+        console.error('Erreur lors du suivi de la série:', error);
+        return false;
+    }
+}
+
+/**
+ * Fonction qui permet de ne plus suivre une série.
+ * @param {string} userId - Identifiant de l'utilisateur
+ * @param {string} serieId - Identifiant de la série
+ * @returns {Promise<boolean>} - Renvoie true si l'opération s'est bien passée, sinon false.
+ */
+export async function unFollowSerie(userId: string, serieId: string): Promise<boolean> {
+    try {
+        await Query(`
+            DELETE FROM "User_serie"
+            WHERE "user_id" = $1 AND "serie_id" = $2
+        `, [userId, serieId]);
+
+        return true;
+    } catch (error) {
+        console.error('Erreur lors du désabonnement de la série:', error);
+        return false;
+    }
+}
+
+/**
+ * Fonction qui permet d'ajouter une note pour une série.
+ * @param {string} userId - Identifiant de l'utilisateur
+ * @param {string} serieId - Identifiant de la série
+ * @param {number} note - Note attribuée à la série
+ * @param {number} comment - Commentaire attribué à la série
+ * @returns 
+ */
+export async function addVote(userId: string, serieId: string, note: number, comment?:number): Promise<boolean> {
+    try {
+        await Query(`
+            INSERT INTO "User_note" ("user_id", "serie_id", "note", "comment")
+            VALUES ($1, $2, $3, $4)
+        `, [userId, serieId, note, comment]);
+
+        return true;
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout de la note:', error);
+        return false;
+    }
+}
+
+/**
+ * Fonction qui permet de mettre à jour une note pour une série.
+ * @param {string} userId - Identifiant de l'utilisateur
+ * @param {string} serieId - Identifiant de la série
+ * @param {number} note - Note attribuée à la série
+ * @param {number} comment - Commentaire attribué à la série
+ * @returns 
+ */
+export async function updateVote(userId: string, serieId: string, note: number, comment?:number): Promise<boolean> {
+    try {
+        await Query(`
+            UPDATE "User_note"
+            SET "note" = $3, "comment" = $4
+            WHERE "user_id" = $1 AND "serie_id" = $2
+        `, [userId, serieId, note, comment]);
+
+        return true;
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour de la note:', error);
+        return false;
+    }
+}
+
+/**
+ * Fonction qui permet de supprimer une note pour une série.
+ * @param {string} userId - Identifiant de l'utilisateur
+ * @param {string} serieId - Identifiant de la série
+ * @returns 
+ */
+export async function deleteVote(userId: string, serieId: string): Promise<boolean> {
+    try {
+        await Query(`
+            DELETE FROM "User_note"
+            WHERE "user_id" = $1 AND "serie_id" = $2
+        `, [userId, serieId]);
+
+        return true;
+    } catch (error) {
+        console.error('Erreur lors de la suppression de la note:', error);
+        return false;
+    }
+}
+
+export async function deleteSerie(serieId: string): Promise<boolean> { /* TODO User_episode, Season, Episode */
+    try {
+        
+        await Query(`
+            DELETE FROM "Country_serie"
+            WHERE "serieId" = $1
+        `, [serieId]);
+
+        await Query(`
+            DELETE FROM "OriginCountry_serie"
+            WHERE "serieId" = $1
+        `, [serieId]);
+
+        await Query(`
+            DELETE FROM "Genre_serie"
+            WHERE "serieId" = $1
+        `, [serieId]);
+
+        await Query(`
+            DELETE FROM "ProductionCompany_serie"
+            WHERE "serieId" = $1
+        `, [serieId]);
+
+        await Query(`
+            DELETE FROM "ProductionCountry_serie"
+            WHERE "serieId" = $1
+        `, [serieId]);
+
+        await Query(`
+            DELETE FROM "User_serie"
+            WHERE "serie_id" = $1
+        `, [serieId]);
+
+        await Query(`
+            DELETE FROM "User_note"
+            WHERE "serie_id" = $1
+        `, [serieId]);
+
+        await Query(`
+            DELETE FROM "Serie"
+            WHERE "id" = $1
+        `, [serieId]);
+
+        return true;
+    } catch (error) {
+        console.error('Erreur lors de la suppression de la série:', error);
+        return false;
     }
 }

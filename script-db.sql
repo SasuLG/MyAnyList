@@ -126,8 +126,6 @@ create table if not exists "Season" (
     "name" varchar, /* Le nom de la saison */
     "overview" text not null, /* La description de la saison */
     "poster_path" varchar, /* L'affiche de la saison */
-
-/* pas sur TODO*/
     "total_time" integer, /* La durée totale de la saison */
     "air_date" date, /* La date de diffusion */
     "vote_average" float /* La note moyenne */
