@@ -1,0 +1,72 @@
+.range-filter-container {
+    width: 100%;
+    margin: 20px 0;
+}
+
+.slider-container {
+  position: relative;
+  height: 6px;
+  border-radius: 4px;
+}
+
+.range-slider {
+  position: absolute;
+  width: 100%;
+  background: transparent;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--button-color);
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+.range-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--button-color);
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+.min-slider {
+  z-index: 2;
+}
+
+.max-slider {
+  z-index: 3;
+}
+
+.slider-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  border-radius: 4px;
+}
+
+.slider-range {
+  position: absolute;
+  top: 0;
+  height: 6px;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 14px;
+}

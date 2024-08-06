@@ -7,41 +7,63 @@ type HoverToolBoxProps = {
     children: ReactNode;
 };
 
-let currentHoveredId: string | null = null;
-
 const HoverToolBox = ({ serie, children }: HoverToolBoxProps) => {
     const [hoverPosition, setHoverPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
     const [itemHover, setItemHover] = useState<boolean>(false);
+    const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
+
+    let hoverTimeout: NodeJS.Timeout | null = null;
 
     const handleMouseEnter = (event: MouseEvent<HTMLDivElement>) => {
-        if (currentHoveredId !== serie.id) {
-            currentHoveredId = serie.id;
-            setItemHover(true);
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
         }
 
         const element = event.currentTarget;
-        const top = element.offsetTop;
-        let left = element.offsetLeft + element.offsetWidth + 10;
+        const rect = element.getBoundingClientRect();
+        const top = rect.top + window.pageYOffset;
+        let left = rect.left + rect.width + 10;
+
         if (left + 350 > window.innerWidth) {
-            left = element.offsetLeft - 10 - 350;
+            left = rect.left - 10 - 350;
         }
         setHoverPosition({ top, left });
+
+        hoverTimeout = setTimeout(() => {
+            setItemHover(true);
+            setTooltipVisible(true);
+        }, 1); // Délai pour le tooltip
+
+        // Gérer l'ID global du tooltip si nécessaire
     };
 
     const handleMouseLeave = () => {
-        if (currentHoveredId === serie.id) {
-            setItemHover(false);
-            currentHoveredId = null;
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
         }
+
+        hoverTimeout = setTimeout(() => {
+            setItemHover(false);
+            setTooltipVisible(false);
+        }, 1); // Délai pour cacher le tooltip
     };
 
     const handleMouseEnterHover = () => {
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+        }
         setItemHover(true);
+        setTooltipVisible(true);
     };
 
     const handleMouseLeaveHover = () => {
-        setItemHover(false);
-        currentHoveredId = null;
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+        }
+        hoverTimeout = setTimeout(() => {
+            setItemHover(false);
+            setTooltipVisible(false);
+        }, 1); // Délai pour cacher le tooltip
     };
 
     const hours = Math.floor(serie.episode_run_time / 60);
@@ -53,23 +75,25 @@ const HoverToolBox = ({ serie, children }: HoverToolBoxProps) => {
                 id={serie.id}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
+                style={{ position: 'relative' }}
             >
                 {children}
             </div>
-            {itemHover && currentHoveredId === serie.id && (
+            {tooltipVisible && (
                 <div
                     id={`${serie.id}-info`}
                     className="hover-info"
                     style={{
                         top: `${hoverPosition.top}px`,
-                        left: `${hoverPosition.left}px`
+                        left: `${hoverPosition.left}px`,
+                        position: 'absolute',
                     }}
                     onMouseEnter={handleMouseEnterHover}
                     onMouseLeave={handleMouseLeaveHover}
                 >
                     <div className="hover-info-content">
                         <div className="hover-info-items initial">
-                            <span>{serie.name}</span>
+                            <span>{serie.name.length > 35 ? serie.name.substring(0, 30).concat("...") : serie.name}</span>
                             <span>{serie.vote_average < 4.5 ? <SmileySad width={20} height={20} /> : serie.vote_average < 7 ? <SmileyNeutral width={20} height={20} /> : <SmileyHappy width={20} height={20} />}{Math.ceil(serie.vote_average * 10)}%</span>
                         </div>
                         <div className="hover-info-items initial">
@@ -86,7 +110,7 @@ const HoverToolBox = ({ serie, children }: HoverToolBoxProps) => {
                                 <span key={genre.id}>{genre.name}</span>
                             ))}
                         </div>
-                        <hr></hr>
+                        <hr />
                         <div>
                             <span>{serie.overview}</span>
                         </div>

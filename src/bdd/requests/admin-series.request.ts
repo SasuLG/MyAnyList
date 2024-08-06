@@ -199,17 +199,6 @@ export async function deleteSerie(serieId: number) {
             WHERE "serie_id" = $1
         `, [serieId]);
 
-        // Suppression des épisodes de la série dans User_episode
-        await Query(`
-            DELETE FROM "User_episode"
-            WHERE "episode_id" IN (
-                SELECT "Episode"."id"
-                FROM "Episode"
-                JOIN "Season" ON "Episode"."season_id" = "Season"."id"
-                WHERE "Season"."serie_id" = $1
-            )
-        `, [serieId]);
-
         // Suppression des épisodes
         await Query(`
             DELETE FROM "Episode"

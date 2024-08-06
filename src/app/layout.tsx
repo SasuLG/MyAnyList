@@ -1,4 +1,3 @@
-// Assurez-vous que ce fichier est en mode client
 "use client";
 
 import { Inter } from "next/font/google";
@@ -9,6 +8,8 @@ import "@/styles/header.style.css";
 import "@/styles/login.style.css";
 import "@/styles/series.style.css";
 import "@/styles/loader.style.css";
+import "@/styles/dropdown.style.css";
+import "@/styles/slider.style.css";
 
 
 const inter = Inter({ subsets: ["latin"] });

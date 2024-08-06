@@ -105,14 +105,23 @@ type MinimalSerie = {
     number_of_episodes: number;
     genres: Genre[];
     vote_average: number;
-    popularity: number;//pas sur
+    popularity: number;
     origin_country: string[];
     episode_run_time: number;
     note?: number;
-
-    first_air_date: string;//pas sur
-    last_air_date: string;//pas sur
+    followDate?: string;
+    production_countries: ProductionCountry[];
+    production_companies: ProductionCompany[];
+    first_air_date: string;
+    last_air_date: string;
 }
 
+type Range = {
+    min: number;
+    max: number;
+    minimalRange: number;
+    maximalRange: number;
+};
 
-export type { TmdbId, ApiSerie, Genre, Language, ProductionCountry, ProductionCompany, Episode, Season, Serie, MinimalSerie };
+
+export type { TmdbId, ApiSerie, Genre, Language, ProductionCountry, ProductionCompany, Episode, Season, Serie, MinimalSerie, Range};
