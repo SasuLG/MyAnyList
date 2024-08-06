@@ -47,6 +47,8 @@ a {
     --secondary-text-color: black;
     --color-green: #0f9b9d;
     --color-red: #B7410E;
+    --color-clear-all: rgba(255, 87, 87, 0.6); /* Rouge transparent pour Clear All */
+    --color-filter-label: rgba(173, 46, 36, 0.4); /* Couleur des filtres plus transparente */
   }
 }
 
@@ -60,7 +62,10 @@ a {
     --secondary-text-color: white;
     --color-green: #0f9b9d;
     --color-red: #B7410E;
-  }
+    --color-clear-all: rgba(255, 87, 87, 0.6); /* Rouge transparent pour Clear All */
+    --color-filter-label: rgba(58, 110, 176, 0.4); /* Couleur des filtres plus transparente */
+
+    }
 }
 /*
     background: linear-gradient(135deg, rgba(58, 110, 176, 0.8), rgba(173, 46, 36, 0.8)); 

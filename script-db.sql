@@ -135,14 +135,8 @@ create table if not exists "Season" (
 create table if not exists "User_serie"(
     "user_id" integer not null, /* L'identifiant de l'utilisateur */
     "serie_id" integer not null, /* L'identifiant de la série */
+    "date" timestamp not null default current_timestamp, /* La date d'ajout de la série */
     primary key ("user_id", "serie_id")
-);
-
-/* Création de la table user episode*/
-create table if not exists "User_episode"(
-    "user_id" integer not null, /* L'identifiant de l'utilisateur */
-    "episode_id" integer not null, /* L'identifiant de l'épisode */
-    primary key ("user_id", "episode_id")
 );
 
 /* Création de la table user notes */
@@ -157,8 +151,6 @@ create table if not exists "User_note"(
 /* Ajout des contraintes de clés étrangères */
 alter table "User_serie" add constraint fk_user_serie_user foreign key ("user_id") references "User" ("id");
 alter table "User_serie" add constraint fk_user_serie_serie foreign key ("serie_id") references "Serie" ("id");
-alter table "User_episode" add constraint fk_user_episode_user foreign key ("user_id") references "User" ("id");
-alter table "User_episode" add constraint fk_user_episode_episode foreign key ("episode_id") references "Episode" ("id");
 alter table "User_note" add constraint fk_user_note_user foreign key ("user_id") references "User" ("id");
 alter table "User_note" add constraint fk_user_note_serie foreign key ("serie_id") references "Serie" ("id");
 alter table "Country_serie" add constraint fk_Country_serie_serie foreign key ("serieId") references "Serie" ("id");

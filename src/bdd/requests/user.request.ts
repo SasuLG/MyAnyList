@@ -175,11 +175,6 @@ export async function deleteUser(userId: string): Promise<boolean> {
             DELETE FROM "User_serie"
             WHERE "user_id" = $1
         `, [userId]);
-
-        await Query(`
-            DELETE FROM "User_episode"
-            WHERE "user_id" = $1
-        `, [userId]);
         
         await Query(`
             DELETE FROM "User_note"

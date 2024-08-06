@@ -30,3 +30,5 @@ TRUNCATE TABLE "User", "Country", "Country_serie", "Genre", "Genre_serie", "Orig
 
 -- Réactiver les contraintes de clés étrangères
 SET session_replication_role = DEFAULT;
+
+/*User_episode*/

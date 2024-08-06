@@ -10,10 +10,12 @@ type SeriesListProps = {
   series: MinimalSerie[];
   styleType: 'grid' | 'list';
   followedIds: number[];
+  onClickHeart: (serie: MinimalSerie) => void;
 };
 
-const SeriesList: React.FC<SeriesListProps> = ({ series, styleType, followedIds }) => {
+const SeriesList: React.FC<SeriesListProps> = ({ series, styleType, followedIds, onClickHeart }) => {
     
+ const tagEnded = ['Ended', 'Released', 'Canceled']; 
   return (
     <ul style={{ listStyle: "none", padding: 0, display: styleType === 'grid' ? 'grid' : 'flex', gridTemplateColumns: styleType === 'grid' ? 'repeat(auto-fit, minmax(250px, 1fr))' : 'none', gap: "1rem", flexDirection: styleType === 'list' ? 'column' : undefined }}>
       {series.map((serie) => (
@@ -43,7 +45,7 @@ const SeriesList: React.FC<SeriesListProps> = ({ series, styleType, followedIds 
                 <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: serie.status === 'Ended' ? "var(--status-ended)" : "var(--status-airing)", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: "bold", fontSize: "18px", position: "absolute", top: "10px", right: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
                   {serie.vote_average.toFixed(1)}
                 </div>
-                <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: serie.status === 'Ended' ? "var(--status-ended)" : "var(--status-airing)", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: "bold", fontSize: "18px", position: "absolute", top: "10px", left: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
+                <div onClick={(e)=>{e.stopPropagation();onClickHeart(serie)}} style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: serie.status === 'Ended' ? "var(--status-ended)" : "var(--status-airing)", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: "bold", fontSize: "18px", position: "absolute", top: "10px", left: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
                 {/*✔️*/}
                 {followedIds.includes(Number(serie.id)) ? <Heart width={20} height={20} /> : <BrokenHeart width={20} height={20}/>}
                 </div>

@@ -1,0 +1,259 @@
+.dropdown {
+  position: relative;
+  width: 200px; 
+  margin-bottom: 1rem;
+}
+  
+.dropdown-label {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--secondary-text-color);
+  cursor: pointer;
+}
+
+.dropdown-label .icon {
+  margin-left: auto; 
+  width: 16px; 
+  height: 16px; 
+  transform: translateY(-10%);
+}
+
+.dropdown-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--secondary-text-color);
+  z-index: 10;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+  padding: 0.5rem; 
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.popup .dropdown-label{
+  background-color: var(--background-color);
+}
+
+.dropdown-option {
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.dropdown-option:hover {
+  background-color: var(--hover-background-color);
+}
+
+.dropdown-option.selected {
+  background-color: var(--selected-background-color);
+}
+
+.check-icon {
+  color: var(--check-icon-color);
+  margin-left: 8px;
+}
+
+
+.tooltip {
+  display: none;
+}
+
+div:hover .tooltip {
+  display: block;
+}
+
+.popup {
+  position: absolute;
+  top: 100%; /* Positionné en dessous de l'élément qui déclenche la popup */
+  left: 0;
+  transform: translateY(8px); /* Ajustez la valeur si nécessaire */
+  background-color: #fff;
+  color: #333;
+  padding: 1rem;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  z-index: 10;
+  width: 90vw;
+  max-width: 800px;
+  min-height: 300px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3rem;
+  box-sizing: border-box;
+  /* Default styles for small screens */
+  right: 0; /* Align popup to the right on small screens */
+}
+.popup.column {
+  width: 70vw; 
+}
+
+.switch{
+  position: relative;
+  display: inline-block;
+  width: 4rem;
+  height: 2rem;
+  background-color: rgba(0,0,0,0.25);
+  border-radius: 2rem;
+  transition: all 0.2s linear;
+  cursor: pointer;
+}
+
+.switch::after{
+  content: "";
+  position: absolute;
+  top: .1rem;
+  left: .1rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  background-color: var(--background-color);
+  transition: all 0.2s linear;
+}
+
+.input-switch:checked + .switch::after{
+  translate: 2rem 0;
+}
+
+.input-switch:checked + .switch{
+  background-color: var(--secondary-background-color);
+}
+
+.input-switch{
+  display: none;
+}
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  align-items: center;
+  padding-left: 2.5rem;
+  position: relative;
+}
+
+.filter-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.6rem;
+  margin: 0.2rem;
+  background-color: var(--color-filter-label);
+  color: var(--titre-color);
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  cursor: pointer;
+}
+
+.filter-label::before {
+  content: '×';
+  font-size: 2rem; /* Taille encore plus grande de la croix */
+  color: transparent;
+  position: absolute;
+  right: 50%; /* Centre horizontalement */
+  top: 50%; /* Centre verticalement */
+  transform: translate(50%, -50%); /* Ajuste la croix pour un centrage parfait */
+  transition: color 0.3s;
+  font-weight: bold;
+}
+
+.filter-label:hover::before {
+  color: #ff5c5c; /* Couleur de la croix au survol */
+}
+
+.filter-remove {
+  background: #e0e0e0;
+  border: none;
+  border-radius: 50%;
+  color: #888;
+  font-size: 0.75rem;
+  line-height: 1;
+  height: 1.2rem;
+  width: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: absolute;
+  right: -0.5rem;
+  top: -0.5rem;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.filter-remove:hover {
+  background-color: #ff5c5c;
+  color: white;
+}
+
+.filter-remove:after {
+  content: '×';
+  font-weight: bold;
+}
+
+.clear-all {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  margin: 0.2rem;
+  background-color: var(--color-clear-all);
+  color: var(--titre-color);
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.clear-all::before {
+  content: '✖';
+  font-size: 0.9rem;
+  margin-right: 0.5rem;
+}
+
+/* Adjust the popup position based on screen size */
+@media (min-width: 1350px) {
+  .popup {
+    left: auto;
+    right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .popup {
+    width: 70vw;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .popup {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+  .slider-filter,
+  .popup div{
+    width: 100% !important;
+  }
+}
+.slider-filter{
+  width: 15%;
+}
