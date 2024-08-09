@@ -93,7 +93,7 @@ const HoverToolBox = ({ serie, children }: HoverToolBoxProps) => {
                 >
                     <div className="hover-info-content">
                         <div className="hover-info-items initial">
-                            <span>{serie.name.length > 35 ? serie.name.substring(0, 30).concat("...") : serie.name}</span>
+                            <span>{serie.romaji_name ? serie.romaji_name.length > 35 ? serie.romaji_name.substring(0, 30).concat("...") : serie.romaji_name:"Apres Reset bd"}</span>
                             <span>{serie.vote_average < 4.5 ? <SmileySad width={20} height={20} /> : serie.vote_average < 7 ? <SmileyNeutral width={20} height={20} /> : <SmileyHappy width={20} height={20} />}{Math.ceil(serie.vote_average * 10)}%</span>
                         </div>
                         <div className="hover-info-items initial">

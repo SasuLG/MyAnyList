@@ -45,6 +45,21 @@ create table if not exists "Genre_serie" (
     primary key ("serieId", "genreId")
 );
 
+/**
+* Création de la table des tags
+*/    
+create table if not exists "Tag" (
+    "id" serial primary key,
+    "name" varchar unique not null /* Le nom du tag */
+);
+
+/* Création des tags d'une série */
+create table if not exists "Tag_serie" (
+    "serieId" integer not null, /* L'identifiant de la série */
+    "tagId" integer not null, /* L'identifiant du tag */
+    primary key ("serieId", "tagId")
+);
+
 /* Création de la table des séries*/
 create table if not exists "Serie" (
     "id" serial primary key,
@@ -55,6 +70,7 @@ create table if not exists "Serie" (
     "backdrop" varchar, /* L'image de fond de la série */
     "media" varchar, /* Le média de la série */
     "original_name" varchar, /* Le titre original de la série */
+    "romaji_name" varchar, /* Le titre romaji de la série */
     "status" varchar, /* Le statut de la série */
     "first_air_date" date, /* La date de première diffusion */
     "last_air_date" date, /* La date de dernière diffusion */

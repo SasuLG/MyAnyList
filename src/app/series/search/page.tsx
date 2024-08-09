@@ -75,7 +75,7 @@ export default function SearchPage() {
   /**
    * Hook pour stocker le tri sélectionné
    */
-  const [selectedSortBy, setSelectedSortBy] = useState<string>('added');
+  const [selectedSortBy, setSelectedSortBy] = useState<string>('Added');
 
   /**
    * Hook pour stocker la recherche
@@ -142,7 +142,7 @@ export default function SearchPage() {
    * Fonction pour récupérer les données des séries
    */
   const fetchData = async () => {
-    const response = await fetch(`/api/series/all?limit=${encodeURIComponent(200)}&page=${encodeURIComponent(1)}`);
+    const response = await fetch(`/api/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}`);
     const data = await response.json();
     setSeries(data);
     setFetchDataFinished(true);
@@ -182,6 +182,7 @@ export default function SearchPage() {
     const response = await fetch('/api/series/genre');
     const data = await response.json();
     setGenres(data);
+    console.log(data);
   };
   
   /**
@@ -237,6 +238,14 @@ export default function SearchPage() {
     });
     const data = await response.json();
     setSeriesIdFollowed(data ? (seriesIdFollowed.includes(Number(serie.id)) ? seriesIdFollowed.filter((id) => id !== Number(serie.id)) : [...seriesIdFollowed, Number(serie.id)]) : seriesIdFollowed);
+    
+    await fetch('/api/user/activity', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ login: user.login }),
+    });
   };
 
   /**
@@ -337,7 +346,8 @@ export default function SearchPage() {
       }
       const matchesGenre = selectedGenres.length === 0 || selectedGenres.every((genre) => serie.genres.some((g) => g.name === genre));
       const matchesFormat = selectedFormats.length === 0 || selectedFormats.includes(serie.media_type);
-      const matchesSearchQuery = serie.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesSearchQuery = serie.name.toLowerCase().includes(searchQuery.toLowerCase())  || serie.original_name.toLowerCase().includes(searchQuery.toLowerCase()) || serie.romaji_name.toLowerCase().includes(searchQuery.toLowerCase()); 
       const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(serie.status);
       const matchesOriginCountry = selectedOriginCountries.length === 0 || 
       selectedOriginCountries.every((country) => serie.origin_country.includes(country));
@@ -356,23 +366,26 @@ export default function SearchPage() {
       case 'popularity':
         filtered.sort((a, b) => b.popularity - a.popularity);
         break;
-      case 'vote_average':
+      case 'Vote average':
         filtered.sort((a, b) => b.vote_average - a.vote_average);
         break;
-      case 'first_air_date':
+      case 'Start date':
         filtered.sort((a, b) => new Date(b.first_air_date).getTime() - new Date(a.first_air_date).getTime());
         break;
-      case 'last_air_date':
+      case 'End date':
         filtered.sort((a, b) => new Date(b.last_air_date).getTime() - new Date(a.last_air_date).getTime());
         break;
-      case 'number_of_episodes':
+      case 'Number episodes':
         filtered.sort((a, b) => b.number_of_episodes - a.number_of_episodes);
         break;
-      case 'added':
+      case 'Added':
         filtered.sort((a, b) => Number(b.id) - Number(a.id));
         break;
-      case 'name':
+      case 'Name':
         filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'Total time' : 
+        filtered.sort((a, b) => b.total_time - a.total_time);
         break;
       default:
         break;
@@ -389,7 +402,7 @@ export default function SearchPage() {
   const clearAllFilters = () => {
     setSelectedGenres([]);
     setSelectedFormats([]);
-    setSelectedSortBy('added');
+    setSelectedSortBy('Added');
     setSearchQuery('');
     setSelectedStatuses([]);
     setSelectedOriginCountries([]);
@@ -444,7 +457,7 @@ export default function SearchPage() {
         formats={['tv', 'movie']}
         selectedFormats={selectedFormats}
         onSelectFormats={setSelectedFormats}
-        sortByOptions={['popularity', 'vote_average', 'first_air_date', 'last_air_date', 'number_of_episodes', 'added', 'name']}
+        sortByOptions={['Added', 'Popularity', 'Start date', 'End date',  'Vote average', 'Name', 'Number episodes', 'Total time']}
         selectedSortBy={selectedSortBy}
         onSelectSortBy={setSelectedSortBy}
         searchQuery={searchQuery}

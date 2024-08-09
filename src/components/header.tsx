@@ -1,34 +1,35 @@
-"use client"
-import { memo } from "react";
+"use client";
+import { memo, useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useUserContext } from "@/userContext";
 import { API_LOGOUT_ROUTE } from "@/constants/api.route.const";
-import { ADMIN_ROUTE, HOME_ROUTE, LOGIN_ROUTE, MYLIST_ROUTE, REGISTER_ROUTE, SEARCH_ROUTE } from "@/constants/app.route.const";
+import { ADMIN_ROUTE, HOME_ROUTE, LOGIN_ROUTE, MYLIST_ROUTE, REGISTER_ROUTE, SEARCH_ROUTE, PROFILE_BASE_ROUTE } from "@/constants/app.route.const";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AdminKey } from "./svg/key.svg";
+import { ProfilCircle } from "./svg/profil.svg";
+import { Logout } from "./svg/logout.svg";
 
-export type MenuList = "search" | "login" | "register" | "myList" | "admin" | "userProfil" | "";
+export type MenuList = "search" | "login" | "register" | "myList" | "admin" | "userProfil" | "home" |  "";
 
 export type HeaderProps = {
     selected_menu: MenuList;
 }
 
-export const Header = memo((selected_menu : HeaderProps)=>{
-
-    /**
-     * React hook pour permettre la navigation entre les différents endpoints de l'application web.
-     */
+export const Header = memo(({ selected_menu }: HeaderProps) => {
+    const [isDropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
+    const { user, updateUserInfo, setAlert } = useUserContext();
 
-    /**
-     * Hook qui permet de récupérer les informations de l'utilisateur connecté.
-     */
-    const {user, updateUserInfo, setAlert} = useUserContext();
+    const toggleDropdown = () => {
+        setDropdownOpen(!isDropdownOpen);
+    };
 
-    /**
-     * Fonction qui permet de déconnecter l'utilisateur.
-     */
+    const closeDropdown = () => {
+        setDropdownOpen(false);
+    };
+
     const logout = async () => {
         const response = await fetch(API_LOGOUT_ROUTE, { method: 'PUT' });
         const data = await response.json();
@@ -39,44 +40,73 @@ export const Header = memo((selected_menu : HeaderProps)=>{
             router.push(LOGIN_ROUTE);
         }
         return data;
-    }
-    
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                closeDropdown();
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
     return (
         <div className="header-container">
             <div className="header-content">
                 <div className="header-items">
                     <Link href={HOME_ROUTE}>
-                        <Image src="/assets/images/_73117bf0-c91e-4bb6-85f0-64563fc48a5c-removebg-preview.png" alt="logo" width={60} height={60}></Image>
+                        <Image src="/assets/images/_73117bf0-c91e-4bb6-85f0-64563fc48a5c-removebg-preview.png" alt="logo" width={60} height={60} />
                     </Link>
                 </div>
                 <div className="header-items">
-                    <Link href={SEARCH_ROUTE} className={selected_menu.selected_menu === "search" ? "selected" : undefined}>Search</Link>
+                    <Link href={SEARCH_ROUTE} className={selected_menu === "search" ? "selected" : ""}>Search</Link>
                     {user && (
-                        <Link href={MYLIST_ROUTE} className={selected_menu.selected_menu === "myList" ? "selected" : undefined}>My list</Link>
+                        <Link href={MYLIST_ROUTE} className={selected_menu === "myList" ? "selected" : ""}>My list</Link>
                     )}
                 </div>
                 <div className="header-items">
-                    {user ? (//TODO profil
+                    {user ? (
                         <>
-                        <p onClick={logout} style={{cursor:"pointer"}}>Logout</p>
-                        {user.admin && (
-                            <Link href={ADMIN_ROUTE} className={selected_menu.selected_menu === "admin" ? "selected" : undefined}>
-                                <span style={{ display: 'flex', alignItems: 'center' }}>
-                                    <AdminKey width={20} height={20} />
-                                    Admin
-                                </span>
-                            </Link>
-                        )}
+                            <div className="profile-menu" onClick={toggleDropdown} ref={dropdownRef}>
+                                <ProfilCircle width={30} height={30} isHeader={true} />
+                                {isDropdownOpen && (
+                                    <div className="dropdown-menu">
+                                        <div>
+                                            <ProfilCircle width={30} height={30} isHeader={false} />
+                                            <Link href={PROFILE_BASE_ROUTE + "/"+user.login} onClick={() => setDropdownOpen(false)}>Profile</Link>
+                                        </div>
+                                        <div>
+                                            <Logout width={30} height={30} />
+                                            <p onClick={() => { logout(); setDropdownOpen(false); }} style={{ cursor: "pointer" }}>Déconnexion</p>
+                                        </div>
+                                        {user.admin && (
+                                            <div>
+                                                <Link href={ADMIN_ROUTE} className={selected_menu === "admin" ? "selected" : ""}>
+                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                        <AdminKey width={30} height={30} />
+                                                        <p>Admin</p>
+                                                    </div>
+                                                </Link>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </>
                     ) : (
                         <>
-                        <Link href={LOGIN_ROUTE} className={selected_menu.selected_menu === "login" ? "selected" : undefined}>Login</Link>
-                        <Link href={REGISTER_ROUTE} className={selected_menu.selected_menu === "register" ? "selected" : undefined}>Sign up</Link>
+                            <Link href={LOGIN_ROUTE} className={selected_menu === "login" ? "selected" : ""}>Login</Link>
+                            <Link href={REGISTER_ROUTE} className={selected_menu === "register" ? "selected" : ""}>Sign up</Link>
                         </>
                     )}
                 </div>
             </div>
         </div>
     );
-})
+});
 Header.displayName = 'Header';

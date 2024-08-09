@@ -10,6 +10,8 @@ import "@/styles/series.style.css";
 import "@/styles/loader.style.css";
 import "@/styles/dropdown.style.css";
 import "@/styles/slider.style.css";
+import "@/styles/admin.style.css";
+import "@/styles/alert.box.style.css";
 
 
 const inter = Inter({ subsets: ["latin"] });

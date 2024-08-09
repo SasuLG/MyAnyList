@@ -1,0 +1,84 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.container {
+    padding: 20px;
+    box-sizing: border-box; 
+}
+
+.title {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.filters {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filterLabel {
+    margin-right: 10px;
+}
+
+.filterSelect {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.legend {
+    margin-bottom: 20px;
+}
+
+.userTable {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; 
+}
+
+.tableHeader {
+    border-bottom: 2px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+.tableRow {
+    border-bottom: 1px solid #eee;
+}
+
+.tableCell {
+    padding: 10px;
+}
+
+.button {
+    margin-right: 10px;
+    padding: 7.5px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #0070f3;
+    color: white;
+    font-size: 14px;
+}
+
+.button:hover {
+    background-color: #005bb5;
+}
+
+.orderButton {
+    background: none;
+    border: 2px solid #0070f3;
+    border-radius: 5px;
+    padding: 1px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -0.25rem;
+}

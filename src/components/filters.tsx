@@ -235,7 +235,7 @@ const Filters: React.FC<FiltersProps> = ({
           </div>
         )}
 
-        {withFollowed && (
+        {withFollowed !== undefined && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <input
               type="checkbox"

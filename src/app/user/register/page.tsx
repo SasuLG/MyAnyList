@@ -41,9 +41,10 @@ export default function Register() {
         const passwordInput = (e.currentTarget.elements.namedItem('password') as HTMLInputElement);
         const confirmPasswordInput = (e.currentTarget.elements.namedItem('confirmPassword') as HTMLInputElement);
 
-        if (loginInput.value.trim() === '' || passwordInput.value.trim() === '' || confirmPasswordInput.value.trim() === '') { return; }
-        if (passwordInput.value !== confirmPasswordInput.value) { return; }
-        if(loginInput.value.length < 3) { return; }
+        if (loginInput.value.includes(' ') ) { setAlert({message:"login incorrecte", valid:false});return; }
+        if (passwordInput.value !== confirmPasswordInput.value) { setAlert({message:"Le mot de passe doit être identique", valid:false});return; }
+        if(passwordInput.value.length < 3) { setAlert({message:"Mot de passe trop court", valid:false});return; }
+        if(loginInput.value.length < 3) { setAlert({message:"Login trop court", valid:false});return; }
 
         const response = await fetch(API_REGISTER_ROUTE, {
             method: 'POST',

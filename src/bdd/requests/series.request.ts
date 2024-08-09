@@ -1,4 +1,4 @@
-import { MinimalSerie, ProductionCountry, Serie, TmdbId } from '@/tmdb/types/series.type';
+import { Genre, MinimalSerie, ProductionCountry, Serie, TmdbId } from '@/tmdb/types/series.type';
 import Query from '../postgre.middleware';
 
 export async function getSerie(tmdb_id: number): Promise<Serie> {
@@ -14,6 +14,7 @@ export async function getSerie(tmdb_id: number): Promise<Serie> {
                     "s"."backdrop" AS "backdrop_path",
                     "s"."media" AS "media_type",
                     "s"."original_name" AS "original_name",
+                    "s"."romaji_name" AS "romaji_name",
                     "s"."status" AS "status",
                     "s"."first_air_date" AS "first_air_date",
                     "s"."last_air_date" AS "last_air_date",
@@ -67,6 +68,14 @@ export async function getSerie(tmdb_id: number): Promise<Serie> {
                 SELECT "e"."tmdb_id" AS "id", "e"."season_id", "e"."number" AS "episode_number", "e"."overview", "e"."name", "e"."runtime", "e"."still_path"
                 FROM "Episode" AS "e"
                 WHERE "e"."season_id" IN (SELECT "id" FROM "Seasons")
+            ),
+            "Tags" AS (
+                SELECT "ts"."serieId" AS "serieId", 
+                       TO_JSONB(ARRAY_AGG("t"."name")) AS "tags"
+                FROM "Tag_serie" AS "ts"
+                JOIN "Tag" AS "t" ON "ts"."tagId" = "t"."id"
+                WHERE "ts"."serieId" = (SELECT "id" FROM "SerieData")
+                GROUP BY "ts"."serieId"
             )
             SELECT
                 "SerieData".*,
@@ -74,7 +83,8 @@ export async function getSerie(tmdb_id: number): Promise<Serie> {
                 ARRAY_AGG(DISTINCT JSON_BUILD_OBJECT('iso_639_1', "Languages"."iso_639_1", 'name', "Languages"."name", 'english_name', "Languages"."english_name")) AS "spoken_languages",
                 ARRAY_AGG(DISTINCT JSON_BUILD_OBJECT('name', "ProductionCountries"."name", 'iso_3166_1', "ProductionCountries"."iso_3166_1")) AS "production_countries",
                 ARRAY_AGG(DISTINCT JSON_BUILD_OBJECT('tmdb_id', "ProductionCompanies"."tmdb_id", 'name', "ProductionCompanies"."name")) AS "production_companies",
-                JSON_AGG(DISTINCT JSON_BUILD_OBJECT('id', "Seasons"."id", 'season_number', "Seasons"."season_number", 'overview', "Seasons"."overview", 'poster_path', "Seasons"."poster_path", 'air_date', "Seasons"."air_date", 'vote_average', "Seasons"."vote_average", 'total_time', "Seasons"."total_time", 'name', "Seasons"."name", 'episodes', JSON_AGG(DISTINCT JSON_BUILD_OBJECT('id', "Episodes"."id", 'episode_number', "Episodes"."episode_number", 'overview', "Episodes"."overview", 'name', "Episodes"."name", 'runtime', "Episodes"."runtime", 'still_path', "Episodes"."still_path")))) AS "seasons"
+                JSON_AGG(DISTINCT JSON_BUILD_OBJECT('id', "Seasons"."id", 'season_number', "Seasons"."season_number", 'overview', "Seasons"."overview", 'poster_path', "Seasons"."poster_path", 'air_date', "Seasons"."air_date", 'vote_average', "Seasons"."vote_average", 'total_time', "Seasons"."total_time", 'name', "Seasons"."name", 'episodes', JSON_AGG(DISTINCT JSON_BUILD_OBJECT('id', "Episodes"."id", 'episode_number', "Episodes"."episode_number", 'overview', "Episodes"."overview", 'name', "Episodes"."name", 'runtime', "Episodes"."runtime", 'still_path', "Episodes"."still_path")))) AS "seasons",
+                COALESCE("Tags"."tags", '[]'::jsonb) AS "tags"
             FROM "SerieData"
             LEFT JOIN "Genres" ON TRUE
             LEFT JOIN "Languages" ON TRUE
@@ -83,6 +93,7 @@ export async function getSerie(tmdb_id: number): Promise<Serie> {
             LEFT JOIN "ProductionCompanies" ON TRUE
             LEFT JOIN "Seasons" ON TRUE
             LEFT JOIN "Episodes" ON "Episodes"."season_id" = "Seasons"."id"
+            LEFT JOIN "Tags" ON "Tags"."serieId" = "SerieData"."id"
             GROUP BY "SerieData"."id"
         `, [tmdb_id]);
 
@@ -96,6 +107,7 @@ export async function getSerie(tmdb_id: number): Promise<Serie> {
         throw error;
     }
 }
+
 
 /**
  * Fonction qui permet de récupérer les séries en fonction de la limite et de la page.
@@ -112,6 +124,8 @@ export async function getSeries(limit: number, page: number): Promise<MinimalSer
                     "s"."id" AS "id",
                     "s"."tmdb_id" AS "tmdb_id",
                     "s"."title" AS "name",
+                    "s"."original_name" AS "original_name",
+                    "s"."romaji_name" AS "romaji_name",
                     "s"."overview" AS "overview",
                     "s"."poster" AS "poster_path",
                     "s"."media" AS "media_type",
@@ -121,7 +135,8 @@ export async function getSeries(limit: number, page: number): Promise<MinimalSer
                     "s"."nb_episodes" AS "number_of_episodes",
                     "s"."vote_average" AS "vote_average",
                     "s"."popularity" AS "popularity",
-                    "s"."episode_run_time" AS "episode_run_time"
+                    "s"."episode_run_time" AS "episode_run_time",
+                    "s"."total_time" AS "total_time"
                 FROM "Serie" AS "s"
                 LIMIT $1 OFFSET $2
             ),
@@ -150,9 +165,8 @@ export async function getSeries(limit: number, page: number): Promise<MinimalSer
                 SELECT "pcs"."serieId" AS "serieId", 
                        JSON_AGG(
                            JSON_BUILD_OBJECT(
-                               'id', "c"."id",
-                               'iso_3166_1', "c"."iso_3166_1",
-                               'name', "c"."name"
+                               'name', "c"."name",
+                               'iso_3166_1', "c"."iso_3166_1"
                            )
                        )::jsonb AS "production_countries"
                 FROM "ProductionCountry_serie" AS "pcs"
@@ -160,30 +174,25 @@ export async function getSeries(limit: number, page: number): Promise<MinimalSer
                 WHERE "pcs"."serieId" IN (SELECT "id" FROM "SerieData")
                 GROUP BY "pcs"."serieId"
             ),
-            "ProductionCompanies" AS (
-                SELECT "pcs"."serieId" AS "serieId", 
-                       JSON_AGG(
-                           JSON_BUILD_OBJECT(
-                               'id', "pc"."id",
-                               'name', "pc"."name"
-                           )
-                       )::jsonb AS "production_companies"
-                FROM "ProductionCompany_serie" AS "pcs"
-                JOIN "ProductionCompany" AS "pc" ON "pcs"."productionCompanyId" = "pc"."id"
-                WHERE "pcs"."serieId" IN (SELECT "id" FROM "SerieData")
-                GROUP BY "pcs"."serieId"
+            "Tags" AS (
+                SELECT "ts"."serieId" AS "serieId", 
+                       TO_JSONB(ARRAY_AGG("t"."name")) AS "tags"
+                FROM "Tag_serie" AS "ts"
+                JOIN "Tag" AS "t" ON "ts"."tagId" = "t"."id"
+                WHERE "ts"."serieId" IN (SELECT "id" FROM "SerieData")
+                GROUP BY "ts"."serieId"
             )
             SELECT
                 "SerieData".*,
                 COALESCE("Genres"."genres", '[]'::jsonb) AS "genres",
                 COALESCE("OriginCountries"."origin_country", '[]'::jsonb) AS "origin_country",
                 COALESCE("ProductionCountries"."production_countries", '[]'::jsonb) AS "production_countries",
-                COALESCE("ProductionCompanies"."production_companies", '[]'::jsonb) AS "production_companies"
+                COALESCE("Tags"."tags", '[]'::jsonb) AS "tags"
             FROM "SerieData"
-            LEFT JOIN "Genres" ON "SerieData"."id" = "Genres"."serieId"
-            LEFT JOIN "OriginCountries" ON "SerieData"."id" = "OriginCountries"."serieId"
-            LEFT JOIN "ProductionCountries" ON "SerieData"."id" = "ProductionCountries"."serieId"
-            LEFT JOIN "ProductionCompanies" ON "SerieData"."id" = "ProductionCompanies"."serieId"
+            LEFT JOIN "Genres" ON "Genres"."serieId" = "SerieData"."id"
+            LEFT JOIN "OriginCountries" ON "OriginCountries"."serieId" = "SerieData"."id"
+            LEFT JOIN "ProductionCountries" ON "ProductionCountries"."serieId" = "SerieData"."id"
+            LEFT JOIN "Tags" ON "Tags"."serieId" = "SerieData"."id"
         `, [limit, offset]);
 
         return result.rows as MinimalSerie[];
@@ -211,6 +220,8 @@ export async function getSeriesFollowed(limit: number, page: number, userId: str
                     "s"."id" AS "id",
                     "s"."tmdb_id" AS "tmdb_id",
                     "s"."title" AS "name",
+                    "s"."original_name" AS "original_name",
+                    "s"."romaji_name" AS "romaji_name",
                     "s"."overview" AS "overview",
                     "s"."poster" AS "poster_path",
                     "s"."media" AS "media_type",
@@ -221,7 +232,8 @@ export async function getSeriesFollowed(limit: number, page: number, userId: str
                     "s"."vote_average" AS "vote_average",
                     "s"."popularity" AS "popularity",
                     "s"."episode_run_time" AS "episode_run_time",
-                    "us"."date" AS "follow_date" -- Ajout de la date de suivi
+                    "us"."date" AS "follow_date",
+                    "s"."total_time" AS "total_time"
                 FROM "Serie" AS "s"
                 JOIN "User_serie" AS "us" ON "s"."id" = "us"."serie_id"
                 WHERE "us"."user_id" = $3
@@ -277,6 +289,14 @@ export async function getSeriesFollowed(limit: number, page: number, userId: str
                 JOIN "ProductionCompany" AS "pc" ON "pcs"."productionCompanyId" = "pc"."id"
                 WHERE "pcs"."serieId" IN (SELECT "id" FROM "SerieData")
                 GROUP BY "pcs"."serieId"
+            ),
+             "Tags" AS (
+                SELECT "ts"."serieId" AS "serieId", 
+                       TO_JSONB(ARRAY_AGG("t"."name")) AS "tags"
+                FROM "Tag_serie" AS "ts"
+                JOIN "Tag" AS "t" ON "ts"."tagId" = "t"."id"
+                WHERE "ts"."serieId" IN (SELECT "id" FROM "SerieData")
+                GROUP BY "ts"."serieId"
             )
             SELECT
                 "SerieData".*,
@@ -284,21 +304,21 @@ export async function getSeriesFollowed(limit: number, page: number, userId: str
                 COALESCE("OriginCountries"."origin_country", ARRAY[]::text[]) AS "origin_country",
                 COALESCE("ProductionCountries"."production_countries", '[]'::jsonb) AS "production_countries",
                 COALESCE("ProductionCompanies"."production_companies", '[]') AS "production_companies",
-                COALESCE("User_note"."note", NULL) AS "note"
+                COALESCE("User_note"."note", NULL) AS "note",
+                COALESCE("Tags"."tags", '[]'::jsonb) AS "tags"
             FROM "SerieData"
             LEFT JOIN "Genres" ON "SerieData"."id" = "Genres"."serieId"
             LEFT JOIN "OriginCountries" ON "SerieData"."id" = "OriginCountries"."serieId"
             LEFT JOIN "ProductionCountries" ON "SerieData"."id" = "ProductionCountries"."serieId"
             LEFT JOIN "ProductionCompanies" ON "SerieData"."id" = "ProductionCompanies"."serieId"
             LEFT JOIN "User_note" ON "SerieData"."id" = "User_note"."serieId"
+            LEFT JOIN "Tags" ON "Tags"."serieId" = "SerieData"."id"
         `, [limit, offset, userId])).rows as MinimalSerie[];
     } catch (error) {
         console.error('Erreur lors de la récupération des séries suivies:', error);
         throw error;
     }
 }
-
-
 
 /**
  * Fonction qui permet de récupérer les identifiants des séries suivies par un utilisateur.
@@ -425,61 +445,11 @@ export async function deleteVote(userId: string, serieId: string): Promise<boole
     }
 }
 
-export async function deleteSerie(serieId: string): Promise<boolean> { /* TODO  Season, Episode */
-    try {
-        
-        await Query(`
-            DELETE FROM "Country_serie"
-            WHERE "serieId" = $1
-        `, [serieId]);
-
-        await Query(`
-            DELETE FROM "OriginCountry_serie"
-            WHERE "serieId" = $1
-        `, [serieId]);
-
-        await Query(`
-            DELETE FROM "Genre_serie"
-            WHERE "serieId" = $1
-        `, [serieId]);
-
-        await Query(`
-            DELETE FROM "ProductionCompany_serie"
-            WHERE "serieId" = $1
-        `, [serieId]);
-
-        await Query(`
-            DELETE FROM "ProductionCountry_serie"
-            WHERE "serieId" = $1
-        `, [serieId]);
-
-        await Query(`
-            DELETE FROM "User_serie"
-            WHERE "serie_id" = $1
-        `, [serieId]);
-
-        await Query(`
-            DELETE FROM "User_note"
-            WHERE "serie_id" = $1
-        `, [serieId]);
-
-        await Query(`
-            DELETE FROM "Serie"
-            WHERE "id" = $1
-        `, [serieId]);
-
-        return true;
-    } catch (error) {
-        console.error('Erreur lors de la suppression de la série:', error);
-        return false;
-    }
-}
-
 /**
- * Fonction qui permet de récupérer les genres des séries.
+ * Fonction qui permet de récupérer les noms des genres des séries.
  * @returns 
  */
-export async function getAllGenres(): Promise<string[]> {
+export async function getAllGenresNames(): Promise<string[]> {
     try {
         const result = await Query(`
             SELECT "name"
@@ -487,6 +457,24 @@ export async function getAllGenres(): Promise<string[]> {
         `);
 
         return result.rows.map((row) => row.name);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des genres:', error);
+        throw error;
+    }
+}
+
+/**
+ * Fonction qui permet de récupérer les genres des séries.
+ * @returns 
+ */
+export async function getAllGenres(): Promise<Genre[]> {
+    try {
+        const result = await Query(`
+            SELECT "id", "name", "tmdb_id"
+            FROM "Genre"
+        `);
+
+        return result.rows as Genre[];
     } catch (error) {
         console.error('Erreur lors de la récupération des genres:', error);
         throw error;

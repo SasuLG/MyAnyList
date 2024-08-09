@@ -45,7 +45,7 @@ export async function PUT(req: Request): Promise<Response> {
             if (sessionID) {
                 await deleteWebToken(sessionID);
 
-                return new Response(JSON.stringify({ message: 'Suppression du cookie de session réussi !', valid: true }), {
+                return new Response(JSON.stringify({ message: 'Déconnexion réussi !', valid: true }), {
                     headers: {
                         'Content-Type': 'application/json',
                         'Set-Cookie': `${SESSION_ID_COOKIE}=; Path=/; Max-Age=-1`

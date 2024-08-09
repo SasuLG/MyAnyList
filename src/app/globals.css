@@ -32,10 +32,6 @@ a {
   transform: scale(1.05);
 }
 
-.selected{
-  /*TODO*/
-}
-
 /*TODO inverser light et dark*/
 @media (prefers-color-scheme: light) {
   :root {

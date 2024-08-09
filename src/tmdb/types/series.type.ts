@@ -20,6 +20,12 @@ type ApiSerie = {
 
 type Genre = {
     id: string;
+    tmdb_id?: string;
+    name: string;
+}
+
+type Tag = {
+    id: string;
     name: string;
 }
 
@@ -74,6 +80,7 @@ type Serie = {
     backdrop_path: string; 
     media_type: string;
     original_name: string;
+    romaji_name: string;
     status: string;
     first_air_date: string;
     last_air_date: string;
@@ -92,12 +99,15 @@ type Serie = {
     popularity: number;
     budget: number;
     revenue: number;
+    tags: Tag[];
 }
 
 type MinimalSerie = {
     id: string;
     tmdb_id: string;
     name: string;
+    original_name: string;
+    romaji_name: string;
     overview: string;
     poster_path: string;
     media_type: string;
@@ -114,6 +124,8 @@ type MinimalSerie = {
     production_companies: ProductionCompany[];
     first_air_date: string;
     last_air_date: string;
+    total_time: number;
+    tags: Tag[];
 }
 
 type Range = {
@@ -124,4 +136,4 @@ type Range = {
 };
 
 
-export type { TmdbId, ApiSerie, Genre, Language, ProductionCountry, ProductionCompany, Episode, Season, Serie, MinimalSerie, Range};
+export type { TmdbId, ApiSerie, Genre, Language, ProductionCountry, ProductionCompany, Episode, Season, Serie, MinimalSerie, Range, Tag };

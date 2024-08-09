@@ -1,8 +1,8 @@
-import { getAllGenresNames } from "@/bdd/requests/series.request";
+import { getAllGenres } from "@/bdd/requests/series.request";
 import { ServerError } from "@/lib/api/response/server.response";
 
 /**
- * Route : /api/series/genre
+ * Route : /api/admin/series/genre
  * METHOD : GET
  * 
  * Route de l'api pour récupérer tous les genres de séries.
@@ -12,7 +12,7 @@ import { ServerError } from "@/lib/api/response/server.response";
 export async function GET(req: Request, context: any): Promise<Response> {
     try {
 
-        const data = await getAllGenresNames();
+        const data = await getAllGenres();
         return new Response(JSON.stringify(data), {
             headers: {
                 'Content-Type': 'application/json'
@@ -21,6 +21,6 @@ export async function GET(req: Request, context: any): Promise<Response> {
         });
 
     } catch (err) {
-        return ServerError('GET : /api/series/genre', err);
+        return ServerError('GET : /api/admin/series/genre', err);
     }
 }

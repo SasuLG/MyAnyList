@@ -87,7 +87,7 @@ export async function updateLogin(id: number, login: string): Promise<void> {
  * @param {number} userId - L'id de la personne.
  * @param {string} password - Le nouveau mot de passe. (IL DOIT ETRE HASHE EN BCRYPT !)
  */
-export async function updateUserPassword(userId: number, password: string) {
+export async function updatePassword(userId: number, password: string) {
     await Query(`update "User" set "password"=$1 where "id"=$2;`, [password, userId]);
 }
 
@@ -191,4 +191,21 @@ export async function deleteUser(userId: string): Promise<boolean> {
         console.error('Erreur lors de la suppression de l\'utilisateur:', error);
         return false;
     }
+}
+
+/**
+ * Fonction qui permet de récupérer tous les utilisateurs.
+ * @returns 
+ */
+export async function getAllUsers(): Promise<User[]> {
+    const bddResponse = await Query(`select * from "User";`);
+    return bddResponse.rows as User[];
+}
+
+/**
+ * Fonction qui permet de mettre à jour la date de dernière activité d'un utilisateur par son nom.
+ * @param {number} username 
+ */
+export async function updateLastActivityByName(username: string) {
+    await Query(`update "User" set "last_activity"=now() where "login"=$1;`, [username]);
 }

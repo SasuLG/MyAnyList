@@ -1,11 +1,11 @@
 import { ServerError } from "@/lib/api/response/server.response";
-import { getDetailsMovieById, getDetailsSeriesById } from "@/tmdb/requests/tseries.request";
+import { getMoviesTagsByMovieId, getSeriesTagsBySerieId } from "@/tmdb/requests/tseries.request";
 
 /**
- * Route : /api/admin/series/search/details
+ * Route : /api/admin/series/search/tags
  * METHOD : GET
  * 
- * Route de l'api pour récupérer les détails d'une série
+ * Route de l'api pour récupérer les tags d'une série ou d'un film.
  * 
  * @param {Request} req - La requête de connexion.
  * @returns {Response} La réponse de la requête de connexion.
@@ -17,11 +17,10 @@ export async function GET(req: Request): Promise<Response> {
         const media_type = url.searchParams.get('media_type') || '';
         let response;
         if(media_type === "movie"){
-            response = await getDetailsMovieById(id);
+            response = await getMoviesTagsByMovieId(id);
         }else{
-            response = await getDetailsSeriesById(id);
+            response = await getSeriesTagsBySerieId(id);
         }
-
         return new Response(JSON.stringify(response), {
             headers: {
                 'Content-Type': 'application/json'
@@ -29,6 +28,6 @@ export async function GET(req: Request): Promise<Response> {
         });
 
     } catch (err) {
-        return ServerError('/api/admin/series/search/details', err);
+        return ServerError('/api/admin/series/search/tags', err);
     }
 }
