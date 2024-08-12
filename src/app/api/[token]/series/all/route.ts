@@ -34,9 +34,6 @@ export async function GET(req: Request, context: any): Promise<Response> {
             },
             status: 404
         });
-
-
-
     } catch (err) {
         return ServerError('GET : /api/[token]/series/all', err);
     }

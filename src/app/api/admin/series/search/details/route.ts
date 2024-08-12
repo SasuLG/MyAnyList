@@ -29,6 +29,6 @@ export async function GET(req: Request): Promise<Response> {
         });
 
     } catch (err) {
-        return ServerError('/api/user/auth/login', err);
+        return ServerError('/api/admin/series/search/details', err);
     }
 }

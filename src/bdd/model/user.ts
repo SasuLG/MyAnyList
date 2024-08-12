@@ -9,6 +9,8 @@ type User = {
     creation_date: Date;
     admin: boolean;
     banned: boolean;
+    createdAt: Date;
+    last_activity: Date;
 }
 
 export type {

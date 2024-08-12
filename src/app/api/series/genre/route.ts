@@ -1,4 +1,4 @@
-import { getAllGenres } from "@/bdd/requests/series.request";
+import { getAllGenresNames } from "@/bdd/requests/series.request";
 import { ServerError } from "@/lib/api/response/server.response";
 
 /**
@@ -12,7 +12,7 @@ import { ServerError } from "@/lib/api/response/server.response";
 export async function GET(req: Request, context: any): Promise<Response> {
     try {
 
-        const data = await getAllGenres();
+        const data = await getAllGenresNames();
         return new Response(JSON.stringify(data), {
             headers: {
                 'Content-Type': 'application/json'

@@ -1,17 +1,86 @@
 .header-container {
     background-color: var(--secondary-background-color);
-    overflow: hidden;
+    overflow: visible;
     color: var(--secondary-text-color);
 }
 
 .header-content {
     display: flex;
     justify-content: space-evenly;
-    overflow: hidden;
+    overflow: visible;
     align-items: center;
 }
 
-.header-items{
+.header-items {
     display: flex;
     gap: 1rem;
+    position: relative;
+}
+
+.header-items .selected{
+    font-weight: bold;
+    color: var(--selected-text-color, #222);
+    border-bottom: 3px solid var(--selected-border-color, var(--button-color));
+    background-color: var(--selected-background-color, transparent);
+    text-decoration: none;
+    padding-bottom: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.selected {/* TODO JE SAIS PAS mais je pense pas*/
+    /* font-weight: bold;
+    color: var(--selected-text-color, #222);
+    border-bottom: 3px solid var(--selected-border-color, #007BFF);
+    background-color: var(--selected-background-color, transparent);
+    text-decoration: none;
+    padding-bottom: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); */
+}
+
+.profile-menu {
+    position: relative;
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: var(--background-color);
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    min-width: 120px; /* Réduit la largeur minimale */
+    padding: 0.25rem 0; /* Réduit le padding */
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.dropdown-menu > div {
+    display: flex;
+    align-items: center;
+    padding: 8px; /* Réduit le padding autour des éléments */
+    color: var(--titre-color);
+}
+
+.dropdown-menu > div > * {
+    margin-right: 8px; /* Réduit l'espace entre les icônes et le texte */
+}
+
+.dropdown-menu a, .dropdown-menu p {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: center;
+    padding: 8px; /* Réduit le padding autour du texte */
+    color: var(--titre-color);
+    text-decoration: none;
+    font-size: 0.875rem; /* Réduit la taille de la police pour plus de compacité */
+}
+
+.dropdown-menu a:hover, .dropdown-menu p:hover {
+    background-color: var(--hover-background-color, #f0f0f0);
 }

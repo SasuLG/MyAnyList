@@ -47,6 +47,13 @@ export default function Login() {
 
         setAlert(response);
         if(response.valid){
+            await fetch('/api/user/activity', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ login: loginInput.value }),
+              });
             setUserCookie(response.cookie);
             router.push(response.redirect);
         }

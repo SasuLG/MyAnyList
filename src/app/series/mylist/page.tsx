@@ -4,11 +4,10 @@ import Loader from "@/components/loader";
 import SeriesList from "@/components/seriesList";
 import { MinimalSerie, ProductionCountry } from "@/tmdb/types/series.type";
 import { useUserContext } from "@/userContext";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Range } from '@/tmdb/types/series.type';
 import { Filter } from "@/components/svg/filter.svg";
 import Filters from "@/components/filters";
-
 
 export default function MyList(){
 
@@ -67,7 +66,7 @@ export default function MyList(){
   /**
    * Hook pour stocker le tri sélectionné
    */
-  const [selectedSortBy, setSelectedSortBy] = useState<string>('followed');
+  const [selectedSortBy, setSelectedSortBy] = useState<string>('Followed');
 
   /**
    * Hook pour stocker la recherche
@@ -137,7 +136,7 @@ export default function MyList(){
     if(user === undefined){
         return;
     }
-    const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all?limit=${encodeURIComponent(20)}&page=${encodeURIComponent(1)}`);
+    const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all?limit=${encodeURIComponent(200000)}&page=${encodeURIComponent(1)}`);
     const data = await response.json();
     setFetchDataFinished(true);
 
@@ -147,11 +146,10 @@ export default function MyList(){
     }else{
         setAlert({ message: 'Erreur lors de la récupération des séries', valid: false });
     }
-    console.log(data);
     if (data.length > 0) {
       const minYear = Math.min(...data.map((serie: MinimalSerie) => new Date(serie.first_air_date).getFullYear()));
       const maxEpisodes = Math.max(...data.map((serie: MinimalSerie) => serie.number_of_episodes));
-
+      
       setYearRange((prevRange) => ({
         ...prevRange,
         minimalRange: minYear,
@@ -164,7 +162,14 @@ export default function MyList(){
         maximalRange: maxEpisodes,
         max: maxEpisodes,
       }));
-
+      const namesResponse = await fetch(`/api/translate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ texts: data.map((serie: MinimalSerie) => serie.original_name) })
+      });
+      const namesData = await namesResponse.json();
       setFiltersReady(true);
     }    
   };
@@ -240,6 +245,14 @@ export default function MyList(){
           }else{
               setSeries([...series, serie]);
           }
+          
+          await fetch('/api/user/activity', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ login: user.login }),
+          });
         }
     }else{
         setAlert({ message: 'Erreur lors de la récupération des séries suivies', valid: false });
@@ -327,57 +340,68 @@ export default function MyList(){
    /**
    * Fonction pour appliquer les filtres et le tri
    */
-  const applyFiltersAndSort = () => {
+   const applyFiltersAndSort = () => {
     if (!filtersReady) return;
-
-    let filtered = series.filter((serie) => {
-      const matchesGenre = selectedGenres.length === 0 || selectedGenres.every((genre) => serie.genres.some((g) => g.name === genre));
-      const matchesFormat = selectedFormats.length === 0 || selectedFormats.includes(serie.media_type);
-      const matchesSearchQuery = serie.name.toLowerCase().includes(searchQuery.toLowerCase());
+  
+    let filtered = series.filter(serie => {
+      const matchesFormat = selectedFormats.length === 0 || selectedFormats.includes(serie.media_type) &&
+        (selectedFormats.includes('tv') && serie.media_type === 'tv' && !serie.genres.some(genre => genre.name === 'Animation')) ||
+        (selectedFormats.includes('movie') && serie.media_type === 'movie' && !serie.genres.some(genre => genre.name === 'Animation')) ||
+        (selectedFormats.includes('anime') && serie.genres.some(genre => genre.name === 'Animation') && serie.media_type === 'tv') ||
+        (selectedFormats.includes('film d\'animation') && serie.genres.some(genre => genre.name === 'Animation') && serie.media_type === 'movie');
+  
+      const matchesGenre = selectedGenres.length === 0 || selectedGenres.every(genre => serie.genres.some(g => g.name === genre));
+      const matchesSearchQuery = [serie.name, serie.original_name, serie.romaji_name].some(name => name.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(serie.status);
-      const matchesOriginCountry = selectedOriginCountries.length === 0 || 
-      selectedOriginCountries.every((country) => serie.origin_country.includes(country));
-      const matchesProductionCompany = selectedProductionCompanies.every((company) => serie.production_companies.some((prod) => prod.name === company));
-      const matchesProductionCountry = selectedProductionCountries.every((country) => serie.production_countries.some((c) => c.name === country));
-
+      const matchesOriginCountry = selectedOriginCountries.length === 0 || selectedOriginCountries.every(country => serie.origin_country.includes(country));
+      const matchesProductionCompany = selectedProductionCompanies.every(company => serie.production_companies.some(prod => prod.name === company));
+      const matchesProductionCountry = selectedProductionCountries.every(country => serie.production_countries.some(c => c.name === country));
       const serieYear = new Date(serie.first_air_date).getFullYear();
       const matchesYearRange = serieYear >= yearRange.min && serieYear <= yearRange.max;
-      const matchesVoteRange = serie.vote_average >= voteRange.min && serie.vote_average <= voteRange.max;
+      const matchesVoteRange = (serie.note || 0) >= voteRange.min && (serie.note || 0) <= voteRange.max;
       const matchesEpisodeRange = serie.number_of_episodes >= episodeRange.min && serie.number_of_episodes <= episodeRange.max;
-      return matchesGenre && matchesFormat && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange;
+  
+      return matchesFormat && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange;
     });
   
     // Apply sorting
     switch (selectedSortBy) {
-      case 'popularity':
+      case 'Popularity':
         filtered.sort((a, b) => b.popularity - a.popularity);
         break;
-      case 'vote_average':
-        filtered.sort((a, b) => b.vote_average - a.vote_average);
+      case 'Vote average':
+        filtered.sort((a, b) => (b.note || 0) - (a.note || 0));
         break;
-      case 'first_air_date':
+      case 'Start date':
         filtered.sort((a, b) => new Date(b.first_air_date).getTime() - new Date(a.first_air_date).getTime());
         break;
-      case 'last_air_date':
+      case 'End date':
         filtered.sort((a, b) => new Date(b.last_air_date).getTime() - new Date(a.last_air_date).getTime());
         break;
-      case 'number_of_episodes':
+      case 'Number episodes':
         filtered.sort((a, b) => b.number_of_episodes - a.number_of_episodes);
         break;
-      case 'followed':
-        filtered.sort((a, b) => Number(b.id) - Number(a.id));
+      case 'Followed':
+        filtered.sort((a, b) => {
+          const dateA = a.follow_date ? new Date(a.follow_date).getTime() : 0;
+          const dateB = b.follow_date ? new Date(b.follow_date).getTime() : 0;
+          return dateB - dateA;
+        });
         break;
-      case 'name':
+      case 'Name':
         filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'Total time':
+        filtered.sort((a, b) => b.total_time - a.total_time);
         break;
       default:
         break;
     }
-    if(!orderAsc){
-      filtered.reverse();
-    }
+  
+    if (!orderAsc) filtered.reverse();
     setFilteredSeries(filtered);
   };
+  
 
   /**
    * Fonction pour réinitialiser tous les filtres
@@ -385,7 +409,7 @@ export default function MyList(){
   const clearAllFilters = () => {
     setSelectedGenres([]);
     setSelectedFormats([]);
-    setSelectedSortBy('added');
+    setSelectedSortBy('Followed');
     setSearchQuery('');
     setSelectedStatuses([]);
     setSelectedOriginCountries([]);
@@ -436,10 +460,10 @@ export default function MyList(){
         genres={genres}
         selectedGenres={selectedGenres}
         onSelectGenres={setSelectedGenres}
-        formats={['tv', 'movie']}
+        formats={['tv', 'movie', 'anime', "film d'animation"]}
         selectedFormats={selectedFormats}
         onSelectFormats={setSelectedFormats}
-        sortByOptions={['popularity', 'vote_average', 'first_air_date', 'last_air_date', 'number_of_episodes', 'added', 'name']}
+        sortByOptions={['Followed', 'Popularity', 'Start date', 'End date',  'Vote average', 'Name', 'Number episodes', 'Total time']}
         selectedSortBy={selectedSortBy}
         onSelectSortBy={setSelectedSortBy}
         searchQuery={searchQuery}

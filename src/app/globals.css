@@ -32,40 +32,32 @@ a {
   transform: scale(1.05);
 }
 
-.selected{
-  /*TODO*/
+/* Styles par défaut (clair) */
+:root {
+  --background-color: #f0f2f5;
+  --secondary-background-color: #3A6EB0;
+  --button-color: #007bff;
+  --titre-color: black;
+  --main-text-color: grey;
+  --secondary-text-color: white;
+  --color-green: #0f9b9d;
+  --color-red: #B7410E;
+  --color-clear-all: rgba(255, 87, 87, 0.6);
+  --color-filter-label: rgba(58, 110, 176, 0.4);
 }
 
-/*TODO inverser light et dark*/
-@media (prefers-color-scheme: light) {
-  :root {
-    --background-color: #181a1b; /* 2C2C2C*/       /*1F1F1F*/
-    --secondary-background-color: #AD2E24;/*B7410E*/   /*0f9b9d*/    /*4b0082*/
-    --button-color: #B7410E;
-    --titre-color: white;
-    --main-text-color: white;
-    --secondary-text-color: black;
-    --color-green: #0f9b9d;
-    --color-red: #B7410E;
-    --color-clear-all: rgba(255, 87, 87, 0.6); /* Rouge transparent pour Clear All */
-    --color-filter-label: rgba(173, 46, 36, 0.4); /* Couleur des filtres plus transparente */
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background-color: #f0f2f5;
-    --secondary-background-color: #3A6EB0;
-    --button-color: #007bff;
-    --titre-color: black;
-    --main-text-color: grey;
-    --secondary-text-color: white;
-    --color-green: #0f9b9d;
-    --color-red: #B7410E;
-    --color-clear-all: rgba(255, 87, 87, 0.6); /* Rouge transparent pour Clear All */
-    --color-filter-label: rgba(58, 110, 176, 0.4); /* Couleur des filtres plus transparente */
-
-    }
+/* Styles pour le mode sombre */
+.dark-mode {
+  --background-color: #181a1b;
+  --secondary-background-color: #AD2E24;
+  --button-color: #B7410E;
+  --titre-color: white;
+  --main-text-color: white;
+  --secondary-text-color: black;
+  --color-green: #0f9b9d;
+  --color-red: #B7410E;
+  --color-clear-all: rgba(255, 87, 87, 0.6);
+  --color-filter-label: rgba(173, 46, 36, 0.4);
 }
 /*
     background: linear-gradient(135deg, rgba(58, 110, 176, 0.8), rgba(173, 46, 36, 0.8)); 

@@ -21,7 +21,7 @@ export default function AlertBox({ message, color, onDelay }: AlertBoxProps): Re
     const hideBox = async () => {
         setTimeout(() => {
             onDelay();
-        }, 5000);
+        }, 4000);
     }
     hideBox();
 

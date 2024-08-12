@@ -38,8 +38,10 @@ export async function POST(req: Request): Promise<Response> {
         const foundUser: User | undefined = await authenticateUser(login, password);
 
         if (foundUser) {
-            const [serverResponse, sessionID] = await AuthRouteResponse('Connexion en cours...', HOME_ROUTE, 200, true) as [Response, string];
-            await updateUserWebToken(foundUser, sessionID);
+            const [serverResponse, sessionID, token] = await AuthRouteResponse(foundUser.web_token || '','Connexion en cours...', HOME_ROUTE, 200, true) as [Response, string, string];
+            if(token === ''){
+                await updateUserWebToken(foundUser, sessionID);
+            }
             return serverResponse;
         }
         return WrongCredentials();

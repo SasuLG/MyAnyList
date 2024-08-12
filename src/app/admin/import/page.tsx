@@ -55,20 +55,28 @@ export default function Import() {
                 const seasonDetailsResponses = await Promise.all(seasonDetailsPromises);
                 seasonDetailsDataArray = await Promise.all(seasonDetailsResponses.map(response => response.json()));
             }
-
-            // Si pas d'episode run_time pour une série , on prend la moyenne des run_time des épisodes
+        
+            // Récupérer les tags associés à la série
+            const tagsResponse = await fetch(`/api/admin/series/search/tags?id=${encodeURIComponent(serie.id)}&media_type=${encodeURIComponent(serie.media_type)}`);
+            const tagsData = await tagsResponse.json();
+        
+            // Déterminer le champ contenant les tags
+            const tags = tagsData.results || tagsData.keywords || [];
+        
+            // Si pas d'episode run_time pour une série, on prend la moyenne des run_time des épisodes
             const totalEpisodes = seasonDetailsDataArray.reduce((total: number, season: any) => total + season.episodes.length, 0);
             const totalTime = seasonDetailsDataArray.reduce((total: number, season: any) => {
                 return total + season.episodes.reduce((episodeTotal: number, episode: any) => episodeTotal + (episode.runtime || 0), 0);
             }, 0);
             const averageTime = totalEpisodes > 0 ? Math.round(totalTime / totalEpisodes) : 0;
-
+        
             // Préparer l'objet ImportSeries avec les données reçues
             const importSeriesData: Serie = {
                 id: serie.id,
                 tmdb_id: serie.tmdb_id,
                 name: serie.name,
                 original_name: serie.original_name,
+                romaji_name: '', // Ajouter le champ romaji_name ici
                 overview: serie.overview,
                 poster_path: serie.poster_path,
                 backdrop_path: detailsData.backdrop_path || "",
@@ -89,6 +97,7 @@ export default function Import() {
                 origin_country: isMovie ? detailsData.origin_country : serie.origin_country || [],
                 popularity: detailsData.popularity || 0,
                 budget: detailsData.budget || 0,
+                tags: tags || [],
                 revenue: detailsData.revenue || 0,
                 seasons: !isMovie ? detailsData.seasons.map((season: any, index: number) => {
                     const seasonPosterPath = season.background_path || season.poster_path;
@@ -96,7 +105,8 @@ export default function Import() {
                     const seasonEpisodes = (seasonDetailsDataArray[index]?.episodes || []).map((e: any) => ({
                         ...e,
                         season_id: season.id,
-                        season_number: adjustedSeasonNumber
+                        season_number: adjustedSeasonNumber,
+                        runtime: e.runtime || detailsData.episode_run_time[0] || averageTime  
                     }));
                     return { 
                         ...season, 
@@ -108,7 +118,62 @@ export default function Import() {
                 }) : []
             };
         
+            // Liste des genres à vérifier
+            const additionalGenres = ["romance", "ecchi", "slice of life", "anime"];
+            const existingGenresResponse = await fetch(`/api/admin/series/genre`);
+            const existingGenresData = await existingGenresResponse.json();
+        
+            // Créer un dictionnaire pour accéder aux genres existants par leur nom en minuscules
+            const existingGenresMap = new Map<string, any>();
+            existingGenresData.forEach((genre: any) => {
+                existingGenresMap.set(genre.name.toLowerCase(), genre);
+            });
+            
+            // Liste des genres à ajouter
+            const genresToAdd: any[] = [];
+            tags.forEach((tag: any) => {
+                const lowerTag = tag.name.toLowerCase();
+                if (lowerTag === "romantic comedy") {
+                    // Ajouter le genre "Romance" si "Romantic Comedy" est trouvé
+                    if (!importSeriesData.genres.some((g: any) => g.name.toLowerCase() === "romance")) {
+                        const romanceGenre = existingGenresMap.get("romance");
+                        if (romanceGenre) {
+                            importSeriesData.genres.push({ id: romanceGenre.tmdb_id, name: romanceGenre.name });
+                        }
+                    }
+                } else if (additionalGenres.includes(lowerTag)) {
+                    const genre = existingGenresMap.get(lowerTag);
+                    if (genre) {
+                        // Genre existe déjà, l'ajouter à la liste des genres de la série
+                        if (!importSeriesData.genres.some((g: any) => g.id === genre.id)) {
+                            importSeriesData.genres.push({ id: genre.tmdb_id, name: genre.name });
+                        }
+                    } else {
+                        // Genre n'existe pas, créer un nouvel objet genre
+                        genresToAdd.push({
+                            id: tag.id, 
+                            name: tag.name.charAt(0).toUpperCase() + tag.name.slice(1) 
+                        });
+                    }
+                }
+            });
+    
+            // Ajouter les nouveaux genres à la liste des genres de la série
+            importSeriesData.genres.push(...genresToAdd);
+    
+            // Ajouter le nom en romaji
+            const namesResponse = await fetch(`/api/translate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ texts: [serie.original_name] })
+            });
+            const namesData = await namesResponse.json();
+            importSeriesData.romaji_name = namesData.texts[0]; // Ajouter le nom en romaji à l'objet importSeriesData
+    
             console.log(importSeriesData);
+        
             // Envoyer les données d'importation à l'API
             const response = await fetch(`/api/admin/series/import`, {
                 method: "PUT",
@@ -129,7 +194,7 @@ export default function Import() {
             throw error;
         }
     };
-
+    
     const getImportedSeriesIds = async () => {
         const response = await fetch(`/api/admin/series/import`, {
             method: "GET",
@@ -153,8 +218,6 @@ export default function Import() {
     useEffect(() => {
         getImportedSeriesIds();
     }, []);
-    
-    useEffect(() => setSelectedMenu("admin"), [setSelectedMenu]);
 
     return (
         <div style={{ height: "100%", padding: "2rem", backgroundColor: "var(--background-color)" }}>

@@ -36,7 +36,8 @@ export default async function userAsASessionIDMiddleware(req: NextRequest) {
     if (req.url.includes('assets')) { return NextResponse.next(); }
 
     if (req.url.match("/404") !== null) { return NextResponse.next(); }
-    if(!isARoute(req)){  return NextResponse.redirect(new URL(`${ERROR_ROUTE}`, req.url)); }
+    const isRoute = await isARoute(req);
+    if(!isRoute){  return NextResponse.redirect(new URL(`${ERROR_ROUTE}`, req.url)); }
     
     const sessionID = req.cookies.get(SESSION_ID_COOKIE);
     const isLoginRoute = req.url.includes('user/login');
@@ -76,12 +77,12 @@ export default async function userAsASessionIDMiddleware(req: NextRequest) {
     }
 }
 
-function isARoute(req: NextRequest) {
+
+async function isARoute(req: NextRequest) {
     const url = new URL(req.url);
     const pathname = url.pathname;
     const isLoginRoute = pathname === "/user/login";
     const isRegisterRoute = pathname === "/user/register";
-    const isUserProfileRoute = pathname === "/user/profile";
     const isHomeRoute = pathname === "/";
     const isMentionsRoute = pathname === "/mentions";
     const isAboutRoute = pathname === "/about";
@@ -90,10 +91,34 @@ function isARoute(req: NextRequest) {
     const isImportRoute = pathname === "/admin/import";
     const isUserListRoute = pathname === "/admin/users";
     const isAdminRoute = pathname === "/admin";
-    // quand profil user par admin // et pareil pour les détails des séries
-    
-    if(isLoginRoute || isRegisterRoute || isHomeRoute || isMentionsRoute || isAboutRoute || isImportRoute || isSearchRoute || isMyListRoute || isUserProfileRoute || isUserListRoute || isAdminRoute){
+    const isUserProfileRoute = pathname.startsWith("/user/profil/");
+
+    if(isLoginRoute || isRegisterRoute || isHomeRoute || isMentionsRoute || isAboutRoute || isImportRoute || isSearchRoute || isMyListRoute || isUserListRoute || isAdminRoute){
         return true;
     }
+
+    if (isUserProfileRoute) {
+        const username = pathname.split("/user/profil/")[1];
+        if (username) {
+            const userExists = await checkUserExists(username, req.url);
+            if (userExists) {
+                const sessionID = req.cookies.get(SESSION_ID_COOKIE);
+                if (sessionID) {
+                    const userResponse = await fetch(new URL(`/api/${encodeURIComponent(sessionID.value)}/user/load`, req.url));
+                    const userInfo = await userResponse.json() as User;
+                    if (userInfo.admin || userInfo.login === username) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
     return false;
+}
+
+async function checkUserExists(username: string, reqUrl: string): Promise<boolean> {
+    const response = await fetch(new URL(`/api/user?username=${encodeURIComponent(username)}`, reqUrl));
+    if(response.status === 400){ return false}
+    const data = await response.json();
+    return data !== undefined;
 }
