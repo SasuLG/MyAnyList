@@ -10,26 +10,52 @@ import { AdminKey } from "./svg/key.svg";
 import { ProfilCircle } from "./svg/profil.svg";
 import { Logout } from "./svg/logout.svg";
 
-export type MenuList = "search" | "login" | "register" | "myList" | "admin" | "userProfil" | "home" |  "";
+export type MenuList = "search" | "login" | "register" | "myList" | "userProfil" | "home" |  "";
 
 export type HeaderProps = {
     selected_menu: MenuList;
 }
 
 export const Header = memo(({ selected_menu }: HeaderProps) => {
+
+    /**
+     * Hook qui permet de gérer l'ouverture et la fermeture du dropdown
+     */
     const [isDropdownOpen, setDropdownOpen] = useState(false);
+
+    /**
+     * Hook qui permet de récupérer la référence du dropdown pour gérer la fermeture du dropdown lors d'un click en dehors de celui-ci
+     */
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    /**
+     * Hook qui permet de récupérer les informations de l'utilisateur et de gérer la déconnexion
+     */
     const router = useRouter();
+
+    /**
+     * Hook qui permet de récupérer les informations de l'utilisateur et de gérer la déconnexion
+     */
     const { user, updateUserInfo, setAlert } = useUserContext();
 
+    /**
+     * Fonction qui permet d'ouvrir ou de fermer le dropdown
+     */
     const toggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
     };
 
+    /**
+     * Fonction qui permet de fermer le dropdown
+     */
     const closeDropdown = () => {
         setDropdownOpen(false);
     };
 
+    /**
+     * Fonction qui permet de déconnecter l'utilisateur
+     * @returns 
+     */
     const logout = async () => {
         const response = await fetch(API_LOGOUT_ROUTE, { method: 'PUT' });
         const data = await response.json();
@@ -73,7 +99,7 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                     {user ? (
                         <>
                             <div className="profile-menu" onClick={toggleDropdown} ref={dropdownRef}>
-                                <ProfilCircle width={30} height={30} isHeader={true} />
+                                <ProfilCircle width={30} height={30} isHeader={true} className={selected_menu === "userProfil" ? "selected" : ""}/>
                                 {isDropdownOpen && (
                                     <div className="dropdown-menu">
                                         <div>
@@ -86,7 +112,7 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                                         </div>
                                         {user.admin && (
                                             <div>
-                                                <Link href={ADMIN_ROUTE} className={selected_menu === "admin" ? "selected" : ""}>
+                                                <Link href={ADMIN_ROUTE}>
                                                     <div style={{ display: 'flex', alignItems: 'center' }}>
                                                         <AdminKey width={30} height={30} />
                                                         <p>Admin</p>

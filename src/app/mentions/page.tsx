@@ -1,56 +1,67 @@
-"use client"
+"use client";
 
 import { LogoTmdb } from "@/components/svg/tmdb.svg";
 
 export default function Mentions() {
     return (
-        <div>
-            <h1>Mentions légales</h1>
-            <LogoTmdb width={100} height={100}/>
-            <p>MyAnyList utilise l'api TMDB pour l'import de séries. Ce site n'est ni approuvé ni certifié par TMDB</p>
+        <div style={{ padding: '2rem', backgroundColor: 'var(--background-color)', fontFamily: 'Roboto, sans-serif', color: 'var(--main-text-color)', maxWidth: '800px', margin: 'auto', borderRadius: '8px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)' }}>
+            <h1 style={{ fontSize: '2.5rem', marginBottom: '2rem', textAlign: 'center', color: 'var(--titre-color)' }}>
+                Mentions légales
+            </h1>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+                <LogoTmdb width={100} height={100} />
+            </div>
+            <p style={{ fontSize: '1rem', margin: '1rem 0', textAlign: 'center' }}>
+                MyAnyList utilise l'API TMDB pour l'import de séries. Ce site n'est ni approuvé ni certifié par TMDB.
+            </p>
 
-            <section>
-                <h2>Informations légales</h2>
-                <p><strong>Nom :</strong> Votre Nom</p>
-                <p><strong>Email :</strong> votre.email@example.com</p>
-            </section>
+            <h2 style={{ fontSize: '1.75rem', color: 'var(--titre-color)', marginBottom: '1rem', borderBottom: '2px solid var(--titre-color)', paddingBottom: '0.5rem' }}>
+                Informations légales
+            </h2>
+            <p style={{ fontSize: '1rem', margin: '1rem 0' }}>
+                <strong>Nom :</strong> Graziani Léo
+            </p>
+            <p style={{ fontSize: '1rem', margin: '1rem 0' }}>
+                <strong>Email :</strong> grazianileo498@gmail.com
+            </p>
 
-            <section>
-                <h2>Responsable de la publication</h2>
-                <p><strong>Nom :</strong> Votre Nom</p>
-                <p><strong>Email :</strong> votre.email@example.com</p>
-            </section>
+            <h2 style={{ fontSize: '1.75rem', color: 'var(--titre-color)', marginBottom: '1rem', borderBottom: '2px solid var(--titre-color)', paddingBottom: '0.5rem' }}>
+                Propriété intellectuelle
+            </h2>
+            <p style={{ fontSize: '1rem', margin: '1rem 0' }}>
+                Le contenu de ce site, incluant les textes, design, et code, est la propriété de Graziani Léo, sauf indication contraire. Les données importées via l'API TMDB restent la propriété de TMDB.
+            </p>
 
-            <section>
-                <h2>Hébergement</h2>
-                <p><strong>Nom de l'hébergeur :</strong> Hébergeur Inc.</p>
-            </section>
+            <h2 style={{ fontSize: '1.75rem', color: 'var(--titre-color)', marginBottom: '1rem', borderBottom: '2px solid var(--titre-color)', paddingBottom: '0.5rem' }}>
+                Hébergement
+            </h2>
+            <p style={{ fontSize: '1rem', margin: '1rem 0' }}>
+                <strong>Nom de l'hébergeur :</strong> Ce site est hébergé par Vercel.
+            </p>
 
-            <section>
-                <h2>Propriété intellectuelle</h2>
-                <p>Le contenu du site, incluant les textes, images, vidéos, et logos, est la propriété de Votre Nom et est protégé par les lois sur la propriété intellectuelle. Toute reproduction ou distribution sans autorisation est interdite.</p>
-            </section>
+            <h2 style={{ fontSize: '1.75rem', color: 'var(--titre-color)', marginBottom: '1rem', borderBottom: '2px solid var(--titre-color)', paddingBottom: '0.5rem' }}>
+                Responsabilité
+            </h2>
+            <p style={{ fontSize: '1rem', margin: '1rem 0' }}>
+                Je ne saurais être tenu(e) responsable des éventuels dommages directs ou indirects résultant de l'utilisation ou de l'impossibilité d'utiliser le site, y compris les pertes de données, interruptions ou autres problèmes techniques.
+            </p>
 
-            <section>
-                <h2>Responsabilité</h2>
-                <p>Je ne saurais être tenu(e) responsable des éventuels dommages directs ou indirects résultant de l'utilisation ou de l'impossibilité d'utiliser le site, y compris les pertes de données, interruptions ou autres problèmes techniques.</p>
-            </section>
+            <h2 style={{ fontSize: '1.75rem', color: 'var(--titre-color)', marginBottom: '1rem', borderBottom: '2px solid var(--titre-color)', paddingBottom: '0.5rem' }}>
+                Modification des mentions légales
+            </h2>
+            <p style={{ fontSize: '1rem', margin: '1rem 0' }}>
+                Je me réserve le droit de modifier ces mentions légales à tout moment. Les utilisateurs sont invités à les consulter régulièrement.
+            </p>
 
-            <section>
-                <h2>Modification des mentions légales</h2>
-                <p>Je me réserve le droit de modifier ces mentions légales à tout moment. Les utilisateurs sont invités à les consulter régulièrement.</p>
-            </section>
-
-            <section>
-                <h2>Droit applicable</h2>
-                <p>Les présentes mentions légales sont régies par le droit français. Tout litige relatif à leur interprétation ou à leur exécution relève des tribunaux compétents de Paris.</p>
-            </section>
-
-            <section>
-                <h2>Liens utiles</h2>
-                <p><strong>Portfolio :</strong> <a href="https://sasulg.github.io" target="_blank" rel="noopener noreferrer">sasulg.github.io</a></p>
-                <p><strong>GitHub :</strong> <a href="https://github.com/SasuLG/" target="_blank" rel="noopener noreferrer">github.com/SasuLG</a></p>
-            </section>
+            <h2 style={{ fontSize: '1.75rem', color: 'var(--titre-color)', marginBottom: '1rem', borderBottom: '2px solid var(--titre-color)', paddingBottom: '0.5rem' }}>
+                Liens utiles
+            </h2>
+            <p style={{ fontSize: '1rem', margin: '1rem 0' }}>
+                <strong>Portfolio :</strong> <a href="https://sasulg.github.io" target="_blank" rel="noopener noreferrer" style={{ color: '#3498db' }}>sasulg.github.io</a>
+            </p>
+            <p style={{ fontSize: '1rem', margin: '1rem 0' }}>
+                <strong>GitHub :</strong> <a href="https://github.com/SasuLG/" target="_blank" rel="noopener noreferrer" style={{ color: '#3498db' }}>github.com/SasuLG</a>
+            </p>
         </div>
     );
 }

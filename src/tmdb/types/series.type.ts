@@ -88,6 +88,8 @@ type Serie = {
     number_of_seasons: number;
     number_of_episodes: number;
     episode_run_time: number | null;
+    note?: number;
+    follow_date?: string;
     genres: Genre[];
     spoken_languages: Language[];
     production_countries: ProductionCountry[];
@@ -119,7 +121,7 @@ type MinimalSerie = {
     origin_country: string[];
     episode_run_time: number;
     note?: number;
-    followDate?: string;
+    follow_date?: string;
     production_countries: ProductionCountry[];
     production_companies: ProductionCompany[];
     first_air_date: string;

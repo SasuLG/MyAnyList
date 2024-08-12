@@ -1,5 +1,4 @@
-import { editUserName } from "@/bdd/requests/user.request";
-import { WrongCredentials } from "@/lib/api/response/auth.response";
+import { banUser, editUserName, unbanUser } from "@/bdd/requests/user.request";
 import { ServerError } from "@/lib/api/response/server.response";
 
 /**
@@ -14,12 +13,16 @@ import { ServerError } from "@/lib/api/response/server.response";
 export async function POST(req: Request): Promise<Response> {
     try {
         const requestBody = await req.json();
-        const { userId, newName } = requestBody;
+        const { userId, isBanned } = requestBody;
         
-        if(!userId || !newName) return ServerError('/api/user/edit/login', 'No userId or newName provided');
-        if (newName.trim() === '') { return WrongCredentials(); }
-
-        await editUserName(userId, newName);
+        if (!userId) {
+            return new Response(JSON.stringify({ valid: false }), { status: 400 });
+        }
+        if(isBanned) {
+            unbanUser(userId);
+        }else{
+            banUser(userId);
+        }
         return new Response(JSON.stringify({ valid: true }), { status: 200 });
     } catch (err) {
         return ServerError('/api/user/edit/ban', err);

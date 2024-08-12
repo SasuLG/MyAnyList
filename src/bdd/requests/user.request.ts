@@ -136,7 +136,7 @@ export async function deleteWebToken(webToken: string) {
  * @param {string} name - Le nouveau nom de l'utilisateur
  */
 export async function editUserName(id: number, name: string) {
-    await Query(`update "User" set "name"=$1 where "id"=$2;`, [name, id]);
+    await Query(`update "User" set "login"=$1 where "id"=$2;`, [name, id]);
 }
 
 /**

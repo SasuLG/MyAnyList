@@ -17,14 +17,24 @@
     position: relative;
 }
 
-.selected {
+.header-items .selected{
     font-weight: bold;
+    color: var(--selected-text-color, #222);
+    border-bottom: 3px solid var(--selected-border-color, var(--button-color));
+    background-color: var(--selected-background-color, transparent);
+    text-decoration: none;
+    padding-bottom: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.selected {/* TODO JE SAIS PAS mais je pense pas*/
+    /* font-weight: bold;
     color: var(--selected-text-color, #222);
     border-bottom: 3px solid var(--selected-border-color, #007BFF);
     background-color: var(--selected-background-color, transparent);
     text-decoration: none;
     padding-bottom: 2px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); */
 }
 
 .profile-menu {

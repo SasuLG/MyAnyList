@@ -17,11 +17,14 @@ import { HashWord } from "../../hash";
  *  Si les identifiants ne sont pas bon :
  *      - Uniquement la réponse du serveur. 
  */
-async function AuthRouteResponse(message: string, redirect: string, status: number, valid: boolean = false): Promise<[Response, string] | Response> {
+async function AuthRouteResponse(Token:string, message: string, redirect: string, status: number, valid: boolean = false): Promise<[Response, string, string] | Response> {
     const responseData: AuthResponse = { message, redirect, valid };
     if (responseData.valid) {
-        const web_token = crypto.randomUUID();
-        const hashed_token = await HashWord(web_token);
+        let hashed_token = Token;
+        if(Token === '') {
+            const web_token = crypto.randomUUID();
+            hashed_token = await HashWord(web_token);
+        }
         const token_expires = 60 * 60 * 24 * 180; // 6 mois.
         const response = new Response(JSON.stringify({ ...responseData, cookie: hashed_token }), {
             headers: {
@@ -30,7 +33,7 @@ async function AuthRouteResponse(message: string, redirect: string, status: numb
             },
             status
         });
-        return [response, hashed_token];
+        return [response, hashed_token, Token];
     }
 
     return new Response(JSON.stringify(responseData), {
@@ -48,7 +51,7 @@ async function AuthRouteResponse(message: string, redirect: string, status: numb
  * @returns Une réponse serveur.
  */
 async function WrongCredentials(): Promise<Response> {
-    return await AuthRouteResponse('Identifiant ou mot de passe incorrect !', '', 200) as Response;
+    return await AuthRouteResponse('','Identifiant ou mot de passe incorrect !', '', 200) as Response;
 }
 
 /**
@@ -58,7 +61,7 @@ async function WrongCredentials(): Promise<Response> {
  * @returns Une réponse serveur.
  */
 async function UserAlreadyExists(): Promise<Response> {
-    return await AuthRouteResponse('Cet identifiant existe déjà !', '', 200) as Response;
+    return await AuthRouteResponse('','Cet identifiant existe déjà !', '', 200) as Response;
 }
 
 export {

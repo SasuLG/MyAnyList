@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { User } from "@/bdd/model/user";
 import { useUserContext } from "@/userContext";
@@ -12,7 +12,7 @@ export default function ListUsers() {
     /**
      * Récupérer les informations de l'utilisateur
      */
-    const { user } = useUserContext();
+    const { user, setAlert } = useUserContext();
 
     /**
      * Hook qui permet de stoker la liste des utilisateurs.
@@ -38,13 +38,37 @@ export default function ListUsers() {
         setUsers(data);
     }
 
-    const toggleBanUser = async (id: string) => {
-        //TODO: Implement the ban functionality
-        fetchUsers();
+    const toggleBanUser = async (user: User) => {
+        const response = await fetch('/api/user/edit/ban', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: user.id, isBanned: user.banned }),
+        });
+        const data = await response.json();
+        if(data.valid) {
+            setAlert({message:`User ${user.login} toggleBan successfully`, valid: true});
+            fetchUsers();
+        } else {
+            setAlert({message:`Failed to update user ${user.login} toggleBan`, valid: false});
+        }
     }
 
     const incarnUser = async (id: string) => {
-        //TODO: Implement the incarn functionality
+        if(!user?.admin) return;
+        if(user.id.toString() === id) {
+            setAlert({message:`You can't incarn yourself`, valid: false});
+            return;
+        }
+
+        const response = await fetch(`/api/admin/user/incarn`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ incarnId: id }),
+        });
     }
     
     const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -81,6 +105,7 @@ export default function ListUsers() {
             <table className="userTable">
                 <thead>
                     <tr>
+                        <th className="tableHeader">ID</th>
                         <th className="tableHeader">Login</th>
                         <th className="tableHeader">Admin</th>
                         <th className="tableHeader">Banned</th>
@@ -90,20 +115,21 @@ export default function ListUsers() {
                     </tr>
                 </thead>
                 <tbody>
-                    {sortedUsers.map((user, index) => (
+                    {sortedUsers.map((u, index) => (
                         <tr key={index} className="tableRow">
+                            <td className="tableCell">{u.id}</td>
                             <td className="tableCell">
-                                <Link href={`${PROFILE_BASE_ROUTE}/${user.login}`} style={{ color: "var(--secondary-background-color)" }}>
-                                    {user.login}
+                                <Link href={`${PROFILE_BASE_ROUTE}/${u.login}`} style={{ color: "var(--secondary-background-color)" }}>
+                                    {u.login}
                                 </Link>
                             </td>
-                            <td className="tableCell">{user.admin ? 'Yes' : 'No'}</td>
-                            <td className="tableCell">{user.banned ? 'Yes' : 'No'}</td>
-                            <td className="tableCell">{new Date(user.createdAt).toLocaleDateString()}</td>
-                            <td className="tableCell">{new Date(user.last_activity).toLocaleDateString()}</td>
+                            <td className="tableCell">{u.admin ? 'Yes' : 'No'}</td>
+                            <td className="tableCell">{u.banned ? 'Yes' : 'No'}</td>
+                            <td className="tableCell">{new Date(u.createdAt).toLocaleDateString()}</td>
+                            <td className="tableCell">{new Date(u.last_activity).toLocaleDateString()}</td>
                             <td className="tableCell">
-                                <button onClick={() => incarnUser(user.id.toString())} className="button">Incarn</button>
-                                <button onClick={() => toggleBanUser(user.id.toString())} className="button">Ban</button>
+                                <button onClick={() => incarnUser(u.id.toString())} className={`button button--small ${user && u.id === user.id ? "disabled-button":""}`}>Incarn</button>
+                                <button onClick={() => toggleBanUser(u)} className={`button button--small ${user && u.id === user.id ? "disabled-button":""}`}>{u.banned?"UnBan":"Ban"}</button>
                             </td>
                         </tr>
                     ))}

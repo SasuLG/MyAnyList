@@ -218,8 +218,6 @@ export default function Import() {
     useEffect(() => {
         getImportedSeriesIds();
     }, []);
-    
-    useEffect(() => setSelectedMenu("admin"), [setSelectedMenu]);
 
     return (
         <div style={{ height: "100%", padding: "2rem", backgroundColor: "var(--background-color)" }}>

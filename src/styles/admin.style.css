@@ -67,8 +67,17 @@ html, body {
     font-size: 14px;
 }
 
-.button:hover {
+.button:hover:not(.disabled-button) {
     background-color: #005bb5;
+}
+
+.button--small {
+    width: 80px; 
+}
+
+.disabled-button{
+    background-color: #ccc;
+    cursor: not-allowed;
 }
 
 .orderButton {

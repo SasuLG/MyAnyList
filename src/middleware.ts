@@ -118,6 +118,7 @@ async function isARoute(req: NextRequest) {
 
 async function checkUserExists(username: string, reqUrl: string): Promise<boolean> {
     const response = await fetch(new URL(`/api/user?username=${encodeURIComponent(username)}`, reqUrl));
+    if(response.status === 400){ return false}
     const data = await response.json();
     return data !== undefined;
 }
