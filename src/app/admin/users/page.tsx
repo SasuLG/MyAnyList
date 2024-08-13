@@ -6,13 +6,19 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Order } from "@/components/svg/filter.svg";
 import { PROFILE_BASE_ROUTE } from "@/constants/app.route.const";
+import { useRouter } from "next/navigation";
 
 export default function ListUsers() {
-
+    
     /**
      * Récupérer les informations de l'utilisateur
      */
-    const { user, setAlert } = useUserContext();
+    const { user, setAlert, setUserCookie } = useUserContext();
+
+    /**
+     * Récupérer le router de la page
+     */
+    const router = useRouter();
 
     /**
      * Hook qui permet de stoker la liste des utilisateurs.
@@ -22,12 +28,12 @@ export default function ListUsers() {
     /**
      * Hook qui permet de stoker le type de tri.
      */
-    const [sortBy, setSortBy] = useState<'createdAt' | 'last_activity'>('createdAt');
+    const [sortBy, setSortBy] = useState<'createdAt' | 'last_activity' | 'connected'>('createdAt');
 
     /**
      * Hook qui permet de stoker l'ordre de tri.
      */
-    const [orderAsc, setOrderAsc] = useState<boolean>(true);  // true for ascending, false for descending
+    const [orderAsc, setOrderAsc] = useState<boolean>(true); // true for ascending, false for descending
 
     /**
      * Fonction qui permet de récupérer la liste des utilisateurs.
@@ -36,8 +42,13 @@ export default function ListUsers() {
         const response = await fetch('/api/admin/user/all');
         const data = await response.json();
         setUsers(data);
+        console.log(data);
     }
 
+    /**
+     * Fonction qui permet de bannir ou débannir un utilisateur.
+     * @param {user} user 
+     */
     const toggleBanUser = async (user: User) => {
         const response = await fetch('/api/user/edit/ban', {
             method: 'POST',
@@ -47,18 +58,22 @@ export default function ListUsers() {
             body: JSON.stringify({ userId: user.id, isBanned: user.banned }),
         });
         const data = await response.json();
-        if(data.valid) {
-            setAlert({message:`User ${user.login} toggleBan successfully`, valid: true});
+        if (data.valid) {
+            setAlert({ message: `User ${user.login} toggleBan successfully`, valid: true });
             fetchUsers();
         } else {
-            setAlert({message:`Failed to update user ${user.login} toggleBan`, valid: false});
+            setAlert({ message: `Failed to update user ${user.login} toggleBan`, valid: false });
         }
     }
 
-    const incarnUser = async (id: string) => {
-        if(!user?.admin) return;
-        if(user.id.toString() === id) {
-            setAlert({message:`You can't incarn yourself`, valid: false});
+    /**
+     * Fonction qui permet d'incarner un utilisateur.
+     * @param {user} u 
+     */
+    const incarnUser = async (u: User) => {
+        if (!user?.admin) return;
+        if (user.id.toString() === u.id) {
+            setAlert({ message: `You can't incarn yourself`, valid: false });
             return;
         }
 
@@ -67,14 +82,27 @@ export default function ListUsers() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ incarnId: id }),
+            body: JSON.stringify({ incarnId: u.id }),
         });
-    }
-    
-    const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setSortBy(e.target.value as 'createdAt' | 'last_activity');
+        const data = await response.json();
+        setAlert(data);
+        if (response.ok) {
+            setUserCookie("");
+            router.push(PROFILE_BASE_ROUTE + '/' + u.login);
+        }
     }
 
+    /**
+     * Fonction qui permet de changer le type de tri.
+     * @param {React.ChangeEvent<HTMLSelectElement>} e 
+     */
+    const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSortBy(e.target.value as 'createdAt' | 'last_activity' | 'connected');
+    }
+
+    /**
+     * Fonction qui permet de changer l'ordre de tri.
+     */
     const handleOrderChange = () => {
         setOrderAsc(prevOrder => !prevOrder);  
     }
@@ -83,10 +111,22 @@ export default function ListUsers() {
         fetchUsers();
     }, []);
 
+    // Sort users based on the selected criteria
     const sortedUsers = [...users].sort((a, b) => {
-        const aDate = sortBy === 'createdAt' ? new Date(a.createdAt).getTime() : new Date(a.last_activity).getTime();
-        const bDate = sortBy === 'createdAt' ? new Date(b.createdAt).getTime() : new Date(b.last_activity).getTime();
-        return orderAsc ? aDate - bDate : bDate - aDate;
+        let aValue: number = 0, bValue: number = 0; // Initialize with default values
+    
+        if (sortBy === 'createdAt') {
+            aValue = new Date(a.createdAt).getTime();
+            bValue = new Date(b.createdAt).getTime();
+        } else if (sortBy === 'last_activity') {
+            aValue = new Date(a.last_activity).getTime();
+            bValue = new Date(b.last_activity).getTime();
+        } else if (sortBy === 'connected') {
+            aValue = a.web_token ? 1 : 0;
+            bValue = b.web_token ? 1 : 0;
+        }
+    
+        return orderAsc ? aValue - bValue : bValue - aValue;
     });
 
     return (
@@ -97,9 +137,10 @@ export default function ListUsers() {
                 <select id="sortBy" value={sortBy} onChange={handleSortChange} className="filterSelect">
                     <option value="createdAt">Creation Date</option>
                     <option value="last_activity">Last Activity</option>
+                    <option value="connected">Connected Status</option>
                 </select>
                 <button onClick={handleOrderChange} className="orderButton">
-                    <Order  width={30}  height={30}  orderAsc={orderAsc} />
+                    <Order width={30} height={30} orderAsc={orderAsc} />
                 </button>
             </div>
             <table className="userTable">
@@ -109,6 +150,7 @@ export default function ListUsers() {
                         <th className="tableHeader">Login</th>
                         <th className="tableHeader">Admin</th>
                         <th className="tableHeader">Banned</th>
+                        <th className="tableHeader">Connected</th>
                         <th className="tableHeader">Creation Date</th>
                         <th className="tableHeader">Last Activity</th>
                         <th className="tableHeader">Actions</th>
@@ -125,11 +167,17 @@ export default function ListUsers() {
                             </td>
                             <td className="tableCell">{u.admin ? 'Yes' : 'No'}</td>
                             <td className="tableCell">{u.banned ? 'Yes' : 'No'}</td>
+                            <td className="tableCell">
+                                <span
+                                    className={`status-indicator ${u.web_token ? 'online' : 'offline'}`}
+                                    title={u.web_token ? 'Online' : 'Offline'}
+                                />
+                            </td>
                             <td className="tableCell">{new Date(u.createdAt).toLocaleDateString()}</td>
                             <td className="tableCell">{new Date(u.last_activity).toLocaleDateString()}</td>
                             <td className="tableCell">
-                                <button onClick={() => incarnUser(u.id.toString())} className={`button button--small ${user && u.id === user.id ? "disabled-button":""}`}>Incarn</button>
-                                <button onClick={() => toggleBanUser(u)} className={`button button--small ${user && u.id === user.id ? "disabled-button":""}`}>{u.banned?"UnBan":"Ban"}</button>
+                                <button onClick={() => incarnUser(u)} className={`button button--small ${user && u.id === user.id ? "disabled-button" : ""}`}>Incarn</button>
+                                <button onClick={() => toggleBanUser(u)} className={`button button--small ${user && u.id === user.id ? "disabled-button" : ""}`}>{u.banned ? "UnBan" : "Ban"}</button>
                             </td>
                         </tr>
                     ))}
