@@ -91,3 +91,21 @@ html, body {
     justify-content: center;
     margin-left: -0.25rem;
 }
+
+.status-indicator {
+    display: inline-block;
+    width: 20px; 
+    height: 20px; 
+    border-radius: 50%;
+    background-color: grey; 
+    margin: 0 auto; 
+    transform: translateX(125%);
+}
+
+.status-indicator.online {
+    background-color: green;
+}
+
+.status-indicator.offline {
+    background-color: red;
+}

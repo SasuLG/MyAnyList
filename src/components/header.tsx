@@ -1,9 +1,8 @@
-"use client";
 import { memo, useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useUserContext } from "@/userContext";
-import { API_LOGOUT_ROUTE } from "@/constants/api.route.const";
-import { ADMIN_ROUTE, HOME_ROUTE, LOGIN_ROUTE, MYLIST_ROUTE, REGISTER_ROUTE, SEARCH_ROUTE, PROFILE_BASE_ROUTE } from "@/constants/app.route.const";
+import { API_LOGOUT_ROUTE, API_RESTORE_SESSION_ROUTE } from "@/constants/api.route.const";
+import { ADMIN_ROUTE, HOME_ROUTE, LOGIN_ROUTE, MYLIST_ROUTE, REGISTER_ROUTE, SEARCH_ROUTE, PROFILE_BASE_ROUTE, USER_LIST_ROUTE } from "@/constants/app.route.const";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AdminKey } from "./svg/key.svg";
@@ -17,55 +16,40 @@ export type HeaderProps = {
 }
 
 export const Header = memo(({ selected_menu }: HeaderProps) => {
-
-    /**
-     * Hook qui permet de gérer l'ouverture et la fermeture du dropdown
-     */
     const [isDropdownOpen, setDropdownOpen] = useState(false);
-
-    /**
-     * Hook qui permet de récupérer la référence du dropdown pour gérer la fermeture du dropdown lors d'un click en dehors de celui-ci
-     */
     const dropdownRef = useRef<HTMLDivElement>(null);
-
-    /**
-     * Hook qui permet de récupérer les informations de l'utilisateur et de gérer la déconnexion
-     */
     const router = useRouter();
+    const { user, updateUserInfo, setAlert, setUserCookie } = useUserContext();
 
-    /**
-     * Hook qui permet de récupérer les informations de l'utilisateur et de gérer la déconnexion
-     */
-    const { user, updateUserInfo, setAlert } = useUserContext();
-
-    /**
-     * Fonction qui permet d'ouvrir ou de fermer le dropdown
-     */
     const toggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
     };
 
-    /**
-     * Fonction qui permet de fermer le dropdown
-     */
     const closeDropdown = () => {
         setDropdownOpen(false);
     };
 
-    /**
-     * Fonction qui permet de déconnecter l'utilisateur
-     * @returns 
-     */
     const logout = async () => {
         const response = await fetch(API_LOGOUT_ROUTE, { method: 'PUT' });
         const data = await response.json();
         setAlert(data);
 
         if (response.ok) {
-            updateUserInfo();
+            setUserCookie("");
             router.push(LOGIN_ROUTE);
         }
         return data;
+    };
+
+    const restorePreviousSession = async () => {
+        const response = await fetch(API_RESTORE_SESSION_ROUTE, { method: 'POST' });
+        const data = await response.json();
+        setAlert(data);
+
+        if (response.ok) {
+            setUserCookie("");
+            router.push(USER_LIST_ROUTE);
+        }
     };
 
     useEffect(() => {
@@ -111,13 +95,22 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                                             <p onClick={() => { logout(); setDropdownOpen(false); }} style={{ cursor: "pointer" }}>Déconnexion</p>
                                         </div>
                                         {user.admin && (
+                                            <>
+                                                <div>
+                                                    <Link href={ADMIN_ROUTE}>
+                                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                            <AdminKey width={30} height={30} />
+                                                            <p>Admin</p>
+                                                        </div>
+                                                    </Link>
+                                                </div>
+                                            </>
+                                        )}
+                                        {user.isIncarned && (
                                             <div>
-                                                <Link href={ADMIN_ROUTE}>
-                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                        <AdminKey width={30} height={30} />
-                                                        <p>Admin</p>
-                                                    </div>
-                                                </Link>
+                                                <p onClick={restorePreviousSession} style={{ cursor: "pointer", color: "blue" }}>
+                                                    Revenir à l'utilisateur original
+                                                </p>
                                             </div>
                                         )}
                                     </div>

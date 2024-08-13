@@ -1,5 +1,5 @@
-import { deleteWebToken, getUserByToken } from "@/bdd/requests/user.request";
-import { SESSION_ID_COOKIE } from "@/constants/session.const";
+import { deleteWebToken } from "@/bdd/requests/user.request";
+import { SESSION_ID_COOKIE, SESSION_ID_COOKIE_INCARN } from "@/constants/session.const";
 import { ServerError } from "@/lib/api/response/server.response";
 
 /**
@@ -27,6 +27,17 @@ function getSessionCookie(cookies: Record<string, string>[]): string | undefined
 }
 
 /**
+ * Fonction qui permet de récupérer la valeur du cookie d'incarnation.
+ *
+ * @param {Record<string, string>[]} cookies - Un tableau d'objet avec les valeurs et les clés des cookies.
+ * @return {string | undefined} La valeur du cookie d'incarnation si trouvé ou undefined.
+ */
+function getIncarnCookie(cookies: Record<string, string>[]): string | undefined {
+    const incarnCookie = cookies.find(cookie => cookie.key === SESSION_ID_COOKIE_INCARN);
+    return incarnCookie ? incarnCookie.value : undefined;
+}
+
+/**
  * Route : /api/user/auth/logout
  * METHOD : PUT
  * 
@@ -41,18 +52,33 @@ export async function PUT(req: Request): Promise<Response> {
         if (cookieString) {
             const cookies = deserializeCookie(cookieString);
             const sessionID = getSessionCookie(cookies);
+            const incarnID = getIncarnCookie(cookies);
 
-            if (sessionID) {
-                await deleteWebToken(sessionID);
-
-                return new Response(JSON.stringify({ message: 'Déconnexion réussi !', valid: true }), {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Set-Cookie': `${SESSION_ID_COOKIE}=; Path=/; Max-Age=-1`
-                    },
-                    status: 200
-                });
+            // If there's no sessionID, we can't proceed
+            if (!sessionID) {
+                return new Response(JSON.stringify({ message: 'Impossible de retrouver votre cookie de session !', valid: false }), { status: 401 });
             }
+
+            // Remove the old session token from the database
+            await deleteWebToken(sessionID);
+
+            // Prepare headers
+            const responseHeaders = new Headers();
+
+            // If there's an impersonation session, transfer it to the main session cookie
+            if (incarnID) {
+                responseHeaders.append('Set-Cookie', `${SESSION_ID_COOKIE}=${incarnID}; Path=/`);
+                // Also remove the impersonation cookie
+                responseHeaders.append('Set-Cookie', `${SESSION_ID_COOKIE_INCARN}=; Path=/; Max-Age=-1`);
+            } else {
+                // Remove the old session cookie if no impersonation cookie exists
+                responseHeaders.append('Set-Cookie', `${SESSION_ID_COOKIE}=; Path=/; Max-Age=-1`);
+            }
+
+            return new Response(JSON.stringify({ message: 'Déconnexion réussi !', valid: true }), {
+                headers: responseHeaders,
+                status: 200
+            });
         }
         return new Response(JSON.stringify({ message: 'Impossible de retrouver votre cookie de session !', valid: false }), { status: 401 });
     } catch (err) {

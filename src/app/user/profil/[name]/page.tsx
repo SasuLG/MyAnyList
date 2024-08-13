@@ -10,7 +10,6 @@ import bcrypt from 'bcryptjs';
 import SeriesList from "@/components/seriesList";
 import MultiSelectDropdown from "@/components/multiSelectDropdown";
 import { Order } from "@/components/svg/filter.svg";
-import { Moon, Sun } from "@/components/svg/colors.mode.svg";
 import ThemeSwitcher from "@/components/themeSwitcher";
 
 export default function Profil({ params }: { params: { name: string } }) {
@@ -405,7 +404,6 @@ export default function Profil({ params }: { params: { name: string } }) {
 
     useEffect(() => {
         applyFiltersAndSortRecent();
-        setAlert({ message: 'Bienvenue sur la page de profil', valid: true });
     }, [selectedRecentFormats, seriesFollowed, orderAscRecent]);
 
     const totalTimePercentage = useCallback((time: number, total: number) => total === 0 ? '0%' : ((time / total) * 100).toFixed(1) + '%', []);

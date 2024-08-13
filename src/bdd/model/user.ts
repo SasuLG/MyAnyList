@@ -11,6 +11,7 @@ type User = {
     banned: boolean;
     createdAt: Date;
     last_activity: Date;
+    isIncarned?: boolean;
 }
 
 export type {
