@@ -4,22 +4,16 @@ import React, { useState, useEffect } from 'react';
 type LoaderProps = {
   width?: number;  // Largeur totale de la télévision (en pixels)
   height?: number; // Hauteur totale de la télévision (en pixels)
-}
+};
 
-const Loader: React.FC<LoaderProps> = ({ width = 140, height = 100 }) => {
-    
-  const [isOn, setIsOn] = useState(true); // État pour la télévision (allumée ou éteinte)
+const Loader = ({ width = 140, height = 100 }: LoaderProps) => {
+  const [isOn, setIsOn] = useState(true);
 
-  // Fonction pour basculer l'état de la télévision toutes les 2 secondes
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIsOn(prev => !prev);
-    }, 2000);
-
+    const interval = setInterval(() => setIsOn(prev => !prev), 2000);
     return () => clearInterval(interval);
   }, []);
 
-  // Calcul des dimensions proportionnelles
   const tvWidth = width;
   const tvHeight = height;
   const screenWidth = tvWidth * (120 / 140);

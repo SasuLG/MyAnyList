@@ -44,7 +44,6 @@ export default function Import() {
         
             // Vérifier si c'est un film ou une série
             const isMovie = serie.media_type === 'movie';
-            const isSpecialEpisodes = detailsData.seasons && detailsData.seasons.some((season: any) => season.season_number === 0 && /épisodes spéciaux/i.test(season.name));
         
             // Préparer les détails de chaque saison si ce n'est pas un film
             let seasonDetailsDataArray: any[] = [];
@@ -96,28 +95,30 @@ export default function Import() {
                 total_time: !isMovie && detailsData.seasons ? detailsData.seasons.reduce((total: number, season: any) => total + (season.total_time || 0), 0) : (detailsData.runtime || 0),
                 origin_country: isMovie ? detailsData.origin_country : serie.origin_country || [],
                 popularity: detailsData.popularity || 0,
-                budget: detailsData.budget || 0,
+                budget: detailsData.budget || null,
                 tags: tags || [],
-                revenue: detailsData.revenue || 0,
+                revenue: detailsData.revenue || null,
                 seasons: !isMovie ? detailsData.seasons.map((season: any, index: number) => {
                     const seasonPosterPath = season.background_path || season.poster_path;
-                    const adjustedSeasonNumber = isSpecialEpisodes ? season.season_number : season.season_number + 1;
                     const seasonEpisodes = (seasonDetailsDataArray[index]?.episodes || []).map((e: any) => ({
                         ...e,
                         season_id: season.id,
-                        season_number: adjustedSeasonNumber,
                         runtime: e.runtime || detailsData.episode_run_time[0] || averageTime  
                     }));
                     return { 
                         ...season, 
                         poster_path: seasonPosterPath, 
-                        season_number: adjustedSeasonNumber, 
                         episodes: seasonEpisodes,
                         total_time: (season.episodes || []).reduce((total: number, episode: any) => total + (episode.runtime || 0), 0)
                     };
                 }) : []
             };
         
+            // Vérification du media type "Released"
+            if (importSeriesData.status === 'Released') {
+                importSeriesData.status = 'Ended';
+            }
+
             // Liste des genres à vérifier
             const additionalGenres = ["romance", "ecchi", "slice of life", "anime"];
             const existingGenresResponse = await fetch(`/api/admin/series/genre`);
@@ -131,6 +132,8 @@ export default function Import() {
             
             // Liste des genres à ajouter
             const genresToAdd: any[] = [];
+            let mediaType = serie.media_type; // Conserver le media type initial
+            let hasAnimationGenre = false;
             tags.forEach((tag: any) => {
                 const lowerTag = tag.name.toLowerCase();
                 if (lowerTag === "romantic comedy") {
@@ -141,6 +144,9 @@ export default function Import() {
                             importSeriesData.genres.push({ id: romanceGenre.tmdb_id, name: romanceGenre.name });
                         }
                     }
+                } else if (lowerTag === "anime") {
+                    // Modifier le media type en "anime" si le tag "anime" est présent
+                    mediaType = "anime";
                 } else if (additionalGenres.includes(lowerTag)) {
                     const genre = existingGenresMap.get(lowerTag);
                     if (genre) {
@@ -158,9 +164,22 @@ export default function Import() {
                 }
             });
     
+            // Vérifier si le genre "animation" est présent
+            if (importSeriesData.genres.some((g: any) => g.name.toLowerCase() === "animation")) {
+                hasAnimationGenre = true;
+            }
+    
+            // Modifier le media type si le genre "animation" est présent et que le media type est "movie"
+            if (hasAnimationGenre && isMovie) {
+                mediaType = "film d'animation";
+            }
+    
             // Ajouter les nouveaux genres à la liste des genres de la série
             importSeriesData.genres.push(...genresToAdd);
-    
+        
+            // Ajouter le media type modifié à l'objet importSeriesData
+            importSeriesData.media_type = mediaType;
+        
             // Ajouter le nom en romaji
             const namesResponse = await fetch(`/api/translate`, {
                 method: 'POST',
@@ -170,8 +189,8 @@ export default function Import() {
                 body: JSON.stringify({ texts: [serie.original_name] })
             });
             const namesData = await namesResponse.json();
-            importSeriesData.romaji_name = namesData.texts[0]; // Ajouter le nom en romaji à l'objet importSeriesData
-    
+            importSeriesData.romaji_name = namesData.texts[0]; 
+        
             console.log(importSeriesData);
         
             // Envoyer les données d'importation à l'API
@@ -194,6 +213,7 @@ export default function Import() {
             throw error;
         }
     };
+    
     
     const getImportedSeriesIds = async () => {
         const response = await fetch(`/api/admin/series/import`, {

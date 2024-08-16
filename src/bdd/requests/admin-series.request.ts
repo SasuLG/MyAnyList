@@ -36,7 +36,8 @@ export async function importSerie(serieData: Serie) {
                 "popularity" = EXCLUDED."popularity",
                 "budget" = EXCLUDED."budget",
                 "revenue" = EXCLUDED."revenue",
-                "romaji_name" = EXCLUDED."romaji_name"
+                "romaji_name" = EXCLUDED."romaji_name",
+                "last_modified" = CURRENT_TIMESTAMP
             RETURNING "id"
         `, [id, name, overview, poster_path, backdrop_path, media_type, original_name, status, first_air_date, last_air_date, episode_run_time, number_of_seasons, number_of_episodes, vote_average, vote_count, popularity, budget, revenue, total_time, romaji_name]);
 

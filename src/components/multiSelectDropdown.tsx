@@ -6,29 +6,18 @@ type MultiSelectDropdownProps = {
   options: string[];
   selectedOptions: string[];
   onSelect: (options: string[]) => void;
-  singleSelect?: boolean; 
-}
+  singleSelect?: boolean;
+};
 
-const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ options, selectedOptions, onSelect, singleSelect = false }) => {
+const MultiSelectDropdown = ({ options, selectedOptions, onSelect, singleSelect = false }: MultiSelectDropdownProps) => {
 
-  /**
-   * Hook pour stocker l'état de l'ouverture du menu déroulant
-   */
   const [isOpen, setIsOpen] = useState(false);
-
-  /**
-   * Référence pour le conteneur du menu déroulant
-   */
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * Fonction pour basculer une option sélectionnée
-   * @param {string} option - Option à basculer
-   */
   const toggleOption = (option: string) => {
     if (singleSelect) {
       onSelect([option]);
-      setIsOpen(false); 
+      setIsOpen(false);
     } else {
       if (selectedOptions.includes(option)) {
         onSelect(selectedOptions.filter(opt => opt !== option));
@@ -38,10 +27,6 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ options, sele
     }
   };
 
-  /**
-   * Fonction pour gérer le clic en dehors du menu déroulant
-   * @param {MouseEvent} event - Événement de clic
-   */
   const handleClickOutside = (event: MouseEvent) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
       setIsOpen(false);

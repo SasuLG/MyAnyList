@@ -57,3 +57,8 @@ export const MYLIST_ROUTE = '/series/mylist';
  * Variable qui représente la valeur de base de la route de profil
  */
 export const PROFILE_BASE_ROUTE = '/user/profil';
+
+/**
+ * Variable qui représente la valeur de la route de profil
+ */
+export const BASE_DETAILS_SERIE_ROUTE = '/series';
