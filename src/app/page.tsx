@@ -16,7 +16,6 @@ export default function Home() {
   const [lastInteractionTime, setLastInteractionTime] = useState(Date.now());
 
   const fetchPopularSeries = async () => {
-    console.log("fetchPopularSeries");
     if (!user) {
       const response = await fetch(`/api/series/popular?limit=10&page=1`);
       const data = await response.json();
@@ -98,7 +97,7 @@ export default function Home() {
             <button onClick={() => handleRotation(360 / recommendedSeries.length)} className="nav-btn" >←</button>
             <button onClick={() => handleRotation(-360 / recommendedSeries.length)} className="nav-btn" >→</button>
             <div className="slider" style={{ "--quantity": recommendedSeries.length, transform: `perspective(1000px) rotateX(-8deg) rotateY(${rotation}deg)`, } as React.CSSProperties}>
-              {recommendedSeries.map((serie, index) => (
+              {recommendedSeries.length>0 && recommendedSeries.map((serie, index) => (
                 <div className="item" key={index} style={{ "--position": index } as React.CSSProperties}>
                   <div style={{ backgroundColor: "var(--secondary-background-color)", borderRadius: "8px", overflow: "hidden", transition: "transform 0.3s", cursor: "pointer", }}>
                     <Link href={`${BASE_DETAILS_SERIE_ROUTE}/${serie.id}`} onMouseDown={(e) => e.stopPropagation()}>
