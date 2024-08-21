@@ -16,12 +16,10 @@ export default function Home() {
   const [lastInteractionTime, setLastInteractionTime] = useState(Date.now());
 
   const fetchPopularSeries = async () => {
-    console.log("fetchPopularSeries");
     if (!user) {
       const response = await fetch(`/api/series/popular?limit=10&page=1`);
       const data = await response.json();
       setRecommendedSeries(data);
-      console.log(data);
     }
   };
 
@@ -75,7 +73,7 @@ export default function Home() {
     return () => clearInterval(autoScroll);
   }, [lastInteractionTime, recommendedSeries.length]);
 
-  useEffect(() => { console.log(recommendedSeries) }, [recommendedSeries]);
+  
   useEffect(() => { if (!user) fetchPopularSeries(); }, [user]);
   useEffect(() => { if (user) fetchRecommendedSeries(); }, [user]);
   useEffect(() => { setSelectedMenu("home") }, [setSelectedMenu]);
