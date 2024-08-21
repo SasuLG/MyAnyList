@@ -4,6 +4,7 @@ import { IMG_SRC } from "@/constants/tmdb.consts";
 import { ApiSerie, Serie, TmdbId } from "@/tmdb/types/series.type";
 import { useUserContext } from "@/userContext";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 export default function Import() {
 
@@ -239,6 +240,10 @@ export default function Import() {
         getImportedSeriesIds();
     }, []);
 
+    useEffect(() => {
+        setSelectedMenu("");
+    }, [setSelectedMenu]);
+
     return (
         <div style={{ height: "100%", padding: "2rem", backgroundColor: "var(--background-color)" }}>
             <h1 style={{ color: "var(--titre-color)", textAlign: "center", marginBottom: "2rem" }}>Import page</h1>
@@ -263,29 +268,10 @@ export default function Import() {
                             const isImported = importedSeriesIds.includes(serie.id.toString());
                             return serie.media_type !== "person" && (
                                 <li key={serie.id} style={{ display: "flex", flexDirection: styleType === 'grid' ? 'column' : 'row', alignItems: styleType === 'grid' ? 'center' : 'flex-start', padding: "1rem", backgroundColor: isImported ? "var(--secondary-background-color)" : "var(--background-color)", borderRadius: "8px", boxShadow: "0 6px 15px rgba(0, 0, 0, 0.3)" }}>
-                                    {styleType === 'grid' && (
-                                        <>
-                                            <div style={{ marginBottom: "1rem" }}>
-                                                {serie.poster_path && <img src={`https://image.tmdb.org/t/p/w500${serie.poster_path}`} alt={serie.name} style={{ width: "100%", borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)" }} />}
-                                            </div>
-                                            <div style={{ textAlign: "center", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                                                <div>
-                                                    <h2 style={{ color: "var(--titre-color)" }}>{serie.name}</h2>
-                                                    <p style={{ color: !isImported?"var(--main-text-color)":"var(--secondary-text-color)" }}>{serie.overview}</p>
-                                                    <h2 style={{ color: "var(--titre-color)" }}>{serie.media_type}</h2>
-                                                </div>
-                                                <div>
-                                                    <button style={{ marginTop: "1rem" }} className="button-validate" onClick={() => importSerie(serie)}>
-                                                        {isImported ? "Update" : "Import"}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
                                     {styleType === 'list' && (
                                         <>
                                             <div style={{ marginRight: "1rem" }}>
-                                                {serie.poster_path && <img src={`${IMG_SRC}${serie.poster_path}`} alt={serie.name} style={{ width: "100px", borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)" }} />}
+                                                {serie.poster_path && <Image  src={`${IMG_SRC}${serie.poster_path}`} alt={serie.name}  width={100} height={150}  style={{ borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)" }}  />}
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <h2 style={{ color: "var(--titre-color)" }}>{serie.name}</h2>

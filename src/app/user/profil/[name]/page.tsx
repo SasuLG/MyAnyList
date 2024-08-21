@@ -582,7 +582,7 @@ export default function Profil({ params }: { params: { name: string } }) {
                         </div>
 
                         <div onMouseEnter={() => setHoveredElement('totalAnimeEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
-                            <p><strong>Nombre total d'animés suivis :</strong> </p>
+                            <p><strong>Nombre total d&apos;animés suivis :</strong> </p>
                             <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333' }}>{nbAnime}</p>
                             {hoveredElement === 'totalAnimeEpisodes' && (
                                 <div style={{ position: 'absolute', backgroundColor: '#e1f5fe', border: '2px solid #0288d1', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>

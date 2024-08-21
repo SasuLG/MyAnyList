@@ -12,7 +12,7 @@ export default function Mentions() {
                 <LogoTmdb width={100} height={100} />
             </div>
             <p style={{ fontSize: '1rem', margin: '1rem 0', textAlign: 'center' }}>
-                MyAnyList utilise l'API TMDB pour l'import de séries. Ce site n'est ni approuvé ni certifié par TMDB.
+                MyAnyList utilise l&apos;API TMDB pour l&apos;import de séries. Ce site n&apos;est ni approuvé ni certifié par TMDB.
             </p>
 
             <h2 style={{ fontSize: '1.75rem', color: 'var(--titre-color)', marginBottom: '1rem', borderBottom: '2px solid var(--titre-color)', paddingBottom: '0.5rem' }}>
@@ -29,21 +29,21 @@ export default function Mentions() {
                 Propriété intellectuelle
             </h2>
             <p style={{ fontSize: '1rem', margin: '1rem 0' }}>
-                Le contenu de ce site, incluant les textes, design, et code, est la propriété de Graziani Léo, sauf indication contraire. Les données importées via l'API TMDB restent la propriété de TMDB.
+                Le contenu de ce site, incluant les textes, design, et code, est la propriété de Graziani Léo, sauf indication contraire. Les données importées via l&apos;API TMDB restent la propriété de TMDB.
             </p>
 
             <h2 style={{ fontSize: '1.75rem', color: 'var(--titre-color)', marginBottom: '1rem', borderBottom: '2px solid var(--titre-color)', paddingBottom: '0.5rem' }}>
                 Hébergement
             </h2>
             <p style={{ fontSize: '1rem', margin: '1rem 0' }}>
-                <strong>Nom de l'hébergeur :</strong> Ce site est hébergé par Vercel.
+                <strong>Nom de l&apos;hébergeur :</strong> Ce site est hébergé par Vercel.
             </p>
 
             <h2 style={{ fontSize: '1.75rem', color: 'var(--titre-color)', marginBottom: '1rem', borderBottom: '2px solid var(--titre-color)', paddingBottom: '0.5rem' }}>
                 Responsabilité
             </h2>
             <p style={{ fontSize: '1rem', margin: '1rem 0' }}>
-                Je ne saurais être tenu(e) responsable des éventuels dommages directs ou indirects résultant de l'utilisation ou de l'impossibilité d'utiliser le site, y compris les pertes de données, interruptions ou autres problèmes techniques.
+                Je ne saurais être tenu(e) responsable des éventuels dommages directs ou indirects résultant de l&apos;utilisation ou de l&apos;impossibilité d&apos;utiliser le site, y compris les pertes de données, interruptions ou autres problèmes techniques.
             </p>
 
             <h2 style={{ fontSize: '1.75rem', color: 'var(--titre-color)', marginBottom: '1rem', borderBottom: '2px solid var(--titre-color)', paddingBottom: '0.5rem' }}>

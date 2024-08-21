@@ -32,6 +32,11 @@ export default function MyList(){
   const [styleType, setStyleType] = useState<'grid' | 'list'>('grid');
 
   /**
+   * Hook pour stocker la taille de l'affichage
+   */
+  const [displaySize, setDisplaySize] = useState<'large'|'normal' | 'small' | 'very-small' | 'extra-small'>('normal');
+
+  /**
    * Hook pour stocker l'état de la récupération des données
    */
   const [fetchDataFinished, setFetchDataFinished] = useState<boolean>(false);
@@ -244,6 +249,26 @@ export default function MyList(){
   };
 
   /**
+   * Fonction pour augmenter la taille d'affichage
+   */
+  const increaseSize = () => {
+    if (displaySize === 'large') return;
+    const sizes = ['large','normal', 'small', 'very-small', 'extra-small'];
+    const currentIndex = sizes.indexOf(displaySize);
+    setDisplaySize(sizes[currentIndex - 1] as 'large'| 'normal' | 'small' | 'very-small' | 'extra-small');
+  };
+
+  /**
+   * Fonction pour diminuer la taille d'affichage
+   */
+  const decreaseSize = () => {
+    if (displaySize === 'extra-small') return;
+    const sizes = ['large','normal', 'small', 'very-small', 'extra-small'];
+    const currentIndex = sizes.indexOf(displaySize);
+    setDisplaySize(sizes[currentIndex + 1] as 'large'|'normal' | 'small' | 'very-small' | 'extra-small');
+  };
+
+  /**
    * Fonction pour gérer le clic sur le coeur, qui permet de suivre ou de ne plus suivre une série
    * @param {MinimalSerie} serie - La série
    * @returns 
@@ -401,7 +426,7 @@ export default function MyList(){
       case 'Popularity':
         filtered.sort((a, b) => b.popularity - a.popularity);
         break;
-      case 'Vote average':
+      case 'Note':
         filtered.sort((a, b) => (b.note || 0) - (a.note || 0));
         break;
       case 'Start date':
@@ -489,6 +514,14 @@ export default function MyList(){
         <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }} onClick={toggleLayout}>
           Toggle Layout
         </button>
+
+        <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }} onClick={increaseSize}>
+          Increase Size
+        </button>
+
+        <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }}onClick={decreaseSize}>
+          Decrease Size
+        </button>
       </div>
 
       <Filters
@@ -498,7 +531,7 @@ export default function MyList(){
         formats={['tv', 'movie', 'anime', "film d'animation"]}
         selectedFormats={selectedFormats}
         onSelectFormats={setSelectedFormats}
-        sortByOptions={['Followed', 'Popularity', 'Start date', 'End date',  'Vote average', 'Name', 'Number episodes', 'Total time']}
+        sortByOptions={['Followed', 'Popularity', 'Start date', 'End date', 'Name', 'Note', 'Number episodes', 'Total time']}
         selectedSortBy={selectedSortBy}
         onSelectSortBy={setSelectedSortBy}
         searchQuery={searchQuery}
@@ -585,7 +618,7 @@ export default function MyList(){
           <Loader />
         </div>
       ) : (
-        <SeriesList series={filteredSeries} styleType={styleType} followedIds={series.map(serie=>Number(serie.id))} onClickHeart={onClickHeart}/>
+        <SeriesList series={filteredSeries} styleType={styleType} followedIds={series.map(serie=>Number(serie.id))} onClickHeart={onClickHeart} size={displaySize}/>
       )}
     </div>
   );

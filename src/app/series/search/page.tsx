@@ -31,6 +31,11 @@ export default function SearchPage() {
   const [styleType, setStyleType] = useState<'grid' | 'list'>('grid');
 
   /**
+   * Hook pour stocker la taille de l'affichage
+   */
+  const [displaySize, setDisplaySize] = useState<'large' | 'normal' | 'small' | 'very-small' | 'extra-small'>('normal');
+
+  /**
    * Hook pour stocker l'état de la récupération des données
    */
   const [fetchDataFinished, setFetchDataFinished] = useState<boolean>(false);
@@ -240,6 +245,26 @@ export default function SearchPage() {
    */
   const toggleLayout = () => {
     setStyleType((prevStyleType) => (prevStyleType === 'grid' ? 'list' : 'grid'));
+  };
+
+  /**
+   * Fonction pour augmenter la taille d'affichage
+   */
+  const increaseSize = () => {
+    if (displaySize === 'large') return;
+    const sizes = ['large','normal', 'small', 'very-small', 'extra-small'];
+    const currentIndex = sizes.indexOf(displaySize);
+    setDisplaySize(sizes[currentIndex - 1] as 'large' | 'normal' | 'small' | 'very-small' | 'extra-small');
+  };
+
+  /**
+   * Fonction pour diminuer la taille d'affichage
+   */
+  const decreaseSize = () => {
+    if (displaySize === 'extra-small') return;
+    const sizes = ['large','normal', 'small', 'very-small', 'extra-small'];
+    const currentIndex = sizes.indexOf(displaySize);
+    setDisplaySize(sizes[currentIndex + 1] as 'large' | 'normal' | 'small' | 'very-small' | 'extra-small');
   };
 
   /**
@@ -485,6 +510,15 @@ export default function SearchPage() {
         <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }} onClick={toggleLayout}>
           Toggle Layout
         </button>
+        
+        <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }}onClick={increaseSize}>
+          Increase Size
+        </button>
+
+        <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }} onClick={decreaseSize}>
+          Decrease Size
+        </button>
+
       </div>
 
       <Filters
@@ -583,7 +617,7 @@ export default function SearchPage() {
           <Loader />
         </div>
       ) : (
-        <SeriesList series={filteredSeries} styleType={styleType} followedIds={seriesIdFollowed} onClickHeart={onClickHeart} />
+        <SeriesList series={filteredSeries} styleType={styleType} followedIds={seriesIdFollowed} onClickHeart={onClickHeart} size={displaySize} isMylist={false}/>
       )}
     </div>
   );

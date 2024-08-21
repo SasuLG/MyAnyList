@@ -695,11 +695,7 @@ export async function getAllProductionCountries(): Promise<ProductionCountry[]> 
     }
 }
 
-export async function getRecommendedSeries(
-    userId: string,
-    limit: number,
-    page: number
-): Promise<any[]> {
+export async function getRecommendedSeries(userId: string, limit: number, page: number): Promise<{ id: number; total_score: number }[]> {
     try {
         const offset = (page - 1) * limit;
 
@@ -836,21 +832,6 @@ export async function getRecommendedSeries(
             "SerieScores" AS (
                 SELECT
                     "s"."id",
-                    "s"."tmdb_id",
-                    "s"."title",
-                    "s"."original_name",
-                    "s"."romaji_name",
-                    "s"."overview",
-                    "s"."poster" AS "poster_path",
-                    "s"."media" AS "media_type",
-                    "s"."status",
-                    "s"."first_air_date",
-                    "s"."last_air_date",
-                    "s"."nb_episodes" AS "number_of_episodes",
-                    "s"."vote_average",
-                    "s"."popularity",
-                    "s"."episode_run_time",
-                    "s"."total_time",
                     -- Calcul du score du type de média
                     COALESCE(
                         (SELECT COUNT(*)
@@ -988,26 +969,6 @@ export async function getRecommendedSeries(
             "RankedSeries" AS (
                 SELECT
                     "id",
-                    "tmdb_id",
-                    "title" AS "name",
-                    "original_name",
-                    "romaji_name",
-                    "overview",
-                    "poster_path",
-                    "media_type",
-                    "status",
-                    "first_air_date",
-                    "last_air_date",
-                    "number_of_episodes",
-                    "vote_average",
-                    "popularity",
-                    "episode_run_time",
-                    "total_time",
-                    "media_score",
-                    "genre_score",
-                    "tag_score",
-                    "country_score",
-                    "company_score",
                     (
                         "media_score" + 
                         "genre_score" + 
@@ -1019,13 +980,256 @@ export async function getRecommendedSeries(
                 ORDER BY "total_score" DESC
                 LIMIT $2 OFFSET $3
             )
-            SELECT *
+            SELECT id, "total_score"
             FROM "RankedSeries";
         `, [userId, limit, offset]);
 
         return result.rows;
     } catch (error) {
         console.error("Error fetching recommended series:", error);
+        throw error;
+    }
+}
+
+/**
+ * Fonction qui permet de récupérer les détails des séries en fonction d'un tableau d'IDs.
+ * @param {number[]} ids - Tableau d'IDs des séries à récupérer
+ * @returns {Promise<MinimalSerie[]>}
+ */
+export async function getSeriesByIds(ids: number[]): Promise<MinimalSerie[]> {
+    try {
+        if (ids.length === 0) {
+            return [];
+        }
+
+        // Créez des placeholders pour les IDs
+        const idsPlaceholder = ids.map((_, index) => `$${index + 1}`).join(', ');
+
+        const result = await Query(`
+            WITH "SerieData" AS (
+                SELECT
+                    "s"."id" AS "id",
+                    "s"."tmdb_id" AS "tmdb_id",
+                    "s"."title" AS "name",
+                    "s"."original_name" AS "original_name",
+                    "s"."romaji_name" AS "romaji_name",
+                    "s"."overview" AS "overview",
+                    "s"."poster" AS "poster_path",
+                    "s"."media" AS "media_type",
+                    "s"."status" AS "status",
+                    "s"."first_air_date" AS "first_air_date",
+                    "s"."last_air_date" AS "last_air_date",
+                    "s"."nb_episodes" AS "number_of_episodes",
+                    "s"."vote_average" AS "vote_average",
+                    "s"."popularity" AS "popularity",
+                    "s"."episode_run_time" AS "episode_run_time",
+                    "s"."total_time" AS "total_time"
+                FROM "Serie" AS "s"
+                WHERE "s"."id" IN (${idsPlaceholder})
+            ),
+            "Genres" AS (
+                SELECT "gs"."serieId" AS "serieId", 
+                       JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'id', "g"."id",
+                               'name', "g"."name"
+                           )
+                       ) AS "genres"
+                FROM "Genre_serie" AS "gs"
+                JOIN "Genre" AS "g" ON "gs"."genreId" = "g"."id"
+                WHERE "gs"."serieId" IN (SELECT "id" FROM "SerieData")
+                GROUP BY "gs"."serieId"
+            ),
+            "OriginCountries" AS (
+                SELECT "ocs"."serieId" AS "serieId", 
+                       JSON_AGG("c"."iso_3166_1") AS "origin_country"
+                FROM "OriginCountry_serie" AS "ocs"
+                JOIN "Country" AS "c" ON "ocs"."countryId" = "c"."id"
+                WHERE "ocs"."serieId" IN (SELECT "id" FROM "SerieData")
+                GROUP BY "ocs"."serieId"
+            ),
+            "ProductionCountries" AS (
+                SELECT "pcs"."serieId" AS "serieId", 
+                       JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'name', "c"."name",
+                               'iso_3166_1', "c"."iso_3166_1"
+                           )
+                       ) AS "production_countries"
+                FROM "ProductionCountry_serie" AS "pcs"
+                JOIN "Country" AS "c" ON "pcs"."countryId" = "c"."id"
+                WHERE "pcs"."serieId" IN (SELECT "id" FROM "SerieData")
+                GROUP BY "pcs"."serieId"
+            ),
+            "ProductionCompanies" AS (
+                SELECT "pcs"."serieId" AS "serieId", 
+                       JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'id', "c"."id",
+                               'name', "c"."name"
+                           )
+                       ) AS "production_companies"
+                FROM "ProductionCompany_serie" AS "pcs"
+                JOIN "ProductionCompany" AS "c" ON "pcs"."productionCompanyId" = "c"."id"
+                WHERE "pcs"."serieId" IN (SELECT "id" FROM "SerieData")
+                GROUP BY "pcs"."serieId"
+            ),
+            "Tags" AS (
+                SELECT "ts"."serieId" AS "serieId", 
+                       JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'id', "t"."id",
+                               'name', "t"."name"
+                           )
+                       ) AS "tags"
+                FROM "Tag_serie" AS "ts"
+                JOIN "Tag" AS "t" ON "ts"."tagId" = "t"."id"
+                WHERE "ts"."serieId" IN (SELECT "id" FROM "SerieData")
+                GROUP BY "ts"."serieId"
+            )
+            SELECT
+                "SerieData".*,
+                COALESCE("Genres"."genres", '[]') AS "genres",
+                COALESCE("OriginCountries"."origin_country", '[]') AS "origin_country",
+                COALESCE("ProductionCountries"."production_countries", '[]') AS "production_countries",
+                COALESCE("ProductionCompanies"."production_companies", '[]') AS "production_companies",
+                COALESCE("Tags"."tags", '[]') AS "tags"
+            FROM "SerieData"
+            LEFT JOIN "Genres" ON "Genres"."serieId" = "SerieData"."id"
+            LEFT JOIN "OriginCountries" ON "OriginCountries"."serieId" = "SerieData"."id"
+            LEFT JOIN "ProductionCountries" ON "ProductionCountries"."serieId" = "SerieData"."id"
+            LEFT JOIN "ProductionCompanies" ON "ProductionCompanies"."serieId" = "SerieData"."id"
+            LEFT JOIN "Tags" ON "Tags"."serieId" = "SerieData"."id"
+            ORDER BY ARRAY_POSITION(ARRAY[${idsPlaceholder}], "SerieData"."id")
+        `, ids);
+
+        return result.rows.map(row => ({
+            ...row,
+            genres: row.genres ? row.genres : [],
+            production_countries: row.production_countries ? row.production_countries : [],
+            production_companies: row.production_companies ? row.production_companies : [],
+            tags: row.tags ? row.tags : [],
+        })) as MinimalSerie[];
+    } catch (error) {
+        console.error('Erreur lors de la récupération des séries:', error);
+        throw error;
+    }
+}
+
+
+export async function getPopularSeries(limit: number, page: number): Promise<MinimalSerie[]> {
+    const offset = (page - 1) * limit;
+
+    try {
+        const result = await Query(`
+            WITH "SerieData" AS (
+                SELECT
+                    "s"."id" AS "id",
+                    "s"."tmdb_id" AS "tmdb_id",
+                    "s"."title" AS "name",
+                    "s"."original_name" AS "original_name",
+                    "s"."romaji_name" AS "romaji_name",
+                    "s"."overview" AS "overview",
+                    "s"."poster" AS "poster_path",
+                    "s"."media" AS "media_type",
+                    "s"."status" AS "status",
+                    "s"."first_air_date" AS "first_air_date",
+                    "s"."last_air_date" AS "last_air_date",
+                    "s"."nb_episodes" AS "number_of_episodes",
+                    "s"."vote_average" AS "vote_average",
+                    "s"."popularity" AS "popularity",
+                    "s"."episode_run_time" AS "episode_run_time",
+                    "s"."total_time" AS "total_time"
+                FROM "Serie" AS "s"
+                ORDER BY "s"."popularity" DESC
+                LIMIT $1 OFFSET $2
+            ),
+            "Genres" AS (
+                SELECT "gs"."serieId" AS "serieId", 
+                       JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'id', "g"."id",
+                               'name', "g"."name"
+                           )
+                       ) AS "genres"
+                FROM "Genre_serie" AS "gs"
+                JOIN "Genre" AS "g" ON "gs"."genreId" = "g"."id"
+                WHERE "gs"."serieId" IN (SELECT "id" FROM "SerieData")
+                GROUP BY "gs"."serieId"
+            ),
+            "OriginCountries" AS (
+                SELECT "ocs"."serieId" AS "serieId", 
+                       JSON_AGG("c"."iso_3166_1") AS "origin_country"
+                FROM "OriginCountry_serie" AS "ocs"
+                JOIN "Country" AS "c" ON "ocs"."countryId" = "c"."id"
+                WHERE "ocs"."serieId" IN (SELECT "id" FROM "SerieData")
+                GROUP BY "ocs"."serieId"
+            ),
+            "ProductionCountries" AS (
+                SELECT "pcs"."serieId" AS "serieId", 
+                       JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'name', "c"."name",
+                               'iso_3166_1', "c"."iso_3166_1"
+                           )
+                       ) AS "production_countries"
+                FROM "ProductionCountry_serie" AS "pcs"
+                JOIN "Country" AS "c" ON "pcs"."countryId" = "c"."id"
+                WHERE "pcs"."serieId" IN (SELECT "id" FROM "SerieData")
+                GROUP BY "pcs"."serieId"
+            ),
+            "ProductionCompanies" AS (
+                SELECT "pcs"."serieId" AS "serieId", 
+                       JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'id', "c"."id",
+                               'name', "c"."name"
+                           )
+                       ) AS "production_companies"
+                FROM "ProductionCompany_serie" AS "pcs"
+                JOIN "ProductionCompany" AS "c" ON "pcs"."productionCompanyId" = "c"."id"
+                WHERE "pcs"."serieId" IN (SELECT "id" FROM "SerieData")
+                GROUP BY "pcs"."serieId"
+            ),
+            "Tags" AS (
+                SELECT "ts"."serieId" AS "serieId", 
+                       JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'id', "t"."id",
+                               'name', "t"."name"
+                           )
+                       ) AS "tags"
+                FROM "Tag_serie" AS "ts"
+                JOIN "Tag" AS "t" ON "ts"."tagId" = "t"."id"
+                WHERE "ts"."serieId" IN (SELECT "id" FROM "SerieData")
+                GROUP BY "ts"."serieId"
+            )
+            SELECT
+                "SerieData".*,
+                COALESCE("Genres"."genres", '[]') AS "genres",
+                COALESCE("OriginCountries"."origin_country", '[]') AS "origin_country",
+                COALESCE("ProductionCountries"."production_countries", '[]') AS "production_countries",
+                COALESCE("ProductionCompanies"."production_companies", '[]') AS "production_companies",
+                COALESCE("Tags"."tags", '[]') AS "tags"
+            FROM "SerieData"
+            LEFT JOIN "Genres" ON "Genres"."serieId" = "SerieData"."id"
+            LEFT JOIN "OriginCountries" ON "OriginCountries"."serieId" = "SerieData"."id"
+            LEFT JOIN "ProductionCountries" ON "ProductionCountries"."serieId" = "SerieData"."id"
+            LEFT JOIN "ProductionCompanies" ON "ProductionCompanies"."serieId" = "SerieData"."id"
+            LEFT JOIN "Tags" ON "Tags"."serieId" = "SerieData"."id"
+            ORDER BY "SerieData"."popularity" DESC
+        `, [limit, offset]);
+
+        return result.rows.map(row => ({
+            ...row,
+            genres: row.genres ? row.genres : [],
+            production_countries: row.production_countries ? row.production_countries : [],
+            production_companies: row.production_companies ? row.production_companies : [],
+            tags: row.tags ? row.tags : [],
+        })) as MinimalSerie[];
+    }
+    catch (error) {
+        console.error('Erreur lors de la récupération des séries populaires:', error);
         throw error;
     }
 }

@@ -22,7 +22,7 @@ export async function POST(req: Request, context: any): Promise<Response> {
             if(serieId){
                 const requestBody = await req.json();
                 const { note, comment, newVote } = requestBody;
-                if(!note) return new Response(JSON.stringify({ message: 'Note is required' }), {
+                if(note < 0 || note > 0 || note===undefined || note === null) return new Response(JSON.stringify({ message: 'Note is required' }), {
                     headers: {
                         'Content-Type': 'application/json'
                     },
