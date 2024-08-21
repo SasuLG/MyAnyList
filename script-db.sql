@@ -84,7 +84,7 @@ create table if not exists "Serie" (
     "popularity" float, /* La popularité */
     "budget" integer, /* Le budget */
     "revenue" integer /* Les recettes */
-
+    "last_modified" timestamp not null default current_timestamp, /* La date de dernière modification */
     /*networks*/
 );
 

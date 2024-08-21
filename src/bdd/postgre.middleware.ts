@@ -1,14 +1,19 @@
 import { Pool, QueryConfig, QueryResult } from "pg";
 
-const userPool = new Pool({
-    connectionString: process.env.POSTGRES_URL,
-    // user: process.env.DB_USER,
-    // password: process.env.DB_PASS,
-    // host: process.env.DB_HOST,
-    // database: process.env.DB_NAME,
-    // port: parseInt(process.env.DB_PORT as string)
-});
+const isDevelopment = process.env.NODE_ENV === 'development' && process.env.MODE !== 'production';
 
+const userPool = new Pool(isDevelopment
+    ? {
+        user: process.env.DB_USER,
+        password: process.env.DB_PASS,
+        host: process.env.DB_HOST,
+        database: process.env.DB_NAME,
+        port: parseInt(process.env.DB_PORT as string, 10)
+    }
+    : {
+        connectionString: process.env.POSTGRES_URL,
+    }
+);
 /**
  * Fonction qui permet de faire une requêtre à la bdd postgreSQL.
  * 
