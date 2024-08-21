@@ -222,11 +222,11 @@ export default function Profil({ params }: { params: { name: string } }) {
         };
 
         const tvSeries = seriesFollowed.filter(serie =>
-            serie.media_type === "tv" && !serie.genres.some(genre => genre.name === "Animation")
+            serie.media_type === "tv"
         );
-        const movies = seriesFollowed.filter(serie => serie.media_type === "movie");
+        const movies = seriesFollowed.filter(serie => serie.media_type === "movie" || serie.media_type === "film d'animation");
         const animeSeries = seriesFollowed.filter(serie =>
-            serie.genres.some(genre => genre.name === "Animation")
+            serie.media_type === "anime"
         );
 
         const nbTv = tvSeries.length;
@@ -262,10 +262,10 @@ export default function Profil({ params }: { params: { name: string } }) {
             filteredSeries = [...seriesFollowed];
         } else {
             filteredSeries = seriesFollowed.filter(serie => {
-                const isTv = serie.media_type === 'tv' && !serie.genres.some(genre => genre.name === 'Animation');
-                const isMovie = serie.media_type === 'movie' && !serie.genres.some(genre => genre.name === 'Animation');
-                const isAnime = serie.genres.some(genre => genre.name === 'Animation') && serie.media_type === 'tv';
-                const isFilmAnimation = serie.genres.some(genre => genre.name === 'Animation') && serie.media_type === 'movie';
+                const isTv = serie.media_type === 'tv';
+                const isMovie = serie.media_type === 'movie' ;
+                const isAnime = serie.media_type === 'anime';
+                const isFilmAnimation = serie.media_type === 'film d\'animation';
                 
                 return (formatSet.has('tv') && isTv) ||
                        (formatSet.has('movie') && isMovie) ||
@@ -298,10 +298,10 @@ export default function Profil({ params }: { params: { name: string } }) {
             filteredSeries = [...seriesFollowed];
         } else {
             filteredSeries = seriesFollowed.filter(serie => {
-                const isTv = serie.media_type === 'tv' && !serie.genres.some(genre => genre.name === 'Animation');
-                const isMovie = serie.media_type === 'movie' && !serie.genres.some(genre => genre.name === 'Animation');
-                const isAnime = serie.genres.some(genre => genre.name === 'Animation') && serie.media_type === 'tv';
-                const isFilmAnimation = serie.genres.some(genre => genre.name === 'Animation') && serie.media_type === 'movie';
+                const isTv = serie.media_type === 'tv';
+                const isMovie = serie.media_type === 'movie' ;
+                const isAnime = serie.media_type === 'anime';
+                const isFilmAnimation = serie.media_type === 'film d\'animation';
                 
                 return (formatSet.has('tv') && isTv) ||
                        (formatSet.has('movie') && isMovie) ||
@@ -328,10 +328,10 @@ export default function Profil({ params }: { params: { name: string } }) {
             filteredSeries = [...seriesFollowed];
         } else {
             filteredSeries = seriesFollowed.filter(serie => {
-                const isTv = serie.media_type === 'tv' && !serie.genres.some(genre => genre.name === 'Animation');
-                const isMovie = serie.media_type === 'movie' && !serie.genres.some(genre => genre.name === 'Animation');
-                const isAnime = serie.genres.some(genre => genre.name === 'Animation') && serie.media_type === 'tv';
-                const isFilmAnimation = serie.genres.some(genre => genre.name === 'Animation') && serie.media_type === 'movie';
+                const isTv = serie.media_type === 'tv';
+                const isMovie = serie.media_type === 'movie';
+                const isAnime = serie.media_type === 'anime';
+                const isFilmAnimation = serie.media_type === 'film d\'animation';
                 
                 return (formatSet.has('tv') && isTv) ||
                        (formatSet.has('movie') && isMovie) ||
@@ -409,9 +409,9 @@ export default function Profil({ params }: { params: { name: string } }) {
     const totalTimePercentage = useCallback((time: number, total: number) => total === 0 ? '0%' : ((time / total) * 100).toFixed(1) + '%', []);
     const totalEpisodesPercentage = useCallback((episodes: number, total: number) => total === 0 ? '0%' : ((episodes / total) * 100).toFixed(1) + '%', []);
 
-    const tvGenreData = useMemo(() => getGenreData(seriesFollowed.filter(serie => serie.media_type === 'tv' && !serie.genres.some(genre => genre.name === 'Animation'))), [seriesFollowed, getGenreData]);
-    const movieGenreData = useMemo(() => getGenreData(seriesFollowed.filter(serie => serie.media_type === 'movie')), [seriesFollowed, getGenreData]);
-    const animeGenreData = useMemo(() => getGenreData(seriesFollowed.filter(serie => serie.genres.some(genre => genre.name === 'Animation'))), [seriesFollowed, getGenreData]);
+    const tvGenreData = useMemo(() => getGenreData(seriesFollowed.filter(serie => serie.media_type === 'tv' )), [seriesFollowed, getGenreData]);
+    const movieGenreData = useMemo(() => getGenreData(seriesFollowed.filter(serie => serie.media_type === 'movie' || serie.media_type === 'film d\'animation')), [seriesFollowed, getGenreData]);
+    const animeGenreData = useMemo(() => getGenreData(seriesFollowed.filter(serie => serie.media_type === 'anime')), [seriesFollowed, getGenreData]);
 
     const combinedGenreData = useMemo(() => ({ ...tvGenreData.genreCount, ...movieGenreData.genreCount, ...animeGenreData.genreCount }), [tvGenreData.genreCount, movieGenreData.genreCount, animeGenreData.genreCount]);
     const combinedEpisodeData = useMemo(() => ({ ...tvGenreData.episodeCount, ...movieGenreData.episodeCount, ...animeGenreData.episodeCount }), [tvGenreData.episodeCount, movieGenreData.episodeCount, animeGenreData.episodeCount]);
@@ -582,7 +582,7 @@ export default function Profil({ params }: { params: { name: string } }) {
                         </div>
 
                         <div onMouseEnter={() => setHoveredElement('totalAnimeEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
-                            <p><strong>Nombre total d'animés suivis :</strong> </p>
+                            <p><strong>Nombre total d&apos;animés suivis :</strong> </p>
                             <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333' }}>{nbAnime}</p>
                             {hoveredElement === 'totalAnimeEpisodes' && (
                                 <div style={{ position: 'absolute', backgroundColor: '#e1f5fe', border: '2px solid #0288d1', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>

@@ -8,12 +8,28 @@ type HoverToolBoxProps = {
 };
 
 const HoverToolBox = ({ serie, children }: HoverToolBoxProps) => {
+
+    /**
+     * Hook qui stock la position du tooltip
+     */
     const [hoverPosition, setHoverPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+
+    /**
+     * Hooks qui stock l'état du tooltip
+     */
     const [itemHover, setItemHover] = useState<boolean>(false);
+
+    /**
+     * Hooks qui stock l'état de la visibilité du tooltip
+     */
     const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
 
     let hoverTimeout: NodeJS.Timeout | null = null;
 
+    /**
+     * Fonction qui gère l'entrée de la souris sur l'élément
+     * @param {MouseEvent<HTMLDivElement>} event 
+     */
     const handleMouseEnter = (event: MouseEvent<HTMLDivElement>) => {
         if (hoverTimeout) {
             clearTimeout(hoverTimeout);
@@ -37,6 +53,10 @@ const HoverToolBox = ({ serie, children }: HoverToolBoxProps) => {
         // Gérer l'ID global du tooltip si nécessaire
     };
 
+
+    /**
+     * Fonction qui gère la sortie de la souris de l'élément
+     */ 
     const handleMouseLeave = () => {
         if (hoverTimeout) {
             clearTimeout(hoverTimeout);
@@ -48,6 +68,9 @@ const HoverToolBox = ({ serie, children }: HoverToolBoxProps) => {
         }, 1); // Délai pour cacher le tooltip
     };
 
+    /**
+     * Fonction qui gère l'entrée de la souris sur le tooltip
+     */
     const handleMouseEnterHover = () => {
         if (hoverTimeout) {
             clearTimeout(hoverTimeout);
@@ -56,6 +79,9 @@ const HoverToolBox = ({ serie, children }: HoverToolBoxProps) => {
         setTooltipVisible(true);
     };
 
+    /**
+     * Fonction qui gère la sortie de la souris du tooltip
+     */
     const handleMouseLeaveHover = () => {
         if (hoverTimeout) {
             clearTimeout(hoverTimeout);
@@ -98,7 +124,7 @@ const HoverToolBox = ({ serie, children }: HoverToolBoxProps) => {
                         </div>
                         <div className="hover-info-items initial">
                             <span>{serie.first_air_date.substring(0, 4)}</span>
-                            <span>{serie.status === "Ended" || serie.status === "Released" ? "✔️" : "🔄"}</span>
+                            <span>{serie.status === "Ended" ? "✔️" : "🔄"}</span>
                         </div>
                         <div className="hover-info-items">
                             <span>{serie.media_type} </span>

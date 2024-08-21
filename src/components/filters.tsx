@@ -38,9 +38,12 @@ type FiltersProps = {
   onwithFollowedChange?: (onlyFollowed: boolean) => void;
   orderAsc: boolean;
   setOrderChange: (order: boolean) => void;
-}
+  tags?: string[];
+  selectedTags?: string[];
+  onSelectTags?: (tags: string[]) => void;
+};
 
-const Filters: React.FC<FiltersProps> = ({
+const Filters = ({
   genres,
   selectedGenres,
   onSelectGenres,
@@ -66,15 +69,18 @@ const Filters: React.FC<FiltersProps> = ({
   onSelectProductionCountries = () => {},
   yearRange,
   onYearRangeChange = () => {},
-  voteRange = { min: 0, max: 10 },
+  voteRange = { min: 0, max: 10, minimalRange: 0, maximalRange: 10 },
   onVoteRangeChange = () => {},
   episodeRange,
   onEpisodeRangeChange = () => {},
   withFollowed,
   onwithFollowedChange = () => {},
   orderAsc = true,
-  setOrderChange
-}) => {
+  setOrderChange,
+  tags = [],
+  selectedTags = [],
+  onSelectTags = () => {}
+}: FiltersProps) => {
 
   const [showTooltip, setShowTooltip] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
@@ -137,17 +143,29 @@ const Filters: React.FC<FiltersProps> = ({
 
         {statuses.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}><span>Status</span><MultiSelectDropdown options={statuses} selectedOptions={selectedStatuses} onSelect={onSelectStatuses} /></div>}
 
-        {voteRange && <div className="slider-filter"><span>Vote Range</span><RangeFilter range={voteRange as Range} onChange={onVoteRangeChange} minLimit={voteRange.min || 0} maxLimit={voteRange.max || 10} /></div>}
+        {voteRange && 
+          <div className="slider-filter">
+            <span>Vote Range</span>
+            <RangeFilter range={voteRange as Range} onChange={onVoteRangeChange} minLimit={voteRange.minimalRange || 0} maxLimit={voteRange.maximalRange || 10} />
+          </div>
+        }
 
         <div style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.15)', padding: '0.5rem', borderRadius: '4px' }} onClick={handleSvgClick} ref={svgRef}>
           <MoreFilter width={30} height={30} isOpen={showPopup} />
-          {showPopup && <div ref={popupRef} className="popup" onClick={handlePopupClick} style={{ top: svgRef.current?.offsetHeight ?? 0 }}>{originCountries.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Origin Country</span><MultiSelectDropdown options={originCountries} selectedOptions={selectedOriginCountries} onSelect={onSelectOriginCountries} /></div>} {productionCompanies.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Production Companies</span><MultiSelectDropdown options={productionCompanies} selectedOptions={selectedProductionCompanies} onSelect={onSelectProductionCompanies} /></div>} {productionCountries.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Production Countries</span><MultiSelectDropdown options={productionCountries} selectedOptions={selectedProductionCountries} onSelect={onSelectProductionCountries} /></div>} {yearRange && <div style={{ marginBottom: '1rem', width: "40%" }}><span>Year Range</span><RangeFilter range={yearRange} onChange={onYearRangeChange} minLimit={yearRange.minimalRange} maxLimit={yearRange.maximalRange} /></div>} {episodeRange && <div style={{ marginBottom: '1rem', width: "40%" }}><span>Episode Range</span><RangeFilter range={episodeRange} onChange={onEpisodeRangeChange} minLimit={episodeRange.minimalRange} maxLimit={episodeRange.maximalRange} /></div>}</div>}
+          {showPopup && <div ref={popupRef} className="popup" onClick={handlePopupClick} style={{ top: svgRef.current?.offsetHeight ?? 0 }}>
+            {originCountries.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Origin Country</span><MultiSelectDropdown options={originCountries} selectedOptions={selectedOriginCountries} onSelect={onSelectOriginCountries} /></div>}
+            {productionCompanies.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Production Companies</span><MultiSelectDropdown options={productionCompanies} selectedOptions={selectedProductionCompanies} onSelect={onSelectProductionCompanies} /></div>}
+            {productionCountries.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Production Countries</span><MultiSelectDropdown options={productionCountries} selectedOptions={selectedProductionCountries} onSelect={onSelectProductionCountries} /></div>}
+            {tags.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Tags</span><MultiSelectDropdown options={tags} selectedOptions={selectedTags} onSelect={onSelectTags} /></div>}
+            {yearRange && <div style={{ marginBottom: '1rem', width: "40%" }}><span>Year Range</span><RangeFilter range={yearRange} onChange={onYearRangeChange} minLimit={yearRange.minimalRange} maxLimit={yearRange.maximalRange} /></div>}
+            {episodeRange && <div style={{ marginBottom: '1rem', width: "40%" }}><span>Episode Range</span><RangeFilter range={episodeRange} onChange={onEpisodeRangeChange} minLimit={episodeRange.minimalRange} maxLimit={episodeRange.maximalRange} /></div>}
+          </div>}
         </div>
 
         {withFollowed !== undefined && <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><input type="checkbox" id='withFollowed' checked={withFollowed} onChange={(e) => onwithFollowedChange(e.target.checked)} className='input-switch' style={{ marginRight: '0.5rem' }} /><label htmlFor='withFollowed' className='switch' /><span>With followed</span></div>}
       </div>
     </div>
   );
-}
+};
 
 export default Filters;

@@ -1,7 +1,7 @@
 "use client"
 import Loader from '@/components/loader';
 import SeriesList from '@/components/seriesList';
-import { MinimalSerie, ProductionCountry } from '@/tmdb/types/series.type';
+import { MinimalSerie, ProductionCompany, ProductionCountry, Tag } from '@/tmdb/types/series.type';
 import { useUserContext } from '@/userContext';
 import React, { useEffect, useState } from 'react';
 import Filters from '@/components/filters';
@@ -29,6 +29,11 @@ export default function SearchPage() {
    * Hook pour stocker le type de style (grille ou liste)
    */
   const [styleType, setStyleType] = useState<'grid' | 'list'>('grid');
+
+  /**
+   * Hook pour stocker la taille de l'affichage
+   */
+  const [displaySize, setDisplaySize] = useState<'large' | 'normal' | 'small' | 'very-small' | 'extra-small'>('normal');
 
   /**
    * Hook pour stocker l'état de la récupération des données
@@ -85,7 +90,13 @@ export default function SearchPage() {
   /**
    * Hook pour stocker les statuts
    */
-  const [statuses, setStatuses] = useState<string[]>(["Returning Series", "Ended", "Canceled"]);/*todo ajouter a la toute fin pour check "Planned", "In Production" */
+  const [statuses, setStatuses] = useState<string[]>(["En cours", "Terminé", "Annulé"]); 
+
+  const statusMapping: Record<string, string> = {
+    "Returning Series" : "En cours",
+     "Ended" : "Terminé",
+    "Canceled" : "Annulé"
+  };
 
   /**
    * Hook pour stocker les statuts sélectionnés
@@ -105,7 +116,7 @@ export default function SearchPage() {
   /**
    * Hook pour stocker les compagnies de production
    */
-  const [productionCompanies, setProductionCompanies] = useState<string[]>([]);
+  const [productionCompanies, setProductionCompanies] = useState<ProductionCompany[]>([]);
 
   /**
    * Hook pour stocker les compagnies de production sélectionnées
@@ -121,6 +132,16 @@ export default function SearchPage() {
    * Hook pour stocker les pays de production sélectionnés
    */
   const [selectedProductionCountries, setSelectedProductionCountries] = useState<string[]>([]);
+
+  /**
+   * Hook pour stocker les tags
+   */
+  const [tags, setTags] = useState<Tag[]>([]);
+
+  /**
+   * Hook pour stocker les tags sélectionnés
+   */
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   //SLIDER
   /**
@@ -181,7 +202,6 @@ export default function SearchPage() {
     const response = await fetch('/api/series/genre');
     const data = await response.json();
     setGenres(data);
-    console.log(data);
   };
   
   /**
@@ -212,10 +232,39 @@ export default function SearchPage() {
   };
 
   /**
+   * Fonction pour récupérer tous les tags
+   */
+  const fetchTags = async () => {
+    const response = await fetch('/api/series/tags');
+    const data = await response.json();
+    setTags(data);
+  };  
+
+  /**
    * Fonction pour basculer entre les styles de disposition
    */
   const toggleLayout = () => {
     setStyleType((prevStyleType) => (prevStyleType === 'grid' ? 'list' : 'grid'));
+  };
+
+  /**
+   * Fonction pour augmenter la taille d'affichage
+   */
+  const increaseSize = () => {
+    if (displaySize === 'large') return;
+    const sizes = ['large','normal', 'small', 'very-small', 'extra-small'];
+    const currentIndex = sizes.indexOf(displaySize);
+    setDisplaySize(sizes[currentIndex - 1] as 'large' | 'normal' | 'small' | 'very-small' | 'extra-small');
+  };
+
+  /**
+   * Fonction pour diminuer la taille d'affichage
+   */
+  const decreaseSize = () => {
+    if (displaySize === 'extra-small') return;
+    const sizes = ['large','normal', 'small', 'very-small', 'extra-small'];
+    const currentIndex = sizes.indexOf(displaySize);
+    setDisplaySize(sizes[currentIndex + 1] as 'large' | 'normal' | 'small' | 'very-small' | 'extra-small');
   };
 
   /**
@@ -312,6 +361,9 @@ export default function SearchPage() {
       case 'productionCountry':
         setSelectedProductionCountries(selectedProductionCountries.filter((country) => country !== value));
         break;
+        case 'tag':
+          setSelectedTags(selectedTags.filter((tag) => tag !== value));
+        break;
       default:
         break;
     }
@@ -346,23 +398,26 @@ export default function SearchPage() {
   
       // Apply format filters
       const matchesFormat = selectedFormats.length === 0 || selectedFormats.includes(serie.media_type) &&
-        (selectedFormats.includes('tv') && serie.media_type === 'tv' && !serie.genres.some(genre => genre.name === 'Animation')) ||
-        (selectedFormats.includes('movie') && serie.media_type === 'movie' && !serie.genres.some(genre => genre.name === 'Animation')) ||
-        (selectedFormats.includes('anime') && serie.genres.some(genre => genre.name === 'Animation') && serie.media_type === 'tv') ||
-        (selectedFormats.includes('film d\'animation') && serie.genres.some(genre => genre.name === 'Animation') && serie.media_type === 'movie');
-  
+        (selectedFormats.includes('tv') && serie.media_type === 'tv' ) ||
+        (selectedFormats.includes('movie') && serie.media_type === 'movie' ) ||
+        (selectedFormats.includes('anime') && serie.media_type === 'anime') ||
+        (selectedFormats.includes('film d\'animation') && serie.media_type === 'film d\'animation');
+      
       const matchesGenre = selectedGenres.length === 0 || selectedGenres.every(genre => serie.genres.some(g => g.name === genre));
-      const matchesSearchQuery = [serie.name, serie.original_name, serie.romaji_name].some(name => name.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(serie.status);
+      const matchesSearchQuery = [serie.name, serie.original_name, serie.romaji_name]
+      .filter(name => name) 
+      .some(name => name.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(statusMapping[serie.status] || serie.status);
       const matchesOriginCountry = selectedOriginCountries.length === 0 || selectedOriginCountries.every(country => serie.origin_country.includes(country));
       const matchesProductionCompany = selectedProductionCompanies.every(company => serie.production_companies.some(prod => prod.name === company));
       const matchesProductionCountry = selectedProductionCountries.every(country => serie.production_countries.some(c => c.name === country));
+      const matchesTags = selectedTags.every(tag => serie.tags.some(t => t.name === tag));
       const serieYear = new Date(serie.first_air_date).getFullYear();
       const matchesYearRange = serieYear >= yearRange.min && serieYear <= yearRange.max;
       const matchesVoteRange = (serie.vote_average || 0) >= voteRange.min && (serie.vote_average || 0) <= voteRange.max;
       const matchesEpisodeRange = serie.number_of_episodes >= episodeRange.min && serie.number_of_episodes <= episodeRange.max;
   
-      return matchesFormat && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange;
+      return matchesFormat && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange && matchesTags;
     });
   
     // Apply sorting
@@ -416,6 +471,7 @@ export default function SearchPage() {
     setVoteRange({ min: 0, max: 10, minimalRange: 0, maximalRange: 10 });
     setEpisodeRange({ min: 1, max: 2000, minimalRange: 1, maximalRange: 2000 });
     setwithFollowed(false);
+    setSelectedTags([]);
     setOrderAsc(true);
   };
 
@@ -425,13 +481,14 @@ export default function SearchPage() {
     fetchOriginCountries();
     fetchProductionCompanies();
     fetchProductionCountries();
+    fetchTags();
   }, [user]);
 
   useEffect(() => {
     if (filtersReady) {
       applyFiltersAndSort();
     }
-  }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, withFollowed, seriesIdFollowed, orderAsc]);
+  }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, withFollowed, seriesIdFollowed, orderAsc, selectedTags]);
 
   useEffect(() => setSelectedMenu("search"), [setSelectedMenu]);
 
@@ -442,6 +499,7 @@ export default function SearchPage() {
   selectedOriginCountries.length > 0 ||
   selectedProductionCompanies.length > 0 ||
   selectedProductionCountries.length > 0 ||
+  selectedTags.length > 0 ||
   (yearRange.min !== yearRange.minimalRange || yearRange.max !== yearRange.maximalRange) ||
   (voteRange.min !== voteRange.minimalRange || voteRange.max !== voteRange.maximalRange) ||
   (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange);
@@ -452,6 +510,15 @@ export default function SearchPage() {
         <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }} onClick={toggleLayout}>
           Toggle Layout
         </button>
+        
+        <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }}onClick={increaseSize}>
+          Increase Size
+        </button>
+
+        <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }} onClick={decreaseSize}>
+          Decrease Size
+        </button>
+
       </div>
 
       <Filters
@@ -472,7 +539,7 @@ export default function SearchPage() {
         originCountries={originCountries}
         selectedOriginCountries={selectedOriginCountries}
         onSelectOriginCountries={setSelectedOriginCountries}
-        productionCompanies={productionCompanies}
+        productionCompanies={productionCompanies.map(pc=> pc.name)}
         selectedProductionCompanies={selectedProductionCompanies}
         onSelectProductionCompanies={setSelectedProductionCompanies}
         productionCountries={productionCountries.map(country => country.name)}
@@ -488,6 +555,9 @@ export default function SearchPage() {
         onwithFollowedChange={handleWithFollowedChange}
         orderAsc={orderAsc}
         setOrderChange={handleOrderChange}
+        tags={tags.map(tag => tag.name)}
+        selectedTags={selectedTags}
+        onSelectTags={setSelectedTags}
       />
 
       <div className="filter-container">
@@ -519,6 +589,9 @@ export default function SearchPage() {
         {selectedProductionCountries.length > 0 && selectedProductionCountries.map((country) => (
           <span key={country} className="filter-label" onClick={() => removeFilter('productionCountry', country)}>{country}</span>
         ))}
+        {selectedTags.length > 0 && selectedTags.map((tag) => (
+          <span key={tag} className="filter-label" onClick={() => removeFilter('tag', tag)}>{tag}</span>
+        ))}
         {(yearRange.min !== yearRange.minimalRange || yearRange.max !== yearRange.maximalRange) && (
           <span className="filter-label" onClick={() => clearYearRange()}> Year: {yearRange.min} - {yearRange.max} </span>
         )}
@@ -544,7 +617,7 @@ export default function SearchPage() {
           <Loader />
         </div>
       ) : (
-        <SeriesList series={filteredSeries} styleType={styleType} followedIds={seriesIdFollowed} onClickHeart={onClickHeart} />
+        <SeriesList series={filteredSeries} styleType={styleType} followedIds={seriesIdFollowed} onClickHeart={onClickHeart} size={displaySize} isMylist={false}/>
       )}
     </div>
   );

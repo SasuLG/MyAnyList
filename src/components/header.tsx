@@ -109,7 +109,7 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                                         {user.isIncarned && (
                                             <div>
                                                 <p onClick={restorePreviousSession} style={{ cursor: "pointer", color: "blue" }}>
-                                                    Revenir à l'utilisateur original
+                                                    UnIncarn
                                                 </p>
                                             </div>
                                         )}

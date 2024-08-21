@@ -1,0 +1,71 @@
+.banner {
+  width: 100%;
+  height: 120vh;
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+}
+
+.banner .slider {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  top: 5%;
+  left: calc(50% - 100px);
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+
+.banner .slider .item {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(calc((var(--position) - 1) * (360 / var(--quantity)) * 1deg)) translateZ(550px);
+}
+
+.banner .slider .item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.banner .nav-btn {
+  position: absolute;
+  top: 30%;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.8);
+  border: none;
+  color: black;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  z-index: 10;
+  font-size: 1.5rem;
+  border-radius: 50%;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.banner .nav-btn:hover {
+  background-color: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+}
+
+.banner .nav-btn:first-of-type {
+  left: 1rem;
+}
+
+.banner .nav-btn:last-of-type {
+  right: 1rem;
+}
+
+@media (max-width: 1500px) {
+    .banner .slider{
+        height: 100px;
+        width: 180px;
+    }
+  }
+
+@media (max-width: 1000px) {
+    .banner .slider .item{
+        width: 70%;
+    }
+  }

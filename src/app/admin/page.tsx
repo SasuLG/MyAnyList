@@ -12,7 +12,7 @@ export default function AdminPage() {
      */
     const { setSelectedMenu } = useUserContext();
     
-    useEffect(() => setSelectedMenu("admin"), [setSelectedMenu]);
+    useEffect(() => setSelectedMenu(""), [setSelectedMenu]);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', backgroundColor: 'var(--background-color)', color: 'var(--secondary-text-color)', fontFamily: 'Arial, sans-serif', minHeight: '100vh', transition: 'background-color 0.3s, color 0.3s' }}>

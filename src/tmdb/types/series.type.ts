@@ -89,6 +89,7 @@ type Serie = {
     number_of_episodes: number;
     episode_run_time: number | null;
     note?: number;
+    comment?: string;
     follow_date?: string;
     genres: Genre[];
     spoken_languages: Language[];
