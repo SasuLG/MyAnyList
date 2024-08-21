@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.25.0",
+    "@vercel/postgres": "^0.9.0",
     "bcryptjs": "^2.4.3",
     "crypto-js": "^4.2.0",
     "kuromoji": "^0.1.2",
