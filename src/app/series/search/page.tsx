@@ -166,6 +166,7 @@ export default function SearchPage() {
     const response = await fetch(`/api/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}`);
     const data = await response.json();
     setSeries(data);
+    console.log(data);
     setFetchDataFinished(true);
 
     if (user !== undefined) {
@@ -211,6 +212,7 @@ export default function SearchPage() {
     const response = await fetch('/api/series/origin_country');
     const data = await response.json();
     setOriginCountries(data);
+    console.log(data);
   };
   
   /**
@@ -220,6 +222,7 @@ export default function SearchPage() {
     const response = await fetch('/api/series/production_companies');
     const data = await response.json();
     setProductionCompanies(data);
+    console.log(data);
   };
   
   /**
