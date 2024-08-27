@@ -180,7 +180,7 @@ export default function Import() {
         
             // Ajouter le media type modifié à l'objet importSeriesData
             importSeriesData.media_type = mediaType;
-        
+            console.log(importSeriesData);
             // Ajouter le nom en romaji
             const namesResponse = await fetch(`/api/translate`, {
                 method: 'POST',
@@ -189,6 +189,7 @@ export default function Import() {
                 },
                 body: JSON.stringify({ texts: [serie.original_name] })
             });
+            console.log(namesResponse);
             const namesData = await namesResponse.json();
             importSeriesData.romaji_name = namesData.texts[0]; 
         

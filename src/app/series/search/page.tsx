@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import Filters from '@/components/filters';
 import { Range } from '@/tmdb/types/series.type';
 import { Filter } from '@/components/svg/filter.svg';
+import { DecreaseSize, IncreaseSize, Settings, ToggleLayout } from '@/components/svg/buttons.svg';
 
 export default function SearchPage() {
 
@@ -160,13 +161,22 @@ export default function SearchPage() {
   const [episodeRange, setEpisodeRange] = useState<Range>({ min: 1, max: 2000, minimalRange: 1, maximalRange: 2000 });
 
   /**
+   * Hook pour stocker la visibilité des boutons de settings
+   */
+  const [buttonsVisible, setButtonsVisible] = useState(true);
+
+  /**
+   * Hook pour stocker l'état de la rotation des boutons de settings
+   */
+  const [Rotating, setRotating] = useState<boolean | undefined>(undefined);
+
+  /**
    * Fonction pour récupérer les données des séries
    */
   const fetchData = async () => {
     const response = await fetch(`/api/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}`);
     const data = await response.json();
     setSeries(data);
-    console.log(data);
     setFetchDataFinished(true);
 
     if (user !== undefined) {
@@ -212,7 +222,6 @@ export default function SearchPage() {
     const response = await fetch('/api/series/origin_country');
     const data = await response.json();
     setOriginCountries(data);
-    console.log(data);
   };
   
   /**
@@ -222,7 +231,6 @@ export default function SearchPage() {
     const response = await fetch('/api/series/production_companies');
     const data = await response.json();
     setProductionCompanies(data);
-    console.log(data);
   };
   
   /**
@@ -297,6 +305,13 @@ export default function SearchPage() {
       },
       body: JSON.stringify({ login: user.login }),
     });
+  };
+
+  /**
+   * Fonction pour basculer la visibilité des boutons de settings
+   */
+  const toggleButtonsVisibility = () => {
+    setButtonsVisible(!buttonsVisible);
   };
 
   /**
@@ -493,6 +508,10 @@ export default function SearchPage() {
     }
   }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, withFollowed, seriesIdFollowed, orderAsc, selectedTags]);
 
+  useEffect(() => {
+    window.innerWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
+  }, [window.innerWidth]);
+
   useEffect(() => setSelectedMenu("search"), [setSelectedMenu]);
 
   const hasActiveFilters = 
@@ -506,23 +525,38 @@ export default function SearchPage() {
   (yearRange.min !== yearRange.minimalRange || yearRange.max !== yearRange.maximalRange) ||
   (voteRange.min !== voteRange.minimalRange || voteRange.max !== voteRange.maximalRange) ||
   (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange);
-  
+
   return (
-    <div style={{ height: "100%", padding: "2rem 5rem", backgroundColor: "var(--background-color)" }}>
-      <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginBottom: "2rem" }}>
-        <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }} onClick={toggleLayout}>
-          Toggle Layout
-        </button>
-        
-        <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }}onClick={increaseSize}>
-          Increase Size
-        </button>
+    <div style={{ height: "100%", padding: window.innerWidth >500?"2rem 5rem":"2rem 2rem", backgroundColor: "var(--background-color)" }}>
 
-        <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }} onClick={decreaseSize}>
-          Decrease Size
-        </button>
+      <button
+        onClick={(e) => { toggleButtonsVisibility(); setRotating(!Rotating); }} 
+        style={{ position: 'absolute', top: '4rem', right: '1rem', border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.6rem 1.2rem", cursor: "pointer", boxShadow: "0px 1px 3px rgba(0,0,0,0.1)", zIndex: 1000, fontSize: '0.9rem', fontWeight: 'normal', color: "var(--text-color)", transition: "background-color 0.3s, color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--button-hover-background-color)'; e.currentTarget.style.color = 'var(--button-hover-text-color)'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'var(--button-background-color)'; e.currentTarget.style.color = 'var(--text-color)'; }} >
+          <Settings width={20} height={20} rotating={Rotating}/>
+      </button>
 
-      </div>
+      {buttonsVisible && (
+        <div style={{ position: 'absolute', top: '6.5rem', right: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 1000 }}>
+          <button
+            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={toggleLayout} onMouseOver={(e) => e.currentTarget.style.opacity = "1"}   onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
+            <ToggleLayout width={25} height={25} checked={styleType==="grid"}/>
+          </button>
+
+          <button
+            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={increaseSize}  onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
+            <IncreaseSize width={25} height={25} />
+          </button>
+
+          <button
+            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={decreaseSize} onMouseOver={(e) => e.currentTarget.style.opacity = "1"}onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"} >
+            <DecreaseSize width={25} height={25} />
+          </button>
+        </div>
+      )}
 
       <Filters
         genres={genres}

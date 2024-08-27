@@ -17,13 +17,6 @@ create table if not exists "Country" (
     "name" varchar unique not null /* Le nom du pays */
 );
 
-/* Création de la table des pays d'une série*/
-create table if not exists "Country_serie" (
-    "serieId" integer not null, /* L'identifiant de la série */
-    "countryId" integer not null, /* L'identifiant du pays */
-    primary key ("serieId", "countryId")
-);
-
 /* Création de la table des pays d'origine d'une série */
 create table if not exists "OriginCountry_serie" (
     "serieId" integer not null, /* L'identifiant de la série */
@@ -169,8 +162,6 @@ alter table "User_serie" add constraint fk_user_serie_user foreign key ("user_id
 alter table "User_serie" add constraint fk_user_serie_serie foreign key ("serie_id") references "Serie" ("id");
 alter table "User_note" add constraint fk_user_note_user foreign key ("user_id") references "User" ("id");
 alter table "User_note" add constraint fk_user_note_serie foreign key ("serie_id") references "Serie" ("id");
-alter table "Country_serie" add constraint fk_Country_serie_serie foreign key ("serieId") references "Serie" ("id");
-alter table "Country_serie" add constraint fk_Country_serie_country foreign key ("countryId") references "Country" ("id");
 alter table "Genre_serie" add constraint fk_genre_serie_serie foreign key ("serieId") references "Serie" ("id");
 alter table "Genre_serie" add constraint fk_genre_serie_genre foreign key ("genreId") references "Genre" ("id");
 alter table "ProductionCompany_serie" add constraint fk_production_company_serie_serie foreign key ("serieId") references "Serie" ("id");

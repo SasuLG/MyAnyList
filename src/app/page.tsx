@@ -8,13 +8,40 @@ import { BASE_DETAILS_SERIE_ROUTE } from "@/constants/app.route.const";
 import Image from "next/image";
 
 export default function Home() {
+
+  /**
+   * Récupérer les informations de l'utilisateur
+   */
   const { user, setSelectedMenu } = useUserContext();
+
+  /**
+   * Hook qui permet de stocker les séries recommandées
+   */
   const [recommendedSeries, setRecommendedSeries] = useState<MinimalSerie[]>([]);
+
+  /**
+   * Hook qui permet de stocker la rotation du slider
+   */
   const [rotation, setRotation] = useState(0);
+
+  /**
+   * Hook qui permet de stocker la position de départ du slider
+   */
   const [startX, setStartX] = useState<number | null>(null);
+
+  /**
+   * Hook qui permet de stocker l'état du slider
+   */
   const [isDragging, setIsDragging] = useState(false);
+
+  /**
+   * Hook qui permet de stocker le temps de la dernière interaction
+   */
   const [lastInteractionTime, setLastInteractionTime] = useState(Date.now());
 
+  /**
+   * Fonction qui permet de récupérer les séries populaires
+   */
   const fetchPopularSeries = async () => {
     if (!user) {
       const response = await fetch(`/api/series/popular?limit=10&page=1`);
@@ -23,6 +50,9 @@ export default function Home() {
     }
   };
 
+  /**
+   * Fonction qui permet de récupérer les séries recommandées
+   */
   const fetchRecommendedSeries = async () => {
     if (!user) return;
     const response = await fetch(`/api/${user.web_token}/series/recommanded?limit=10&page=1`);
@@ -30,11 +60,19 @@ export default function Home() {
     setRecommendedSeries(data);
   };
 
+  /**
+   * Fonction qui permet de gérer la rotation du slider
+   * @param {number} angle - L'angle de rotation
+   */
   const handleRotation = (angle: number) => {
     setRotation((prev) => prev + angle);
     setLastInteractionTime(Date.now());
   };
 
+  /**
+   * Fonction qui permet de gérer le clic sur le slider
+   * @param {React.MouseEvent} e - L'événement de clic
+   */
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setStartX(e.clientX);
@@ -42,6 +80,10 @@ export default function Home() {
     setLastInteractionTime(Date.now());
   };
 
+  /**
+   * Fonction qui permet de gérer le déplacement de la souris
+   * @param {MouseEvent} e - L'événement de déplacement de la souris
+   */
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging || startX === null) return;
     const deltaX = e.clientX - startX;
@@ -50,11 +92,17 @@ export default function Home() {
     setStartX(e.clientX);
   };
 
+  /**
+   * Fonction qui permet de gérer le relâchement de la souris
+   */
   const handleMouseUp = () => {
     setIsDragging(false);
     setStartX(null);
   };
 
+  /**
+   * Effet qui permet de gérer les événements de la souris
+   */
   useEffect(() => {
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
@@ -64,6 +112,9 @@ export default function Home() {
     };
   }, [startX, isDragging]);
 
+  /**
+   * Effet qui permet de gérer le défilement automatique du slider
+   */
   useEffect(() => {
     const autoScroll = setInterval(() => {
       if (Date.now() - lastInteractionTime >= 3000) {

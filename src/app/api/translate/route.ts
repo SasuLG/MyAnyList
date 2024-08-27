@@ -6,6 +6,7 @@ const kuromoji = require('kuromoji');
 
 export async function POST(req: Request): Promise<Response> {
     try {
+        console.log('DANS LE POST');
         // Assure-toi que le corps de la requête est en JSON
         const requestBody = await req.json();
         const texts: string[] = requestBody.texts;
@@ -24,7 +25,7 @@ export async function POST(req: Request): Promise<Response> {
         });
 
         const tokenizer = await tokenizerPromise;
-
+        console.log('TOKENIZER', tokenizer);
         // Fonction pour translittérer un texte en romaji
         const transliterateText = (text: string): string => {
             const tokens = tokenizer.tokenize(text);
@@ -52,7 +53,7 @@ export async function POST(req: Request): Promise<Response> {
                     lastWasJapanese = false;
                 }
             });
-
+            console.log('ROMAJI TEXT', romajiText);
             // Ajouter le dernier token romaji s'il y en a
             if (currentRomajiToken) {
                 romajiText += currentRomajiToken.trim();
