@@ -504,7 +504,7 @@ export default function SearchPage() {
     window.addEventListener('resize', handleWindowResize);
     return () => window.removeEventListener('resize', handleWindowResize);
   }, []);
-  
+
   useEffect(() => {
     fetchData();
     fetchGenres();
@@ -521,8 +521,8 @@ export default function SearchPage() {
   }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, withFollowed, seriesIdFollowed, orderAsc, selectedTags]);
 
   useEffect(() => {
-    if(typeof window !== "undefined") window.innerWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
-  }, [window.innerWidth]);
+    if(windowWidth) windowWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
+  }, [windowWidth]);
 
   useEffect(() => setSelectedMenu("search"), [setSelectedMenu]);
 

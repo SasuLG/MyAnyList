@@ -506,7 +506,7 @@ export default function MyList(){
     window.addEventListener('resize', handleWindowResize);
     return () => window.removeEventListener('resize', handleWindowResize);
   }, []);
-  
+
   useEffect(() => {
     fetchData();
     fetchGenres();
@@ -523,8 +523,8 @@ export default function MyList(){
   }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, series, orderAsc, selectedTags]);
   
   useEffect(() => {
-    if(typeof window !== "undefined") window.innerWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
-  }, [window.innerWidth]);
+    if(windowWidth) windowWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
+  }, [windowWidth]);
 
   useEffect(() => setSelectedMenu("myList"), [setSelectedMenu]);
 

@@ -1,4 +1,4 @@
-"use client"
+
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import HoverToolBox from '@/components/hover';
@@ -8,12 +8,13 @@ import { BrokenHeart, Heart } from './svg/heart.svg';
 import { BASE_DETAILS_SERIE_ROUTE } from '@/constants/app.route.const';
 
 const useMediaQuery = (query: string) => {
-  const [matches, setMatches] = useState(window.matchMedia(query).matches);
+  const [matches, setMatches] = useState<boolean>(false);
 
   useEffect(() => {
     const mediaQueryList = window.matchMedia(query);
     const handleChange = () => setMatches(mediaQueryList.matches);
     
+    handleChange(); // Set initial value
     mediaQueryList.addEventListener('change', handleChange);
     return () => mediaQueryList.removeEventListener('change', handleChange);
   }, [query]);
