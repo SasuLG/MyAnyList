@@ -1,6 +1,6 @@
 import { Pool, QueryConfig, QueryResult } from "pg";
 
-const isDevelopment =process.env.MODE !== 'production';
+const isDevelopment = process.env.NODE_ENV === 'development' && process.env.MODE !== 'production';
 
 const userPool = new Pool(isDevelopment
     ? {
