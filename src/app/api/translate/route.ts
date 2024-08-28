@@ -1,5 +1,6 @@
 import { ServerError } from "@/lib/api/response/server.response";
 import { toRomaji } from "wanakana";
+import path from 'path';
 
 // Importation dynamique de kuromoji
 const kuromoji = require('kuromoji');
@@ -18,7 +19,7 @@ export async function POST(req: Request): Promise<Response> {
 
         // Initialisation du tokenizer
         const tokenizerPromise = new Promise<any>((resolve, reject) => {
-            kuromoji.builder({ dicPath: 'node_modules/kuromoji/dict' }).build((err: any, tokenizer: any) => {
+            kuromoji.builder({ dicPath: path.resolve(process.cwd(), 'public/kuromoji-dict') }).build((err: any, tokenizer: any) => {
                 if (err) reject(err);
                 else resolve(tokenizer);
             });
