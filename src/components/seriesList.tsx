@@ -165,7 +165,7 @@ const SeriesList = ({ series, styleType, followedIds, onClickHeart, limit, size 
                     )}
                   </div>
                   {styleType === 'list' && (
-                    <div style={{ marginTop: "1rem", marginLeft: '1rem', alignSelf: 'stretch', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '14px', color: 'var(--main-text-color)', textAlign: 'right' }}>
+                    <div style={{ marginTop: "2rem", marginLeft: '1rem', alignSelf: 'stretch', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '14px', color: 'var(--main-text-color)', textAlign: 'right' }}>
                       <span><strong>Vote Average:</strong> {serie.vote_average}</span>
                       <span><strong>Episodes:</strong> {serie.number_of_episodes}</span>
                       <span><strong>Status:</strong> {serie.status}</span>
@@ -180,6 +180,20 @@ const SeriesList = ({ series, styleType, followedIds, onClickHeart, limit, size 
             >
               {followedIds.includes(Number(serie.id)) ? <Heart width={heartSize} height={heartSize} /> : <BrokenHeart width={heartSize} height={heartSize} />}
             </div>
+            {styleType === 'list' && isMylist && (
+              <input type="number" min="0" max="10" step="0.01"  onClick={(e) => { e.stopPropagation(); }} /*DEFAULTVALUE TODO */
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  if (!isNaN(value) && e.target.value.includes('.')) {
+                    const [integer, decimal] = e.target.value.split('.');
+                    if (decimal.length > 2) {
+                      e.target.value = `${integer}.${decimal.substring(0, 2)}`;
+                    }
+                  }
+                }}
+                className="no-spinners"
+                style={{ width: `${badgeSize}px`,  height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: '0', right: '0', borderRadius: '50%',zIndex: 1, transition: 'transform 0.3s', fontSize: `${badgeFontSize}px`, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',  border: 'none',   outline: 'none', textAlign: 'center',padding: '0', backgroundColor: 'transparent',  color: 'inherit',  appearance: 'none' }}/>
+            )}
           </li>
         );
 

@@ -13,10 +13,8 @@ import { ServerError } from "@/lib/api/response/server.response";
  */
 export async function POST(req: Request, context: any): Promise<Response> {
     try {
-        console.log('DANS LE POST');
         const serieData = await req.json();
         await importSerie(serieData);
-        console.log('Série importé techniquement');
         return new Response(JSON.stringify({ message: 'Série importée avec succès', valid: true }), {
             headers: {
                 'Content-Type': 'application/json'
