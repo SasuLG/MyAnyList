@@ -11,6 +11,8 @@ import { DecreaseSize, IncreaseSize, Settings, ToggleLayout } from '@/components
 
 export default function SearchPage() {
 
+  const [windowWidth, setWindowWidth] = useState<number | undefined>(undefined);
+
   /**
    * Récupérer les informations de l'utilisateur
    */
@@ -493,6 +495,16 @@ export default function SearchPage() {
     setOrderAsc(true);
   };
 
+  const handleWindowResize = () => {
+    setWindowWidth(window.innerWidth);
+  }
+
+  useEffect(() => {
+    handleWindowResize();
+    window.addEventListener('resize', handleWindowResize);
+    return () => window.removeEventListener('resize', handleWindowResize);
+  }, []);
+  
   useEffect(() => {
     fetchData();
     fetchGenres();
@@ -509,7 +521,7 @@ export default function SearchPage() {
   }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, withFollowed, seriesIdFollowed, orderAsc, selectedTags]);
 
   useEffect(() => {
-    window.innerWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
+    if(typeof window !== "undefined") window.innerWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
   }, [window.innerWidth]);
 
   useEffect(() => setSelectedMenu("search"), [setSelectedMenu]);
@@ -527,7 +539,7 @@ export default function SearchPage() {
   (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange);
 
   return (
-    <div style={{ height: "100%", padding: window.innerWidth >500?"2rem 5rem":"2rem 2rem", backgroundColor: "var(--background-color)" }}>
+    <div style={{ height: "100%", padding: windowWidth && windowWidth >500?"2rem 5rem":"2rem 2rem", backgroundColor: "var(--background-color)" }}>
 
       <button
         onClick={(e) => { toggleButtonsVisibility(); setRotating(!Rotating); }} 
