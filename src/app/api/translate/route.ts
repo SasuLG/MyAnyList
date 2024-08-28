@@ -19,7 +19,7 @@ export async function POST(req: Request): Promise<Response> {
 
         // Initialisation du tokenizer
         let dictPath = 'node_modules/kuromoji/dict';
-        if(process.env.MODE === 'production') dictPath = path.resolve(process.cwd(), 'public/kuromoji-dict');
+        if(process.env.NODE_ENV === 'production') dictPath = path.resolve(process.cwd(), 'public/kuromoji-dict');
         const tokenizerPromise = new Promise<any>((resolve, reject) => {
             kuromoji.builder({ dicPath: dictPath }).build((err: any, tokenizer: any) => {
                 if (err) reject(err);
