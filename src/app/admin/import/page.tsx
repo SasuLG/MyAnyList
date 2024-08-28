@@ -189,7 +189,6 @@ export default function Import() {
                 },
                 body: JSON.stringify({ texts: [serie.original_name] })
             });
-            console.log(namesResponse);
             const namesData = await namesResponse.json();
             importSeriesData.romaji_name = namesData.texts[0]; 
         
@@ -197,7 +196,7 @@ export default function Import() {
         
             // Envoyer les données d'importation à l'API
             const response = await fetch(`/api/admin/series/import`, {
-                method: "PUT",
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },

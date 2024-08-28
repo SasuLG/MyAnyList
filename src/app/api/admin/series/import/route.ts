@@ -3,7 +3,7 @@ import { ServerError } from "@/lib/api/response/server.response";
 
 /**
  * Route : /api/amdin/series/import
- * METHOD : PUT
+ * METHOD : POST
  * 
  * Route de l'api pour insérer une nouvelle série dans la base de données.
  * 
@@ -11,10 +11,12 @@ import { ServerError } from "@/lib/api/response/server.response";
  * @params {any} [token, name] - Le paramètre dynamique de la route de l'api.
  * @returns {Response} La réponse de la requête.
  */
-export async function PUT(req: Request, context: any): Promise<Response> {
+export async function POST(req: Request, context: any): Promise<Response> {
     try {
+        console.log('DANS LE POST');
         const serieData = await req.json();
         await importSerie(serieData);
+        console.log('Série importé techniquement');
         return new Response(JSON.stringify({ message: 'Série importée avec succès', valid: true }), {
             headers: {
                 'Content-Type': 'application/json'
@@ -23,7 +25,7 @@ export async function PUT(req: Request, context: any): Promise<Response> {
         });
 
     } catch (err) {
-        return ServerError('PUT : /api/amdin/series/import', err);
+        return ServerError('POST : /api/amdin/series/import', err);
     }
 }
 
