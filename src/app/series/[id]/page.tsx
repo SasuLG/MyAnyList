@@ -9,16 +9,55 @@ import { useUserContext } from "@/userContext";
 import { Star, StarColored, StarHalfColored } from "@/components/svg/stars.svg";
 
 export default function SerieDetails({ params }: { params: { id: string } }) {
+
+    /**
+     * Récupération des informations de l'utilisateur.
+     */
     const { user, setAlert, setSelectedMenu } = useUserContext();
+
+    /**
+     * Hook qui permet de stocker les informations de la série.
+     */
     const [serie, setSerie] = useState<Serie | undefined>(undefined);
+
+    /**
+     * Hook qui permet de savoir si les données ont été récupérées.
+     */
     const [fetchDataFinished, setFetchDataFinished] = useState<boolean>(false);
+
+    /**
+     * Hook qui permet de stocker la saison sélectionnée.
+     */
     const [selectedSeason, setSelectedSeason] = useState<number>(0);
+
+    /**
+     * Hook qui permet de stocker la note de l'utilisateur.
+     */
     const [rating, setRating] = useState<number>(serie?.note ?? 0);
+
+    /**
+     * Hook qui permet de stocker la note survolée.
+     */
     const [hoverRating, setHoverRating] = useState<number | null>(null);
+
+    /**
+     * Hook qui permet de stocker l'état de l'affichage du synopsis.
+     */
     const [showMore, setShowMore] = useState<boolean>(false);
+
+    /**
+     * Hook qui permet de stocker l'état de l'édition de la note.
+     */
     const [isEditing, setIsEditing] = useState<boolean>(false);
+
+    /**
+     * Hook qui permet de stocker l'état de l'affichage des informations supplémentaires.
+     */
     const [showMoreInfo, setShowMoreInfo] = useState<boolean>(false);
 
+    /**
+     * Fonction pour récupérer les informations de la série.
+     */
     const fetchSerie = async () => {
         const response = await fetch(`/api/series/${encodeURIComponent(params.id)}`);
         if (!response.ok) {
@@ -26,9 +65,9 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
             return;
         }
         const data: Serie = await response.json();
-        data.seasons.sort((a, b) => a.season_number - b.season_number);
+        if(data.seasons) data.seasons.sort((a, b) => a.season_number - b.season_number);
         data.seasons.forEach(season => {
-            season.episodes.sort((a, b) => a.episode_number - b.episode_number);
+            if(season.episodes) season.episodes.sort((a, b) => a.episode_number - b.episode_number);
         });
 
         if (user) {
@@ -47,6 +86,9 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
         setFetchDataFinished(true);
     };
 
+    /**
+     * Fonction pour suivre ou arrêter de suivre une série.
+     */
     const onClickHeart = async (serie: Serie) => {
         if (!user) return;
         let route = `/api/${encodeURIComponent(user.web_token)}/series/follow`;
@@ -74,6 +116,9 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
         }
     };
 
+    /**
+     * Fonction pour mettre à jour le vote de l'utilisateur.
+     */
     const updateVote = async () => {
         if (!user || !serie) return;
         const note = rating ?? serie.note;
@@ -95,16 +140,29 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
         }
     };
 
+    /**
+     * Fonction pour gérer l'événement de touche enfoncée.
+     * @param {React.KeyboardEvent<HTMLInputElement>} event 
+     */
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
             if(isEditing) setIsEditing(false);
         }
     };
     
+    /**
+     * Fonction pour gérer le changement de note.
+     * @param {number} - newRating
+     */
     const handleRating = (newRating: number) => {
         setRating(newRating);
     };
 
+    /**
+     * Fonction pour gérer l'événement de survol de la note.
+     * @param {number} - index
+     * @param {React.MouseEvent<HTMLSpanElement, MouseEvent>} - event
+     */
     const handleMouseEnter = (index: number, event: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
         const rect = event.currentTarget.getBoundingClientRect();
         const x = event.clientX - rect.left;
@@ -113,10 +171,18 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
         setHoverRating(newHoverRating);
     };
 
+    /**
+     * Fonction pour gérer l'événement de sortie de la note.
+     */
     const handleMouseLeave = () => {
         setHoverRating(null);
     };
 
+    /**
+     * Fonction pour gérer le clic sur une note.
+     * @param {number} - index
+     * @param {React.MouseEvent<HTMLSpanElement, MouseEvent>} - event
+     */
     const handleClick = (index: number, event: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
         const rect = event.currentTarget.getBoundingClientRect();
         const x = event.clientX - rect.left;
@@ -125,14 +191,28 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
         handleRating(newRating);
     };
 
+    /**
+     * Fonction pour formater la note.
+     * @param {number} - rating
+     */
     const formatRating = (rating: number) => {
         return rating % 1 === 0 ? `${rating}.0` : rating.toFixed(1);
     };
 
+    /**
+     * Fonction pour tronquer un texte.
+     * @param {string} - text
+     * @param {number} - length
+     */
     const truncateText = (text: string, length: number) => {
         return text.length > length ? text.substring(0, length) + '...' : text;
     };
 
+    /**
+     * Fonction pour obtenir l'icône de la note.
+     * @param {number} - index
+     * @return {JSX.Element}
+     */
     const getStarIcon = (index: number) => {
         if (hoverRating !== null) {
             return hoverRating >= index + 1 ? <StarColored width={30} height={30} /> : hoverRating > index ? <StarHalfColored width={30} height={30} /> : <Star width={30} height={30} />;
@@ -142,6 +222,10 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
         return <Star width={30} height={30} />;
     };
 
+    /**
+     * Fonction pour gérer le changement de note.
+     * @param {React.ChangeEvent<HTMLInputElement>}
+     */
     const handleRatingChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newRating = parseFloat(event.target.value);
         if (!isNaN(newRating)) {
@@ -288,7 +372,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                     <select onChange={(e) => setSelectedSeason(Number(e.target.value))} value={selectedSeason} style={{ padding: "10px", marginBottom: "20px", fontSize: "1rem", borderRadius: "5px", border: "1px solid #ccc", cursor: "pointer" }}>
                         {serie.seasons.map((season, index) => (
                             <option key={season.id} value={index}>
-                                Saison {season.season_number}: {season.name} ({season.episodes.length} épisodes)
+                                Saison {season.season_number}: {season.name} ({season.episodes ? season.episodes.length:0} épisodes)
                             </option>
                         ))}
                     </select>
@@ -300,7 +384,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                         <p style={{ fontSize: "1.1rem", color: "#666", marginTop: "10px" }}>{serie.seasons[selectedSeason].overview}</p>
                         <h4 style={{ fontSize: "1.2rem", color: "#333", marginTop: "20px", marginBottom: "10px" }}>Episodes</h4>
                         <ul style={{ listStyleType: "none", paddingLeft: "0" }}>
-                            {serie.seasons[selectedSeason].episodes.map((episode) => (
+                            {serie.seasons[selectedSeason].episodes && serie.seasons[selectedSeason].episodes.map((episode) => (
                                 <li key={episode.id} style={{ marginBottom: "20px" }}>
                                     <h5 style={{ fontSize: "1.1rem", color: "#007bff" }}>Episode {episode.episode_number}: {episode.name}</h5>
                                     <img src={`${IMG_SRC}${episode.still_path}`} alt={episode.name} style={{ width: "150px", borderRadius: "5px", objectFit: "cover" }} />

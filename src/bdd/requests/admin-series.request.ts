@@ -10,14 +10,14 @@ export async function importSerie(serieData: Serie) {
         id, name, overview, poster_path, backdrop_path, media_type, original_name, status,
         first_air_date, last_air_date, episode_run_time, number_of_seasons, number_of_episodes, genres,
         spoken_languages, production_countries, production_companies, seasons, vote_average, vote_count, origin_country,
-        popularity, budget, revenue, total_time, tags, romaji_name
+        popularity, budget, revenue, tags, romaji_name
     } = serieData;
 
     try {
         // Insertion ou mise à jour de la série
         const { rows: serieRows } = await Query(`
-            INSERT INTO "Serie" ("tmdb_id", "title", "overview", "poster", "backdrop", "media", "original_name", "status", "first_air_date", "last_air_date", "episode_run_time", "nb_seasons", "nb_episodes", "vote_average", "vote_count", "popularity", "budget", "revenue", "total_time", "romaji_name")
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+            INSERT INTO "Serie" ("tmdb_id", "title", "overview", "poster", "backdrop", "media", "original_name", "status", "first_air_date", "last_air_date", "episode_run_time", "nb_seasons", "nb_episodes", "vote_average", "vote_count", "popularity", "budget", "revenue", "romaji_name")
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
             ON CONFLICT ("tmdb_id") DO UPDATE
             SET "title" = EXCLUDED."title",
                 "overview" = EXCLUDED."overview",
@@ -39,7 +39,7 @@ export async function importSerie(serieData: Serie) {
                 "romaji_name" = EXCLUDED."romaji_name",
                 "last_modified" = CURRENT_TIMESTAMP
             RETURNING "id"
-        `, [id, name, overview, poster_path, backdrop_path, media_type, original_name, status, first_air_date, last_air_date, episode_run_time, number_of_seasons, number_of_episodes, vote_average, vote_count, popularity, budget, revenue, total_time, romaji_name]);
+        `, [id, name, overview, poster_path, backdrop_path, media_type, original_name, status, first_air_date, last_air_date, episode_run_time, number_of_seasons, number_of_episodes, vote_average, vote_count, popularity, budget, revenue, romaji_name]);
 
         if (serieRows.length === 0) {
             throw new Error('Impossible de récupérer l\'ID de la série après l\'insertion.');
@@ -52,14 +52,12 @@ export async function importSerie(serieData: Serie) {
             const { rows: genreRows } = await Query(`
                 INSERT INTO "Genre" ("tmdb_id", "name")
                 VALUES ($1, $2)
-                ON CONFLICT ("name") DO NOTHING
+                ON CONFLICT ("tmdb_id") DO NOTHING
                 RETURNING "id"
             `, [genre.id, genre.name]);
 
-            let genreId;
-            if (genreRows.length > 0) {
-                genreId = genreRows[0].id;
-            } else {
+            let genreId = genreRows.length > 0 ? genreRows[0].id : null;
+            if (!genreId) {
                 const { rows: existingGenreRows } = await Query(`
                     SELECT "id" FROM "Genre" WHERE "tmdb_id" = $1
                 `, [genre.id]);
@@ -86,10 +84,8 @@ export async function importSerie(serieData: Serie) {
                 RETURNING "id"
             `, [language.iso_639_1, language.name, language.english_name]);
 
-            let languageId;
-            if (languageRows.length > 0) {
-                languageId = languageRows[0].id;
-            } else {
+            let languageId = languageRows.length > 0 ? languageRows[0].id : null;
+            if (!languageId) {
                 const { rows: existingLanguageRows } = await Query(`
                     SELECT "id" FROM "Language" WHERE "iso_639_1" = $1
                 `, [language.iso_639_1]);
@@ -116,10 +112,8 @@ export async function importSerie(serieData: Serie) {
                 RETURNING "id"
             `, [country.name, country.iso_3166_1]);
 
-            let countryId;
-            if (countryRows.length > 0) {
-                countryId = countryRows[0].id;
-            } else {
+            let countryId = countryRows.length > 0 ? countryRows[0].id : null;
+            if (!countryId) {
                 const { rows: existingCountryRows } = await Query(`
                     SELECT "id" FROM "Country" WHERE "iso_3166_1" = $1
                 `, [country.iso_3166_1]);
@@ -150,21 +144,19 @@ export async function importSerie(serieData: Serie) {
             const { rows: companyRows } = await Query(`
                 INSERT INTO "ProductionCompany" ("tmdb_id", "name")
                 VALUES ($1, $2)
-                ON CONFLICT ("name") DO UPDATE
-                SET "tmdb_id" = EXCLUDED."tmdb_id"
+                ON CONFLICT ("tmdb_id") DO UPDATE
+                SET "name" = EXCLUDED."name"
                 RETURNING "id"
             `, [company.id, company.name]);
 
-            let companyId;
-            if (companyRows.length > 0) {
-                companyId = companyRows[0].id;
-            } else {
+            let companyId = companyRows.length > 0 ? companyRows[0].id : null;
+            if (!companyId) {
                 const { rows: existingCompanyRows } = await Query(`
-                    SELECT "id" FROM "ProductionCompany" WHERE "name" = $1
-                `, [company.name]);
+                    SELECT "id" FROM "ProductionCompany" WHERE "tmdb_id" = $1
+                `, [company.id]);
 
                 if (existingCompanyRows.length === 0) {
-                    throw new Error(`Société non trouvée pour le nom: ${company.name}`);
+                    throw new Error(`Société non trouvée pour tmdb_id: ${company.id}`);
                 }
                 companyId = existingCompanyRows[0].id;
             }
@@ -185,10 +177,8 @@ export async function importSerie(serieData: Serie) {
                 RETURNING "id"
             `, [tag.name]);
 
-            let tagId;
-            if (tagRows.length > 0) {
-                tagId = tagRows[0].id;
-            } else {
+            let tagId = tagRows.length > 0 ? tagRows[0].id : null;
+            if (!tagId) {
                 const { rows: existingTagRows } = await Query(`
                     SELECT "id" FROM "Tag" WHERE "name" = $1
                 `, [tag.name]);
@@ -243,6 +233,7 @@ export async function importSerie(serieData: Serie) {
         throw error;
     }
 }
+
 
 
 
@@ -324,7 +315,6 @@ export async function deleteSerie(serieId: number) {
             WHERE "id" = $1
         `, [serieId]);
 
-        console.log(`La série avec l'ID ${serieId} a été supprimée avec succès.`);
     } catch (error) {
         console.error('Erreur lors de la suppression de la série:', error);
         throw error;

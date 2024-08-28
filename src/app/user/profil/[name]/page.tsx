@@ -283,7 +283,7 @@ export default function Profil({ params }: { params: { name: string } }) {
             filteredSeries.reverse();
         }
     
-        setRecentSeries(filteredSeries.slice(0, 5));
+        setRecentSeries(filteredSeries.slice(0, 8));
     };
     
     /**
@@ -671,7 +671,7 @@ export default function Profil({ params }: { params: { name: string } }) {
                     <div style={{   display: 'flex', alignItems: 'center',   position: 'relative',   cursor: 'pointer',  marginRight: '-1.5rem', width:"max-content"}}  onClick={() => setOrderAscRecent(!orderAscRecent)}  >
                         <Order  width={30}    height={30}  orderAsc={orderAscRecent} />
                     </div>
-                    <SeriesList series={recentSeries} styleType={"grid"} followedIds={recentSeries.map(serie=>Number(serie.id))} onClickHeart={editPassword} limit={5} size="very-small"/>
+                    <SeriesList series={recentSeries} styleType={"grid"} followedIds={recentSeries.map(serie=>Number(serie.id))} onClickHeart={editPassword} limit={8} size="very-small" isList={false}/>
                 </div>
     
                 <div>
@@ -683,7 +683,7 @@ export default function Profil({ params }: { params: { name: string } }) {
                     <div style={{   display: 'flex', alignItems: 'center',   position: 'relative',   cursor: 'pointer',  marginRight: '-1.5rem',width:"max-content"}}  onClick={() => setOrderAscRating(!orderAscRating)}  >
                         <Order  width={30}    height={30}  orderAsc={orderAscRating} />
                     </div>
-                    <SeriesList series={ratedSeries} styleType={"grid"} followedIds={ratedSeries.map(serie=>Number(serie.id))} onClickHeart={editPassword} limit={5} size="very-small"/>
+                    <SeriesList series={ratedSeries} styleType={"grid"} followedIds={ratedSeries.map(serie=>Number(serie.id))} onClickHeart={editPassword} limit={8} size="very-small" isList={false}/>
                 </div>
 
                 <div>
@@ -695,7 +695,7 @@ export default function Profil({ params }: { params: { name: string } }) {
                     <div style={{   display: 'flex', alignItems: 'center',   position: 'relative',   cursor: 'pointer',  marginRight: '-1.5rem',width:"max-content"}}  onClick={() => setOrderAscTime(!orderAscTime)}  >
                         <Order  width={30}    height={30}  orderAsc={orderAscTime} />
                     </div>
-                    <SeriesList series={longSeries} styleType={"grid"} followedIds={longSeries.map(serie=>Number(serie.id))} onClickHeart={editPassword} limit={5} size="very-small"/>
+                    <SeriesList series={longSeries} styleType={"grid"} followedIds={longSeries.map(serie=>Number(serie.id))} onClickHeart={editPassword} limit={8} size="very-small" isList={false}/>
                 </div>
             </div>
         </div>

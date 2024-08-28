@@ -695,12 +695,27 @@ export async function getAllProductionCountries(): Promise<ProductionCountry[]> 
     }
 }
 
+/**
+ * Fonction qui permet de récupérer les séries recommandées pour un utilisateur.
+ * @param {string} userId - Identifiant de l'utilisateur
+ * @param {number} limit - Nombre de séries à récupérer
+ * @param {number} page - Page de séries à récupérer
+ * @returns 
+ */
 export async function getRecommendedSeries(userId: string, limit: number, page: number): Promise<{ id: number; total_score: number }[]> {
     try {
         const offset = (page - 1) * limit;
 
+        // Helper function to safely format SQL conditions
+        const formatConditions = (conditions: string[]) => {
+            return conditions.length > 0 
+                ? conditions.map(cond => `'${cond}'`).join(',') 
+                : 'NULL';
+        };
+
         // Récupérer les genres préférés de l'utilisateur et les compter
-        const userGenrePrefsResult = await Query(`
+        const userGenrePrefsResult = await Query(
+            `
             WITH "UserGenrePreferences" AS (
                 SELECT
                     "g"."name" AS genre,
@@ -714,17 +729,18 @@ export async function getRecommendedSeries(userId: string, limit: number, page: 
             )
             SELECT genre, genre_count
             FROM "UserGenrePreferences";
-        `, [userId]);
+            `, [userId]);
 
         const genreCounts = userGenrePrefsResult.rows.reduce((acc, row) => {
             acc[row.genre] = parseInt(row.genre_count, 10);
             return acc;
         }, {});
 
-        const genreConditions = Object.keys(genreCounts).map(genre => `'${genre}'`).join(',');
+        const genreConditions = formatConditions(Object.keys(genreCounts));
 
         // Récupérer les pays de production préférés de l'utilisateur et les compter
-        const userCountryPrefsResult = await Query(`
+        const userCountryPrefsResult = await Query(
+            `
             WITH "UserCountryPreferences" AS (
                 SELECT
                     "c"."iso_3166_1" AS country,
@@ -738,17 +754,18 @@ export async function getRecommendedSeries(userId: string, limit: number, page: 
             )
             SELECT country, country_count
             FROM "UserCountryPreferences";
-        `, [userId]);
+            `, [userId]);
 
         const countryCounts = userCountryPrefsResult.rows.reduce((acc, row) => {
             acc[row.country] = parseInt(row.country_count, 10);
             return acc;
         }, {});
 
-        const countryConditions = Object.keys(countryCounts).map(country => `'${country}'`).join(',');
+        const countryConditions = formatConditions(Object.keys(countryCounts));
 
         // Récupérer les sociétés de production préférées de l'utilisateur et les compter
-        const userCompanyPrefsResult = await Query(`
+        const userCompanyPrefsResult = await Query(
+            `
             WITH "UserCompanyPreferences" AS (
                 SELECT
                     "pc"."name" AS company,
@@ -762,17 +779,18 @@ export async function getRecommendedSeries(userId: string, limit: number, page: 
             )
             SELECT company, company_count
             FROM "UserCompanyPreferences";
-        `, [userId]);
+            `, [userId]);
 
         const companyCounts = userCompanyPrefsResult.rows.reduce((acc, row) => {
             acc[row.company] = parseInt(row.company_count, 10);
             return acc;
         }, {});
 
-        const companyConditions = Object.keys(companyCounts).map(company => `'${company}'`).join(',');
+        const companyConditions = formatConditions(Object.keys(companyCounts));
 
         // Récupérer les tags préférés de l'utilisateur et les compter
-        const userTagPrefsResult = await Query(`
+        const userTagPrefsResult = await Query(
+            `
             WITH "UserTagPreferences" AS (
                 SELECT
                     "t"."name" AS tag,
@@ -786,7 +804,7 @@ export async function getRecommendedSeries(userId: string, limit: number, page: 
             )
             SELECT tag, tag_count
             FROM "UserTagPreferences";
-        `, [userId]);
+            `, [userId]);
 
         const tagCounts = userTagPrefsResult.rows.reduce((acc, row) => {
             acc[row.tag] = parseInt(row.tag_count, 10);
@@ -794,13 +812,14 @@ export async function getRecommendedSeries(userId: string, limit: number, page: 
         }, {});
 
         // Exclure le tag "anime" de la liste des tags
-        const tagConditions = Object.keys(tagCounts)
-            .filter(tag => tag !== 'anime' && tag !== 'slice of life' && tag !== 'romance' && tag !== 'romantic comedy') // Filtrer le tag "anime"
-            .map(tag => `'${tag}'`)
-            .join(',');
+        const tagConditions = formatConditions(
+            Object.keys(tagCounts)
+                .filter(tag => tag !== 'anime' && tag !== 'slice of life' && tag !== 'romance' && tag !== 'romantic comedy')
+        );
 
         // Récupérer les séries recommandées avec les scores correctement calculés
-        const result = await Query(`
+        const result = await Query(
+            `
             WITH "UserPreferences" AS (
                 SELECT 
                     JSONB_AGG("g"."name") AS "genres",
@@ -832,14 +851,12 @@ export async function getRecommendedSeries(userId: string, limit: number, page: 
             "SerieScores" AS (
                 SELECT
                     "s"."id",
-                    -- Calcul du score du type de média
                     COALESCE(
                         (SELECT COUNT(*)
                          FROM "User_serie" AS "us"
                          JOIN "Serie" AS "s_user" ON "us"."serie_id" = "s_user"."id"
                          WHERE "s_user"."media" = "s"."media"
                          AND "us"."user_id" = $1), 0) * 6 AS "media_score",
-                    -- Calcul du score des genres avec ajustement pour certains genres
                     COALESCE(
                         (
                             SELECT SUM(
@@ -873,7 +890,6 @@ export async function getRecommendedSeries(userId: string, limit: number, page: 
                             WHERE "gs"."serieId" = "s"."id"
                         ), 0
                     ) AS "genre_score",
-                    -- Calcul du score des tags en tenant compte de leur fréquence et en excluant "anime"
                     COALESCE(
                         (
                             SELECT SUM(
@@ -902,7 +918,6 @@ export async function getRecommendedSeries(userId: string, limit: number, page: 
                             WHERE "ts"."serieId" = "s"."id"
                         ), 0
                     ) AS "tag_score",
-                    -- Calcul du score des pays de production en tenant compte de leur fréquence
                     COALESCE(
                         (
                             SELECT SUM(
@@ -931,7 +946,6 @@ export async function getRecommendedSeries(userId: string, limit: number, page: 
                             WHERE "pcs"."serieId" = "s"."id"
                         ), 0
                     ) AS "country_score",
-                    -- Calcul du score des sociétés de production en tenant compte de leur fréquence
                     COALESCE(
                         (
                             SELECT SUM(
@@ -982,7 +996,7 @@ export async function getRecommendedSeries(userId: string, limit: number, page: 
             )
             SELECT id, "total_score"
             FROM "RankedSeries";
-        `, [userId, limit, offset]);
+            `, [userId, limit, offset]);
 
         return result.rows;
     } catch (error) {
@@ -990,6 +1004,7 @@ export async function getRecommendedSeries(userId: string, limit: number, page: 
         throw error;
     }
 }
+
 
 /**
  * Fonction qui permet de récupérer les détails des séries en fonction d'un tableau d'IDs.

@@ -15,7 +15,6 @@ export async function GET(req: Request, context: any): Promise<Response> {
         const { params } = context;
         const webToken = decodeURIComponent(params.token);
         const userRequest = await getUserByToken(webToken);
-        
         if(userRequest){
             const url = new URL(req.url);
             const limit = Number(url.searchParams.get('limit')) || 10;
@@ -23,7 +22,6 @@ export async function GET(req: Request, context: any): Promise<Response> {
     
             const data = await getRecommendedSeries(userRequest.id, limit, page);
             if(data.length > 0){
-                console.log(data);
                 const series = await getSeriesByIds(data.map((serie) => serie.id));
                 return new Response(JSON.stringify(series), {
                     headers: {

@@ -8,8 +8,10 @@ import { useEffect, useState } from "react";
 import { Range } from '@/tmdb/types/series.type';
 import { Filter } from "@/components/svg/filter.svg";
 import Filters from "@/components/filters";
+import { DecreaseSize, IncreaseSize, Settings, ToggleLayout } from "@/components/svg/buttons.svg";
 
 export default function MyList(){
+  const [windowWidth, setWindowWidth] = useState<number | undefined>(undefined);
 
   /**
    * Récupérer les informations de l'utilisateur
@@ -151,6 +153,16 @@ export default function MyList(){
   const [episodeRange, setEpisodeRange] = useState<Range>({ min: 1, max: 2000, minimalRange: 1, maximalRange: 2000 });
 
   /**
+   * Hook pour stocker la visibilité des boutons de settings
+   */
+  const [buttonsVisible, setButtonsVisible] = useState(true);
+
+  /**
+   * Hook pour stocker l'état de la rotation des boutons de settings
+   */
+  const [Rotating, setRotating] = useState<boolean | undefined>(undefined);
+
+  /**
    * Récupérer les séries
    */
   const fetchData = async () => {
@@ -163,7 +175,6 @@ export default function MyList(){
 
     if(response.ok){
         setSeries(data);
-        console.log(data);
         setFilteredSeries(data);
     }else{
         setAlert({ message: 'Erreur lors de la récupération des séries', valid: false });
@@ -309,6 +320,13 @@ export default function MyList(){
         setAlert({ message: 'Erreur lors de la récupération des séries suivies', valid: false });
     }
   }
+
+  /**
+   * Fonction pour basculer la visibilité des boutons de settings
+   */
+  const toggleButtonsVisibility = () => {
+    setButtonsVisible(!buttonsVisible);
+  };
 
   /**
    * Fonction pour gérer le changement de la plage d'années
@@ -479,6 +497,16 @@ export default function MyList(){
     setOrderAsc(true);
   };
 
+  const handleWindowResize = () => {
+    setWindowWidth(window.innerWidth);
+  }
+
+  useEffect(() => {
+    handleWindowResize();
+    window.addEventListener('resize', handleWindowResize);
+    return () => window.removeEventListener('resize', handleWindowResize);
+  }, []);
+
   useEffect(() => {
     fetchData();
     fetchGenres();
@@ -493,6 +521,10 @@ export default function MyList(){
       applyFiltersAndSort();
     }
   }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, series, orderAsc, selectedTags]);
+  
+  useEffect(() => {
+    if(windowWidth) windowWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
+  }, [windowWidth]);
 
   useEffect(() => setSelectedMenu("myList"), [setSelectedMenu]);
 
@@ -509,20 +541,36 @@ export default function MyList(){
   (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange);
 
   return (
-    <div style={{ height: "100%", padding: "2rem 4rem", backgroundColor: "var(--background-color)" }}>
-      <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginBottom: "2rem" }}>
-        <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }} onClick={toggleLayout}>
-          Toggle Layout
-        </button>
+    <div style={{ height: "100%", padding: windowWidth && windowWidth >500?"2rem 5rem":"2rem 2rem", backgroundColor: "var(--background-color)" }}>
 
-        <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }} onClick={increaseSize}>
-          Increase Size
-        </button>
+      <button
+        onClick={(e) => { toggleButtonsVisibility(); setRotating(!Rotating); }} 
+        style={{ position: 'absolute', top: '4rem', right: '1rem', border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.6rem 1.2rem", cursor: "pointer", boxShadow: "0px 1px 3px rgba(0,0,0,0.1)", zIndex: 1000, fontSize: '0.9rem', fontWeight: 'normal', color: "var(--text-color)", transition: "background-color 0.3s, color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--button-hover-background-color)'; e.currentTarget.style.color = 'var(--button-hover-text-color)'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'var(--button-background-color)'; e.currentTarget.style.color = 'var(--text-color)'; }} >
+          <Settings width={20} height={20} rotating={Rotating}/>
+      </button>
 
-        <button style={{ padding: "0.9rem", border: "none", backgroundColor: "var(--button-background)", color: "var(--button-text)", borderRadius: "4px", cursor: "pointer" }}onClick={decreaseSize}>
-          Decrease Size
-        </button>
-      </div>
+      {buttonsVisible && (
+        <div style={{ position: 'absolute', top: '6.5rem', right: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 1000 }}>
+          <button
+            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={toggleLayout} onMouseOver={(e) => e.currentTarget.style.opacity = "1"}   onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
+            <ToggleLayout width={25} height={25} checked={styleType==="grid"}/>
+          </button>
+
+          <button
+            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={increaseSize}  onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
+            <IncreaseSize width={25} height={25} />
+          </button>
+
+          <button
+            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={decreaseSize} onMouseOver={(e) => e.currentTarget.style.opacity = "1"}onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"} >
+            <DecreaseSize width={25} height={25} />
+          </button>
+        </div>
+      )}
 
       <Filters
         genres={genres}

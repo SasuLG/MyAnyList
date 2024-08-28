@@ -42,7 +42,6 @@ export default function ListUsers() {
         const response = await fetch('/api/admin/user/all');
         const data = await response.json();
         setUsers(data);
-        console.log(data);
     }
 
     /**

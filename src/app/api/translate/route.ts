@@ -1,11 +1,13 @@
 import { ServerError } from "@/lib/api/response/server.response";
 import { toRomaji } from "wanakana";
+import path from 'path';
 
 // Importation dynamique de kuromoji
 const kuromoji = require('kuromoji');
 
 export async function POST(req: Request): Promise<Response> {
     try {
+        
         // Assure-toi que le corps de la requête est en JSON
         const requestBody = await req.json();
         const texts: string[] = requestBody.texts;
@@ -16,15 +18,16 @@ export async function POST(req: Request): Promise<Response> {
         }
 
         // Initialisation du tokenizer
+        let dictPath = 'node_modules/kuromoji/dict';
+        if(process.env.NODE_ENV === 'production') dictPath = path.resolve(process.cwd(), 'public/kuromoji-dict');
         const tokenizerPromise = new Promise<any>((resolve, reject) => {
-            kuromoji.builder({ dicPath: 'node_modules/kuromoji/dict' }).build((err: any, tokenizer: any) => {
+            kuromoji.builder({ dicPath: dictPath }).build((err: any, tokenizer: any) => {
                 if (err) reject(err);
                 else resolve(tokenizer);
             });
         });
 
         const tokenizer = await tokenizerPromise;
-
         // Fonction pour translittérer un texte en romaji
         const transliterateText = (text: string): string => {
             const tokens = tokenizer.tokenize(text);
@@ -52,7 +55,6 @@ export async function POST(req: Request): Promise<Response> {
                     lastWasJapanese = false;
                 }
             });
-
             // Ajouter le dernier token romaji s'il y en a
             if (currentRomajiToken) {
                 romajiText += currentRomajiToken.trim();

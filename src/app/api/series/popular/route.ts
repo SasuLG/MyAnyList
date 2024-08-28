@@ -16,7 +16,6 @@ export async function GET(req: Request, context: any): Promise<Response> {
         const page = Number(url.searchParams.get('page')) || 1;
 
         const data = await getPopularSeries(limit, page);
-        console.log(data);
         return new Response(JSON.stringify(data), {
             headers: {
                 'Content-Type': 'application/json'

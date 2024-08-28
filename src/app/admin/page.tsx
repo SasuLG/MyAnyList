@@ -7,9 +7,9 @@ import { useEffect } from "react";
 
 export default function AdminPage() {
 
-    /**
-     * Hook qui permet de gérer l'affichage du mot de passe.
-     */
+  /**
+   * Récupérer les informations de l'utilisateur
+   */
     const { setSelectedMenu } = useUserContext();
     
     useEffect(() => setSelectedMenu(""), [setSelectedMenu]);
