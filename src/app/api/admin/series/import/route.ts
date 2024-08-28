@@ -1,5 +1,6 @@
 import { getTmdbIdsSeries, importSerie } from "@/bdd/requests/admin-series.request";
 import { ServerError } from "@/lib/api/response/server.response";
+export const maxDuration = 60; // This function can run for a maximum of 5 seconds
 
 /**
  * Route : /api/amdin/series/import

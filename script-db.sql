@@ -76,7 +76,7 @@ create table if not exists "Serie" (
     "nb_episodes" integer, /* Le nombre d'épisodes */
     "popularity" float, /* La popularité */
     "budget" integer, /* Le budget */
-    "revenue" integer /* Les recettes */
+    "revenue" integer, /* Les recettes */
     "last_modified" timestamp not null default current_timestamp, /* La date de dernière modification */
     /*networks*/
 );
