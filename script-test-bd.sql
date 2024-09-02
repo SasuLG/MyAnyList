@@ -25,7 +25,7 @@ SET session_replication_role = replica;
 -- Supprimer toutes les données des tables
 TRUNCATE TABLE "User", "Country", "Genre", "Genre_serie", "OriginCountry_serie", 
     "Serie", "ProductionCompany", "ProductionCompany_serie", 
-    "ProductionCountry_serie", "Language", "Language_serie", "Episode", "Season", "User_serie", "User_note", "Tag", "Tag_serie";
+    "ProductionCountry_serie", "Language", "Language_serie", "Episode", "Season", "User_serie", "User_note", "Tag", "Tag_serie"
     CASCADE;
 
 -- Réactiver les contraintes de clés étrangères

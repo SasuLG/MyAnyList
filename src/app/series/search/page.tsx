@@ -289,6 +289,10 @@ export default function SearchPage() {
     if (user === undefined) {
       return;
     }
+    if (seriesIdFollowed.includes(Number(serie.id))) {
+      const confirmUnfollow = confirm("Êtes-vous sûr de vouloir arrêter de suivre cette série ?");
+      if (!confirmUnfollow) return;
+  }
     const route = `/api/${encodeURIComponent(user.web_token)}/series/${seriesIdFollowed.includes(Number(serie.id)) ? 'un' : ''}follow`;
     const response = await fetch(route, {
       method: 'POST',
@@ -424,9 +428,12 @@ export default function SearchPage() {
         (selectedFormats.includes('film d\'animation') && serie.media_type === 'film d\'animation');
       
       const matchesGenre = selectedGenres.length === 0 || selectedGenres.every(genre => serie.genres.some(g => g.name === genre));
+      const searchWords = searchQuery.toLowerCase().split(/\s+/);
       const matchesSearchQuery = [serie.name, serie.original_name, serie.romaji_name]
-      .filter(name => name) 
-      .some(name => name.toLowerCase().includes(searchQuery.toLowerCase()));
+        .filter(name => name) 
+        .some(name => 
+          searchWords.every(word => name.toLowerCase().includes(word))
+        );
       const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(statusMapping[serie.status] || serie.status);
       const matchesOriginCountry = selectedOriginCountries.length === 0 || selectedOriginCountries.every(country => serie.origin_country.includes(country));
       const matchesProductionCompany = selectedProductionCompanies.every(company => serie.production_companies.some(prod => prod.name === company));

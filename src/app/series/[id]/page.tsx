@@ -91,6 +91,11 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
      */
     const onClickHeart = async (serie: Serie) => {
         if (!user) return;
+
+        if (serie.follow_date) {
+            const confirmUnfollow = confirm("Êtes-vous sûr de vouloir arrêter de suivre cette série ?");
+            if (!confirmUnfollow) return; 
+        }
         let route = `/api/${encodeURIComponent(user.web_token)}/series/follow`;
         if (serie.follow_date) {
             route = `/api/${encodeURIComponent(user.web_token)}/series/unfollow`;

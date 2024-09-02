@@ -271,7 +271,7 @@ export default function Import() {
                                     {styleType === 'list' && (
                                         <>
                                             <div style={{ marginRight: "1rem" }}>
-                                                {serie.poster_path && <Image  src={`${IMG_SRC}${serie.poster_path}`} alt={serie.name}  width={100} height={150}  style={{ borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)" }}  />}
+                                                {serie.poster_path && <Image unoptimized src={`${IMG_SRC}${serie.poster_path}`} alt={serie.name}  width={100} height={150}  style={{ borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)" }}  />}
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <h2 style={{ color: "var(--titre-color)" }}>{serie.name}</h2>
