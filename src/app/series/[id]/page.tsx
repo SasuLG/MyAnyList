@@ -369,38 +369,40 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                     </button>
                 </div>
             )}
-
-    
-            <div style={{ marginTop: "40px" }}>
-                <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Saisons</h2>
-                {serie.seasons.length > 1 && (
-                    <select onChange={(e) => setSelectedSeason(Number(e.target.value))} value={selectedSeason} style={{ padding: "10px", marginBottom: "20px", fontSize: "1rem", borderRadius: "5px", border: "1px solid #ccc", cursor: "pointer" }}>
-                        {serie.seasons.map((season, index) => (
-                            <option key={season.id} value={index}>
-                                Saison {season.season_number}: {season.name} ({season.episodes ? season.episodes.length:0} épisodes)
-                            </option>
-                        ))}
-                    </select>
-                )}
-                {serie.seasons[selectedSeason] && (
-                    <div style={{ padding: "20px", backgroundColor: "#f4f4f4", borderRadius: "10px", boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }}>
-                        <h3 style={{ fontSize: "1.3rem", color: "#333", marginBottom: "10px" }}>{serie.seasons[selectedSeason].name}</h3>
-                        <img src={`${IMG_SRC}${serie.seasons[selectedSeason].poster_path}`} alt={serie.seasons[selectedSeason].name} style={{ width: "200px", borderRadius: "10px", objectFit: "cover", boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} />
-                        <p style={{ fontSize: "1.1rem", color: "#666", marginTop: "10px" }}>{serie.seasons[selectedSeason].overview}</p>
-                        <h4 style={{ fontSize: "1.2rem", color: "#333", marginTop: "20px", marginBottom: "10px" }}>Episodes</h4>
-                        <ul style={{ listStyleType: "none", paddingLeft: "0" }}>
-                            {serie.seasons[selectedSeason].episodes && serie.seasons[selectedSeason].episodes.map((episode) => (
-                                <li key={episode.id} style={{ marginBottom: "20px" }}>
-                                    <h5 style={{ fontSize: "1.1rem", color: "#007bff" }}>Episode {episode.episode_number}: {episode.name}</h5>
-                                    <img src={`${IMG_SRC}${episode.still_path}`} alt={episode.name} style={{ width: "150px", borderRadius: "5px", objectFit: "cover" }} />
-                                    <p style={{ fontSize: "1rem", color: "#666" }}>{episode.overview}</p>
-                                    <p style={{ fontSize: "0.9rem", color: "#999" }}>Durée: {episode.runtime} minutes</p>
-                                </li>
+            
+            {(serie.media_type === "anime" || serie.media_type === "tv") && (
+                <div style={{ marginTop: "40px" }}>
+                    <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Saisons</h2>
+                    {serie.seasons.length > 1 && (
+                        <select onChange={(e) => setSelectedSeason(Number(e.target.value))} value={selectedSeason} style={{ padding: "10px", marginBottom: "20px", fontSize: "1rem", borderRadius: "5px", border: "1px solid #ccc", cursor: "pointer" }}>
+                            {serie.seasons.map((season, index) => (
+                                <option key={season.id} value={index}>
+                                    Saison {season.season_number}: {season.name} ({season.episodes ? season.episodes.length:0} épisodes)
+                                </option>
                             ))}
-                        </ul>
-                    </div>
-                )}
-            </div>
+                        </select>
+                    )}
+                    {serie.seasons[selectedSeason] && (
+                        <div style={{ padding: "20px", backgroundColor: "#f4f4f4", borderRadius: "10px", boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }}>
+                            <h3 style={{ fontSize: "1.3rem", color: "#333", marginBottom: "10px" }}>{serie.seasons[selectedSeason].name}</h3>
+                            <img src={`${IMG_SRC}${serie.seasons[selectedSeason].poster_path}`} alt={serie.seasons[selectedSeason].name} style={{ width: "200px", borderRadius: "10px", objectFit: "cover", boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} />
+                            <p style={{ fontSize: "1.1rem", color: "#666", marginTop: "10px" }}>{serie.seasons[selectedSeason].overview}</p>
+                            <h4 style={{ fontSize: "1.2rem", color: "#333", marginTop: "20px", marginBottom: "10px" }}>Episodes</h4>
+                            <ul style={{ listStyleType: "none", paddingLeft: "0" }}>
+                                {serie.seasons[selectedSeason].episodes && serie.seasons[selectedSeason].episodes.map((episode) => (
+                                    <li key={episode.id} style={{ marginBottom: "20px" }}>
+                                        <h5 style={{ fontSize: "1.1rem", color: "#007bff" }}>Episode {episode.episode_number}: {episode.name}</h5>
+                                        <img src={`${IMG_SRC}${episode.still_path}`} alt={episode.name} style={{ width: "150px", borderRadius: "5px", objectFit: "cover" }} />
+                                        <p style={{ fontSize: "1rem", color: "#666" }}>{episode.overview}</p>
+                                        <p style={{ fontSize: "0.9rem", color: "#999" }}>Durée: {episode.runtime} minutes</p>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+            )}
+
         </div>
     );
 }
