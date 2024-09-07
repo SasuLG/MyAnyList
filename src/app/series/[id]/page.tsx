@@ -82,6 +82,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                 }
             }
         }
+        console.log(data);
         setSerie(data);
         setFetchDataFinished(true);
     };
@@ -331,16 +332,32 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
     
                     {showMoreInfo ? (
                         <div style={{ marginBottom: "40px" }}>
-                            <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Détails Secondaires</h2>
+                            {serie.budget && (
+                                <h3 style={{ fontSize: "1.2rem", color: "#333", marginBottom: "10px" }}>Budget : </h3>
+                            )}
+                            {serie.revenue && (
+                                <h3 style={{ fontSize: "1.2rem", color: "#333", marginBottom: "10px" }}>Revenue : </h3>
+                            )}
                             <ul style={{ listStyleType: "none", paddingLeft: "0", fontSize: "1.1rem", color: "#555" }}>
                                 <li style={{ marginBottom: "5px" }}><strong>Tags:</strong> {serie.tags.map(tag => tag.name).join(", ")}</li>
                             </ul>
                             <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Production Companies</h2>
                             <ul style={{ listStyleType: "none", paddingLeft: "0", fontSize: "1.1rem", color: "#555" }}>
-                                {serie.production_companies.map((company) => (
+                                {serie.production_companies
+                                    .filter((company, index, self) =>
+                                    index === self.findIndex(c => c.name === company.name) 
+                                    )
+                                    .map((company) => (
                                     <li key={company.id} style={{ marginBottom: "5px" }}>{company.name}</li>
                                 ))}
                             </ul>
+                            <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Spoken Languages</h2>
+                            <ul style={{ listStyleType: "none", paddingLeft: "0", fontSize: "1.1rem", color: "#555" }}>
+                                {serie.spoken_languages.map((language) => (
+                                    <li key={language.iso_639_1} style={{ marginBottom: "5px" }}>{language.english_name}</li>
+                                ))}
+                            </ul>
+
                             <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Production Countries</h2>
                             <ul style={{ listStyleType: "none", paddingLeft: "0", fontSize: "1.1rem", color: "#555" }}>
                                 {serie.production_countries.map((country) => (

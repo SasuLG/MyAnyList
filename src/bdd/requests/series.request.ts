@@ -706,304 +706,138 @@ export async function getRecommendedSeries(userId: string, limit: number, page: 
     try {
         const offset = (page - 1) * limit;
 
-        // Helper function to safely format SQL conditions
-        const formatConditions = (conditions: string[]) => {
-            return conditions.length > 0 
-                ? conditions.map(cond => `'${cond}'`).join(',') 
-                : 'NULL';
-        };
-
-        // Récupérer les genres préférés de l'utilisateur et les compter
-        const userGenrePrefsResult = await Query(
-            `
-            WITH "UserGenrePreferences" AS (
+        const result = await Query(`
+            WITH "UserGenres" AS (
                 SELECT
-                    "g"."name" AS genre,
-                    COUNT(*) AS genre_count
+                    "g"."name" AS "genre_name",
+                    COUNT(*) AS "genre_count"
                 FROM "User_serie" AS "us"
                 JOIN "Serie" AS "s" ON "us"."serie_id" = "s"."id"
                 LEFT JOIN "Genre_serie" AS "gs" ON "s"."id" = "gs"."serieId"
                 LEFT JOIN "Genre" AS "g" ON "gs"."genreId" = "g"."id"
                 WHERE "us"."user_id" = $1
                 GROUP BY "g"."name"
-            )
-            SELECT genre, genre_count
-            FROM "UserGenrePreferences";
-            `, [userId]);
-
-        const genreCounts = userGenrePrefsResult.rows.reduce((acc, row) => {
-            acc[row.genre] = parseInt(row.genre_count, 10);
-            return acc;
-        }, {});
-
-        const genreConditions = formatConditions(Object.keys(genreCounts));
-
-        // Récupérer les pays de production préférés de l'utilisateur et les compter
-        const userCountryPrefsResult = await Query(
-            `
-            WITH "UserCountryPreferences" AS (
+            ),
+            "UserCountries" AS (
                 SELECT
-                    "c"."iso_3166_1" AS country,
-                    COUNT(*) AS country_count
+                    "c"."iso_3166_1" AS "country_code",
+                    COUNT(*) AS "country_count"
                 FROM "User_serie" AS "us"
                 JOIN "Serie" AS "s" ON "us"."serie_id" = "s"."id"
                 LEFT JOIN "ProductionCountry_serie" AS "pcs" ON "s"."id" = "pcs"."serieId"
                 LEFT JOIN "Country" AS "c" ON "pcs"."countryId" = "c"."id"
                 WHERE "us"."user_id" = $1
                 GROUP BY "c"."iso_3166_1"
-            )
-            SELECT country, country_count
-            FROM "UserCountryPreferences";
-            `, [userId]);
-
-        const countryCounts = userCountryPrefsResult.rows.reduce((acc, row) => {
-            acc[row.country] = parseInt(row.country_count, 10);
-            return acc;
-        }, {});
-
-        const countryConditions = formatConditions(Object.keys(countryCounts));
-
-        // Récupérer les sociétés de production préférées de l'utilisateur et les compter
-        const userCompanyPrefsResult = await Query(
-            `
-            WITH "UserCompanyPreferences" AS (
+            ),
+            "UserProductionCompanies" AS (
                 SELECT
-                    "pc"."name" AS company,
-                    COUNT(*) AS company_count
+                    "pc"."name" AS "company_name",
+                    COUNT(*) AS "company_count"
                 FROM "User_serie" AS "us"
                 JOIN "Serie" AS "s" ON "us"."serie_id" = "s"."id"
                 LEFT JOIN "ProductionCompany_serie" AS "pcs_comp" ON "s"."id" = "pcs_comp"."serieId"
                 LEFT JOIN "ProductionCompany" AS "pc" ON "pcs_comp"."productionCompanyId" = "pc"."id"
                 WHERE "us"."user_id" = $1
                 GROUP BY "pc"."name"
-            )
-            SELECT company, company_count
-            FROM "UserCompanyPreferences";
-            `, [userId]);
-
-        const companyCounts = userCompanyPrefsResult.rows.reduce((acc, row) => {
-            acc[row.company] = parseInt(row.company_count, 10);
-            return acc;
-        }, {});
-
-        const companyConditions = formatConditions(Object.keys(companyCounts));
-
-        // Récupérer les tags préférés de l'utilisateur et les compter
-        const userTagPrefsResult = await Query(
-            `
-            WITH "UserTagPreferences" AS (
+            ),
+            "UserTags" AS (
                 SELECT
-                    "t"."name" AS tag,
-                    COUNT(*) AS tag_count
+                    "t"."name" AS "tag_name",
+                    COUNT(*) AS "tag_count"
                 FROM "User_serie" AS "us"
                 JOIN "Serie" AS "s" ON "us"."serie_id" = "s"."id"
                 LEFT JOIN "Tag_serie" AS "ts" ON "s"."id" = "ts"."serieId"
                 LEFT JOIN "Tag" AS "t" ON "ts"."tagId" = "t"."id"
                 WHERE "us"."user_id" = $1
                 GROUP BY "t"."name"
-            )
-            SELECT tag, tag_count
-            FROM "UserTagPreferences";
-            `, [userId]);
-
-        const tagCounts = userTagPrefsResult.rows.reduce((acc, row) => {
-            acc[row.tag] = parseInt(row.tag_count, 10);
-            return acc;
-        }, {});
-
-        // Exclure le tag "anime" de la liste des tags
-        const tagConditions = formatConditions(
-            Object.keys(tagCounts)
-                .filter(tag => tag !== 'anime' && tag !== 'slice of life' && tag !== 'romance' && tag !== 'romantic comedy')
-        );
-
-        // Récupérer les séries recommandées avec les scores correctement calculés
-        const result = await Query(
-            `
-            WITH "UserPreferences" AS (
-                SELECT 
-                    JSONB_AGG("g"."name") AS "genres",
-                    JSONB_AGG("t"."name") AS "tags",
-                    JSONB_AGG("c"."iso_3166_1") AS "production_countries",
-                    JSONB_AGG("pc"."name") AS "production_companies",
-                    MAX("us"."date") AS "most_recent_follow",
-                    COUNT("us"."serie_id") AS "serie_count"
-                FROM "User_serie" AS "us"
-                JOIN "Serie" AS "s" ON "us"."serie_id" = "s"."id"
-                LEFT JOIN "Genre_serie" AS "gs" ON "s"."id" = "gs"."serieId"
-                LEFT JOIN "Genre" AS "g" ON "gs"."genreId" = "g"."id"
-                LEFT JOIN "Tag_serie" AS "ts" ON "s"."id" = "ts"."serieId"
-                LEFT JOIN "Tag" AS "t" ON "ts"."tagId" = "t"."id"
-                LEFT JOIN "ProductionCountry_serie" AS "pcs" ON "s"."id" = "pcs"."serieId"
-                LEFT JOIN "Country" AS "c" ON "pcs"."countryId" = "c"."id"
-                LEFT JOIN "ProductionCompany_serie" AS "pcs_comp" ON "s"."id" = "pcs_comp"."serieId"
-                LEFT JOIN "ProductionCompany" AS "pc" ON "pcs_comp"."productionCompanyId" = "pc"."id"
-                WHERE "us"."user_id" = $1
             ),
-            "SeriesFollowOrder" AS (
-                SELECT 
-                    "s"."id",
-                    ROW_NUMBER() OVER (PARTITION BY "us"."user_id" ORDER BY "us"."date" DESC) AS "follow_rank"
-                FROM "Serie" AS "s"
-                JOIN "User_serie" AS "us" ON "s"."id" = "us"."serie_id"
-                WHERE "us"."user_id" = $1
-            ),
-            "SerieScores" AS (
+            "SeriesScores" AS (
                 SELECT
                     "s"."id",
                     COALESCE(
-                        (SELECT COUNT(*)
-                         FROM "User_serie" AS "us"
-                         JOIN "Serie" AS "s_user" ON "us"."serie_id" = "s_user"."id"
-                         WHERE "s_user"."media" = "s"."media"
-                         AND "us"."user_id" = $1), 0) * 6 AS "media_score",
+                        (
+                            SELECT COUNT(*)
+                            FROM "User_serie" AS "us"
+                            JOIN "Serie" AS "s_user" ON "us"."serie_id" = "s_user"."id"
+                            WHERE "s_user"."media" = "s"."media"
+                            AND "us"."user_id" = $1
+                        ), 0) * 6 AS "media_score",
                     COALESCE(
                         (
-                            SELECT SUM(
-                                CASE
-                                    WHEN "g"."name" IN (${genreConditions}) THEN (
-                                        CASE
-                                            WHEN "g"."name" IN ('Action & Adventure', 'Animation') THEN 0.5
-                                            ELSE 1
-                                        END * 
-                                        (SELECT genre_count
-                                         FROM (
-                                             SELECT "genre", COUNT(*) AS genre_count
-                                             FROM (
-                                                 SELECT "g"."name" AS "genre"
-                                                 FROM "User_serie" AS "us"
-                                                 JOIN "Serie" AS "s" ON "us"."serie_id" = "s"."id"
-                                                 LEFT JOIN "Genre_serie" AS "gs" ON "s"."id" = "gs"."serieId"
-                                                 LEFT JOIN "Genre" AS "g" ON "gs"."genreId" = "g"."id"
-                                                 WHERE "us"."user_id" = $1
-                                             ) AS genres
-                                             GROUP BY "genre"
-                                         ) AS genre_counts
-                                         WHERE genre_counts.genre = "g"."name"
-                                        )
-                                    )
-                                    ELSE 0
-                                END
+                            SELECT SUM("ug"."genre_count")
+                            FROM "UserGenres" AS "ug"
+                            WHERE "ug"."genre_name" IN (
+                                SELECT "g"."name"
+                                FROM "Genre_serie" AS "gs"
+                                JOIN "Genre" AS "g" ON "gs"."genreId" = "g"."id"
+                                WHERE "gs"."serieId" = "s"."id"
                             )
-                            FROM "Genre_serie" AS "gs"
-                            JOIN "Genre" AS "g" ON "gs"."genreId" = "g"."id"
-                            WHERE "gs"."serieId" = "s"."id"
                         ), 0
                     ) AS "genre_score",
                     COALESCE(
                         (
-                            SELECT SUM(
-                                CASE
-                                    WHEN "t"."name" IN (${tagConditions}) THEN (
-                                        SELECT tag_count
-                                        FROM (
-                                            SELECT "tag", COUNT(*) AS tag_count
-                                            FROM (
-                                                SELECT "t"."name" AS "tag"
-                                                FROM "User_serie" AS "us"
-                                                JOIN "Serie" AS "s" ON "us"."serie_id" = "s"."id"
-                                                LEFT JOIN "Tag_serie" AS "ts" ON "s"."id" = "ts"."serieId"
-                                                LEFT JOIN "Tag" AS "t" ON "ts"."tagId" = "t"."id"
-                                                WHERE "us"."user_id" = $1
-                                            ) AS tags
-                                            GROUP BY "tag"
-                                        ) AS tag_counts
-                                        WHERE tag_counts.tag = "t"."name"
-                                    ) *1.5
-                                    ELSE 0
-                                END
+                            SELECT SUM("uc"."country_count")
+                            FROM "UserCountries" AS "uc"
+                            WHERE "uc"."country_code" IN (
+                                SELECT "c"."iso_3166_1"
+                                FROM "ProductionCountry_serie" AS "pcs"
+                                JOIN "Country" AS "c" ON "pcs"."countryId" = "c"."id"
+                                WHERE "pcs"."serieId" = "s"."id"
                             )
-                            FROM "Tag_serie" AS "ts"
-                            JOIN "Tag" AS "t" ON "ts"."tagId" = "t"."id"
-                            WHERE "ts"."serieId" = "s"."id"
-                        ), 0
-                    ) AS "tag_score",
-                    COALESCE(
-                        (
-                            SELECT SUM(
-                                CASE
-                                    WHEN "c"."iso_3166_1" IN (${countryConditions}) THEN (
-                                        SELECT country_count
-                                        FROM (
-                                            SELECT "country", COUNT(*) AS country_count
-                                            FROM (
-                                                SELECT "c"."iso_3166_1" AS "country"
-                                                FROM "User_serie" AS "us"
-                                                JOIN "Serie" AS "s" ON "us"."serie_id" = "s"."id"
-                                                LEFT JOIN "ProductionCountry_serie" AS "pcs" ON "s"."id" = "pcs"."serieId"
-                                                LEFT JOIN "Country" AS "c" ON "pcs"."countryId" = "c"."id"
-                                                WHERE "us"."user_id" = $1
-                                            ) AS countries
-                                            GROUP BY "country"
-                                        ) AS country_counts
-                                        WHERE country_counts.country = "c"."iso_3166_1"
-                                    )
-                                    ELSE 0
-                                END
-                            )
-                            FROM "ProductionCountry_serie" AS "pcs"
-                            JOIN "Country" AS "c" ON "pcs"."countryId" = "c"."id"
-                            WHERE "pcs"."serieId" = "s"."id"
                         ), 0
                     ) AS "country_score",
                     COALESCE(
                         (
-                            SELECT SUM(
-                                CASE
-                                    WHEN "pc"."name" IN (${companyConditions}) THEN (
-                                        SELECT company_count
-                                        FROM (
-                                            SELECT "company", COUNT(*) AS company_count
-                                            FROM (
-                                                SELECT "pc"."name" AS "company"
-                                                FROM "User_serie" AS "us"
-                                                JOIN "Serie" AS "s" ON "us"."serie_id" = "s"."id"
-                                                LEFT JOIN "ProductionCompany_serie" AS "pcs_comp" ON "s"."id" = "pcs_comp"."serieId"
-                                                LEFT JOIN "ProductionCompany" AS "pc" ON "pcs_comp"."productionCompanyId" = "pc"."id"
-                                                WHERE "us"."user_id" = $1
-                                            ) AS companies
-                                            GROUP BY "company"
-                                        ) AS company_counts
-                                        WHERE company_counts.company = "pc"."name"
-                                    )
-                                    ELSE 0
-                                END
+                            SELECT SUM("upc"."company_count")
+                            FROM "UserProductionCompanies" AS "upc"
+                            WHERE "upc"."company_name" IN (
+                                SELECT "pc"."name"
+                                FROM "ProductionCompany_serie" AS "pcs_comp"
+                                JOIN "ProductionCompany" AS "pc" ON "pcs_comp"."productionCompanyId" = "pc"."id"
+                                WHERE "pcs_comp"."serieId" = "s"."id"
                             )
-                            FROM "ProductionCompany_serie" AS "pcs_comp"
-                            JOIN "ProductionCompany" AS "pc" ON "pcs_comp"."productionCompanyId" = "pc"."id"
-                            WHERE "pcs_comp"."serieId" = "s"."id"
                         ), 0
-                    ) AS "company_score"
+                    ) AS "company_score",
+                    COALESCE(
+                        (
+                            SELECT SUM("ut"."tag_count")
+                            FROM "UserTags" AS "ut"
+                            WHERE "ut"."tag_name" IN (
+                                SELECT "t"."name"
+                                FROM "Tag_serie" AS "ts"
+                                JOIN "Tag" AS "t" ON "ts"."tagId" = "t"."id"
+                                WHERE "ts"."serieId" = "s"."id"
+                            )
+                        ), 0
+                    ) AS "tag_score"
                 FROM "Serie" AS "s"
-                LEFT JOIN "UserPreferences" ON TRUE
-                WHERE "s"."id" NOT IN (
-                    SELECT "serie_id" FROM "User_serie" WHERE "user_id" = $1
-                )
-            ),
-            "RankedSeries" AS (
-                SELECT
-                    "id",
-                    (
-                        "media_score" + 
-                        "genre_score" + 
-                        "tag_score" + 
-                        "country_score" + 
-                        "company_score"
-                    ) AS "total_score"
-                FROM "SerieScores"
-                ORDER BY "total_score" DESC
-                LIMIT $2 OFFSET $3
             )
-            SELECT id, "total_score"
-            FROM "RankedSeries";
-            `, [userId, limit, offset]);
+            SELECT
+                "s"."id",
+                COALESCE(
+                    (
+                        "s"."media_score" +
+                        "s"."genre_score" +
+                        "s"."country_score" +
+                        "s"."company_score" +
+                        "s"."tag_score"
+                    ) / 6.0, 0
+                ) AS "total_score"
+            FROM "SeriesScores" AS "s"
+            WHERE "s"."id" NOT IN (
+                SELECT "serie_id" FROM "User_serie" WHERE "user_id" = $1
+            )
+            ORDER BY "total_score" DESC
+            LIMIT $2 OFFSET $3;
+        `, [userId, limit, offset]);
 
         return result.rows;
     } catch (error) {
-        console.error("Error fetching recommended series:", error);
+        console.error('Error in getRecommendedSeries:', error);
         throw error;
     }
 }
+
 
 
 /**

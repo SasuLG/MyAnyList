@@ -8,9 +8,19 @@ import Filters from '@/components/filters';
 import { Range } from '@/tmdb/types/series.type';
 import { Filter } from '@/components/svg/filter.svg';
 import { DecreaseSize, IncreaseSize, Settings, ToggleLayout } from '@/components/svg/buttons.svg';
+import { useRouter } from "next/navigation";
+import { LOGIN_ROUTE } from '@/constants/app.route.const';
 
 export default function SearchPage() {
 
+  /**
+   * React hook pour permettre la navigation entre les différents endpoints de l'application web.
+   */
+  const router = useRouter();
+
+  /**
+   * Hook pour stocker la largeur de la fenêtre
+   */
   const [windowWidth, setWindowWidth] = useState<number | undefined>(undefined);
 
   /**
@@ -287,6 +297,7 @@ export default function SearchPage() {
    */
   const onClickHeart = async (serie: MinimalSerie) => {
     if (user === undefined) {
+      router.push(LOGIN_ROUTE);
       return;
     }
     if (seriesIdFollowed.includes(Number(serie.id))) {
