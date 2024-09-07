@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import HoverToolBox from '@/components/hover';
@@ -86,7 +85,6 @@ const sizeStyles = {
   },
 };
 
-
 const adjustSizes = (baseStyles: typeof sizeStyles[keyof typeof sizeStyles], isSmallScreen: boolean) => {
   if (!isSmallScreen) return baseStyles;
 
@@ -125,12 +123,21 @@ const SeriesList = ({ series, styleType, followedIds, onClickHeart, limit, size 
 
   const imgWidthStyle = styleType === 'list' && size === 'large' ? imgWidth : styleType === 'list' ? `calc(${imgWidth}px - 60px)` : `${imgWidth}px`;
 
+  const phoneStyles = isSmallScreen && styleType === 'list' ? {
+    imgWidth: imgWidth * 1.2, 
+    padding: padding * 0.5,  
+    height: 'auto', 
+    maxWidth: '100%', 
+    overflow: 'hidden', 
+    marginBottom: '1rem', 
+  } : {};
+
   return (
     <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexWrap: 'wrap', gap: `${gap}px`, flexDirection: styleType === 'list' ? 'column' : undefined }}>
       {limitedSeries.map((serie, index) => {
         const content = (
           <li
-            style={{ display: 'flex', flexDirection: styleType === 'grid' ? 'column' : 'row', alignItems: styleType === 'grid' ? 'center' : 'flex-start', padding: `${padding}px`, cursor: 'pointer', transition: 'transform 0.3s, border-color 0.3s', position: 'relative', borderRadius: '8px', border: '1px solid transparent', boxShadow: styleType === 'grid' ? '' : 'rgba(0, 0, 0, 0.3) 0px 4px 10px', maxWidth: styleType === 'grid' ? `${maxwidth}px` : undefined }}
+            style={{ display: 'flex', flexDirection: styleType === 'grid' ? 'column' : 'row', alignItems: styleType === 'grid' ? 'center' : 'flex-start', padding: `${padding}px`, cursor: 'pointer', transition: 'transform 0.3s, border-color 0.3s', position: 'relative', borderRadius: '8px', border: '1px solid transparent', boxShadow: styleType === 'grid' ? '' : 'rgba(0, 0, 0, 0.3) 0px 4px 10px', maxWidth: styleType === 'grid' ? `${maxwidth}px` : undefined, ...phoneStyles }}
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
@@ -150,7 +157,7 @@ const SeriesList = ({ series, styleType, followedIds, onClickHeart, limit, size 
                     <h2 style={{ color: serie.status === 'Released' || serie.status === 'Ended' ? 'red' : 'var(--titre-color)', fontSize: `${fontSize}px`, margin: '0 0 0.5rem 0', fontWeight: '600', transition: 'color 0.3s', textShadow: 'rgba(0, 0, 0, 0.2) 1px 1px 1px', textAlign: styleType === 'grid' ? 'center' : 'left' }}>
                       {serie.name.length > 35 ? serie.name.substring(0, 30).concat('...') : serie.name}
                     </h2>
-                    {styleType === 'list' && (
+                    {styleType === 'list' && !isSmallScreen && (
                       <>
                         <p style={{ color: 'var(--main-text-color)', fontSize: `${fontSize}px`, margin: '0 0 0.5rem 0' }}>
                           {serie.overview.length > 200 ? serie.overview.substring(0, 200).concat('...') : serie.overview}
@@ -164,7 +171,7 @@ const SeriesList = ({ series, styleType, followedIds, onClickHeart, limit, size 
                       </>
                     )}
                   </div>
-                  {styleType === 'list' && (
+                  {styleType === 'list' && !isSmallScreen && (
                     <div style={{ marginTop: "2rem", marginLeft: '1rem', alignSelf: 'stretch', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '14px', color: 'var(--main-text-color)', textAlign: 'right' }}>
                       <span><strong>Vote Average:</strong> {serie.vote_average}</span>
                       <span><strong>Episodes:</strong> {serie.number_of_episodes}</span>
@@ -172,6 +179,13 @@ const SeriesList = ({ series, styleType, followedIds, onClickHeart, limit, size 
                     </div>
                   )}
                 </div>
+                {isSmallScreen && styleType === 'list' && (
+                  <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--main-text-color)', textAlign: 'center' }}>
+                    <span><strong>Status:</strong> {serie.status}</span>
+                    <span><strong>Episodes:</strong> {serie.number_of_episodes}</span>
+                    <span><strong>Vote Avg:</strong> {serie.vote_average}</span>
+                  </div>
+                )}
               </div>
             </Link>
             <div
