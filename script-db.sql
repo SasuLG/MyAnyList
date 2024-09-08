@@ -2,6 +2,7 @@
 create table if not exists "User" (
     "id" serial primary key,
     "login" varchar unique not null, /* L'identifiant de connexion */
+    "email" varchar unique not null, /* L'adresse email */
     "password" varchar not null, /* Le mot de passe hashé en bcrypt */
     "banned" boolean not null default false, /* Si l'utilisateur est banni */
     "admin" boolean not null default false, /* Si l'utilisateur est administrateur */

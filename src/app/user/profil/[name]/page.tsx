@@ -422,20 +422,20 @@ export default function Profil({ params }: { params: { name: string } }) {
 
     return (
         <div style={{ margin: '20px' }}>
-            <h1 style={{ fontSize: '2rem', color: '#333', marginBottom:"3rem" }}>Profil : {userProfil?.login}</h1>
+            <h1 style={{ fontSize: '2rem', color: 'var(--titre-color)', marginBottom:"3rem" }}>Profil : {userProfil?.login}</h1>
             <ThemeSwitcher />
             <div style={{ display: "flex", flexDirection: "row", gap: "1rem", width: "100%" }}>
                 <div style={{ flex: "1" }}>
-                    <h3>Modifier le nom</h3>
+                    <h3 style={{color:"var(--main-text-color)"}}>Modifier le nom</h3>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <input type="text" id="editName" placeholder="Nouveau nom" defaultValue={userProfil?.login} style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", height: "2.5rem", boxSizing: "border-box" }} />
+                        <input type="text" id="editName" placeholder="Nouveau nom" defaultValue={userProfil?.login} style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", height: "2.5rem", boxSizing: "border-box", color:"var(--titre-color)"}} />
                         <button className="button-validate" onClick={() => setShowConfirmEditName(true)} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#007bff", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", transform:"translate(0px, -12px)" }}>Modifier</button>
                     </div>
                     {showConfirmEditName && (
                         <div className="overlay" style={{ position: "fixed", left: "0", top: "0", backgroundColor: "rgba(0, 0, 0, 0.5)", width: "100%", height: "100%", zIndex: "10" }}>
                             <div className="overlay-content" style={{ margin: "18% auto", padding: "3rem 5rem", borderRadius: "15px" }}>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                                    <p>Êtes-vous sûr de vouloir modifier le nom ?</p>
+                                    <p style={{color:"var(--main-text-color)"}}>Êtes-vous sûr de vouloir modifier le nom ?</p>
                                     <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
                                         <button className="button" onClick={() => { editName(); setShowConfirmEditName(false); }} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#28a745", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>Confirmer</button>
                                         <button className="button" onClick={() => setShowConfirmEditName(false)} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#dc3545", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>Annuler</button>
@@ -447,18 +447,18 @@ export default function Profil({ params }: { params: { name: string } }) {
                 </div>
 
                 <div style={{ flex: "1" }}>
-                    <h3>Modifier le mot de passe</h3>
+                    <h3 style={{color:"var(--main-text-color)"}}>Modifier le mot de passe</h3>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <input type="password" id="editPassword" placeholder="Nouveau mot de passe" style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", height: "2.5rem", boxSizing: "border-box" }} />
+                        <input type="password" id="editPassword" placeholder="Nouveau mot de passe" style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", height: "2.5rem", boxSizing: "border-box", color:"var(--titre-color)" }} />
                         <button className="button-validate" onClick={() => setShowConfirmEditPassword(true)} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#007bff", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", transform:"translate(0px, -12px)" }}>Modifier</button>
                     </div>
                     {showConfirmEditPassword && (
                         <div className="overlay" style={{ position: "fixed", left: "0", top: "0", backgroundColor: "rgba(0, 0, 0, 0.5)", width: "100%", height: "100%", zIndex: "10" }}>
                             <div className="overlay-content" style={{ margin: "18% auto", padding: "3rem 5rem", borderRadius: "15px" }}>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                                    <p>Êtes-vous sûr de vouloir modifier le mot de passe ?</p>
+                                    <p style={{color:"var(--main-text-color)"}}>Êtes-vous sûr de vouloir modifier le mot de passe ?</p>
                                     {userProfil && userProfil.login === user?.login && (
-                                        <input type="password" id="oldPassword" placeholder="Ancien mot de passe" style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", marginBottom: "1rem", height: "2.5rem", boxSizing: "border-box" }} />
+                                        <input type="password" id="oldPassword" placeholder="Ancien mot de passe" style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", marginBottom: "1rem", height: "2.5rem", boxSizing: "border-box", color:"var(--titre-color)" }} />
                                     )}
                                     <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
                                         <button className="button" onClick={() => { editPassword(); setShowConfirmEditPassword(false); }} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#28a745", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>Confirmer</button>
@@ -661,11 +661,11 @@ export default function Profil({ params }: { params: { name: string } }) {
             </div>
 
             <div>
-                <h1>TOP</h1>
+                <h1 style={{color:"var(--titre-color)"}}>TOP</h1>
                 <div>
-                    <h2>Récemment vue</h2>
+                    <h2 style={{color:"var(--main-text-color)"}}>Récemment vue</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                        <span>Format</span>
+                        <span style={{color:"var(--main-text-color)"}}>Format</span>
                         <MultiSelectDropdown options={['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedRecentFormats} onSelect={setSelectedRecentFormats}/>
                     </div>
                     <div style={{   display: 'flex', alignItems: 'center',   position: 'relative',   cursor: 'pointer',  marginRight: '-1.5rem', width:"max-content"}}  onClick={() => setOrderAscRecent(!orderAscRecent)}  >
@@ -675,9 +675,9 @@ export default function Profil({ params }: { params: { name: string } }) {
                 </div>
     
                 <div>
-                    <h2>Les mieux notés</h2>
+                    <h2 style={{color:"var(--main-text-color)"}}>Les mieux notés</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                        <span>Format</span>
+                        <span style={{color:"var(--main-text-color)"}}>Format</span>
                         <MultiSelectDropdown options={['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedRatingFormats} onSelect={setSelectedRatingFormats}/>
                     </div>
                     <div style={{   display: 'flex', alignItems: 'center',   position: 'relative',   cursor: 'pointer',  marginRight: '-1.5rem',width:"max-content"}}  onClick={() => setOrderAscRating(!orderAscRating)}  >
@@ -687,9 +687,9 @@ export default function Profil({ params }: { params: { name: string } }) {
                 </div>
 
                 <div>
-                    <h2>Les plus longs</h2>
+                    <h2 style={{color:"var(--main-text-color)"}}>Les plus longs</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                        <span>Format</span>
+                        <span style={{color:"var(--main-text-color)"}}>Format</span>
                         <MultiSelectDropdown options={['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedLongFormats} onSelect={setSelectedLongFormats}/>
                     </div>
                     <div style={{   display: 'flex', alignItems: 'center',   position: 'relative',   cursor: 'pointer',  marginRight: '-1.5rem',width:"max-content"}}  onClick={() => setOrderAscTime(!orderAscTime)}  >
