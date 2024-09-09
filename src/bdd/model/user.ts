@@ -5,6 +5,7 @@ type User = {
     id: string;
     login: string;
     email: string;
+    verified: boolean;
     password: string;
     web_token: string;
     creation_date: Date;

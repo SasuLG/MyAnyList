@@ -88,7 +88,7 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                                     <div className="dropdown-menu">
                                         <div>
                                             <ProfilCircle width={30} height={30} isHeader={false} />
-                                            <Link href={PROFILE_BASE_ROUTE + "/"+user.login} onClick={() => setDropdownOpen(false)}>Profile</Link>
+                                            <Link href={PROFILE_BASE_ROUTE + "/"+user.login} onClick={() => setDropdownOpen(false)}>Profil</Link>
                                         </div>
                                         <div>
                                             <Logout width={30} height={30} />

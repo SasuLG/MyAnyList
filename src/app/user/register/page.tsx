@@ -1,3 +1,4 @@
+
 "use client"
 import { API_REGISTER_ROUTE } from "@/constants/api.route.const";
 import { HashWord } from "@/lib/hash";
@@ -9,6 +10,11 @@ import { useRouter } from "next/navigation";
 import { useUserContext } from "@/userContext";
 
 export default function Register() {
+
+    /**
+     * Regex pour valider un email.
+     */
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     /**
      * React hook pour permettre la navigation entre les différents endpoints de l'application web.
@@ -36,15 +42,33 @@ export default function Register() {
      */
     const formSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
+
         const loginInput = (e.currentTarget.elements.namedItem('login') as HTMLInputElement);
+        const emailInput = (e.currentTarget.elements.namedItem('email') as HTMLInputElement);
         const passwordInput = (e.currentTarget.elements.namedItem('password') as HTMLInputElement);
         const confirmPasswordInput = (e.currentTarget.elements.namedItem('confirmPassword') as HTMLInputElement);
 
-        if (loginInput.value.includes(' ') ) { setAlert({message:"login incorrecte", valid:false});return; }
-        if (passwordInput.value !== confirmPasswordInput.value) { setAlert({message:"Le mot de passe doit être identique", valid:false});return; }
-        if(passwordInput.value.length < 3) { setAlert({message:"Mot de passe trop court", valid:false});return; }
-        if(loginInput.value.length < 3) { setAlert({message:"Login trop court", valid:false});return; }
+        // Validation des champs
+        if (loginInput.value.includes(' ')) { 
+            setAlert({message:"Login incorrect", valid:false});
+            return; 
+        }
+        if (!emailRegex.test(emailInput.value)) { 
+            setAlert({message:"Email invalide", valid:false});
+            return; 
+        }
+        if (passwordInput.value !== confirmPasswordInput.value) { 
+            setAlert({message:"Le mot de passe doit être identique", valid:false});
+            return; 
+        }
+        if (passwordInput.value.length < 3) { 
+            setAlert({message:"Mot de passe trop court", valid:false});
+            return; 
+        }
+        if (loginInput.value.length < 3) { 
+            setAlert({message:"Login trop court", valid:false});
+            return; 
+        }
 
         const response = await fetch(API_REGISTER_ROUTE, {
             method: 'POST',
@@ -53,6 +77,7 @@ export default function Register() {
             },
             body: JSON.stringify({
                 login: loginInput.value,
+                email: emailInput.value,
                 password: await HashWord(passwordInput.value),
                 admin: false,
                 banned: false
@@ -60,7 +85,7 @@ export default function Register() {
         });
         const data = await response.json();
         setAlert(data);
-        if(response.ok){
+        if (response.ok) {
             router.push(LOGIN_ROUTE);
         }
     }
@@ -68,12 +93,15 @@ export default function Register() {
     useEffect(() => setSelectedMenu("register"), [setSelectedMenu]);
 
     return (
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "130vh" }}>
             <div className="login-container">
                 <h1>Register</h1>
                 <form onSubmit={formSubmit}>
                     <label htmlFor="login" className="login-label">Login:</label>
                     <input type="text" id="login" name="login" />
+
+                    <label htmlFor="email" className="login-label">Email:</label>
+                    <input className="login-label" type="email" id="email" name="email" />
 
                     <label htmlFor="password" className="login-label">Password:</label>
                     <div className="password-container">

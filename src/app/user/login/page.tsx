@@ -66,7 +66,7 @@ export default function Login() {
             <div className="login-container">
                 <h1>Login</h1>
                 <form onSubmit={formSubmit}>
-                    <label htmlFor="login" className="login-label">Login:</label>
+                    <label htmlFor="login" className="login-label">Login ou email:</label>
                     <input type="text" id="login" name="login" />
 
                     <label htmlFor="password" className="login-label">Password:</label>

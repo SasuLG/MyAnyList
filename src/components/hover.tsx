@@ -5,9 +5,10 @@ import { SmileyHappy, SmileyNeutral, SmileySad } from "./svg/smileys.svg";
 type HoverToolBoxProps = {
     serie: MinimalSerie;
     children: ReactNode;
+    isMyList: boolean;
 };
 
-const HoverToolBox = ({ serie, children }: HoverToolBoxProps) => {
+const HoverToolBox = ({ serie, children, isMyList }: HoverToolBoxProps) => {
     const [hoverPosition, setHoverPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
     const [itemHover, setItemHover] = useState<boolean>(false);
     const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
@@ -74,7 +75,8 @@ const HoverToolBox = ({ serie, children }: HoverToolBoxProps) => {
 
     const hours = Math.floor(serie.episode_run_time / 60);
     const minutes = serie.episode_run_time % 60;
-
+    
+    const note = isMyList ? serie.note ? serie.note : undefined : serie.vote_average;
     return (
         <>
             <div id={serie.id} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} style={{ position: 'relative' }}  >
@@ -85,7 +87,7 @@ const HoverToolBox = ({ serie, children }: HoverToolBoxProps) => {
                     <div className="hover-info-content">
                         <div className="hover-info-items initial">
                             <span>{serie.romaji_name ? serie.romaji_name.length > 35 ? serie.romaji_name.substring(0, 30).concat("...") : serie.romaji_name : "Apres Reset bd"}</span>
-                            <span>{serie.vote_average < 4.5 ? <SmileySad width={20} height={20} /> : serie.vote_average < 7 ? <SmileyNeutral width={20} height={20} /> : <SmileyHappy width={20} height={20} />}{Math.ceil(serie.vote_average * 10)}%</span>
+                            <span>{note !== undefined ? note < 4.5 ? <SmileySad width={20} height={20} /> : note < 7 ? <SmileyNeutral width={20} height={20} /> : <SmileyHappy width={20} height={20} /> : null}{Math.ceil((note || 0) * 10)}%</span>
                         </div>
                         <div className="hover-info-items initial">
                             <span>{serie.first_air_date.substring(0, 4)}</span>

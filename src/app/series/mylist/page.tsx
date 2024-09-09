@@ -427,12 +427,15 @@ export default function MyList(){
         (selectedFormats.includes('film d\'animation') && serie.media_type === 'film d\'animation');
   
       const matchesGenre = selectedGenres.length === 0 || selectedGenres.every(genre => serie.genres.some(g => g.name === genre));
-      const searchWords = searchQuery.toLowerCase().split(/\s+/);
+      const searchWords = searchQuery.toLowerCase().replace(/\s+/g, ''); 
+
       const matchesSearchQuery = [serie.name, serie.original_name, serie.romaji_name]
         .filter(name => name) 
-        .some(name => 
-          searchWords.every(word => name.toLowerCase().includes(word))
-        );
+        .some(name => {
+          const normalizedSerieName = name.toLowerCase().replace(/\s+/g, ''); 
+          return normalizedSerieName.includes(searchWords); 
+        });
+      
       const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(statusMapping[serie.status] || serie.status);
       const matchesOriginCountry = selectedOriginCountries.length === 0 || selectedOriginCountries.every(country => serie.origin_country.includes(country));
       const matchesProductionCompany = selectedProductionCompanies.every(company => serie.production_companies && serie.production_companies.some(prod => prod.name === company));

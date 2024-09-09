@@ -4,6 +4,7 @@ create table if not exists "User" (
     "login" varchar unique not null, /* L'identifiant de connexion */
     "email" varchar unique not null, /* L'adresse email */
     "password" varchar not null, /* Le mot de passe hashé en bcrypt */
+    "verified" boolean not null default false, /* Si l'email est vérifié */
     "banned" boolean not null default false, /* Si l'utilisateur est banni */
     "admin" boolean not null default false, /* Si l'utilisateur est administrateur */
     "createdAt" timestamp not null default current_timestamp, /* La date de création du compte */

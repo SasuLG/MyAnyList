@@ -5,9 +5,10 @@ import Query from "../postgre.middleware";
  * Fonction qui permet de créer un utilisateur
  * @param {string} username - Le nom d'utilisateur
  * @param {string} password - Le mot de passe
+ * @param {string} email - L'email de l'utilisateur
  */
-export async function createUser(login: string,  password: string): Promise<any> {
-    await Query('INSERT INTO "User" ("login", "password") VALUES ($1, $2)', [login, password]);
+export async function createUser(login: string,  password: string, email: string): Promise<any> {
+    await Query('INSERT INTO "User" ("login", "password", "email") VALUES ($1, $2, $3)', [login, password, email]);
 }
 
 /**
@@ -19,6 +20,18 @@ export async function createUser(login: string,  password: string): Promise<any>
  */
 export async function getUserByLogin(login: string): Promise<User | undefined> {
     const bddResponse = await Query(`select * from "User" where "login"=$1;`, [login]);
+    return bddResponse.rows[0] as User | undefined;
+}
+
+/**
+ * Fonction qui permet de récupérer un utilisateur par son 'email'.
+ * ! L'email est unique dans la bdd !
+ *
+ * @param {string} email - L'email de la personne.
+ * @return {User | undefined} L'utilisateur si trouvé ou undefined.
+ */
+export async function getUserByMail(email: string): Promise<User | undefined> {
+    const bddResponse = await Query(`select * from "User" where "email"=$1;`, [email]);
     return bddResponse.rows[0] as User | undefined;
 }
 
@@ -66,9 +79,23 @@ export async function isUserAdmin(id: number): Promise<boolean> {
     return bddResponse.rows[0].admin;
 }
 
+/**
+ * Fonction qui permet de vérifier si un utilisateur est banni.
+ * @param {number} id - L'identifiant de la personne.
+ * @returns 
+ */
 export async function isUserBanned(id: number): Promise<boolean> {
     const bddResponse = await Query(`select "banned" from "User" where "id"=$1;`, [id]);
     return bddResponse.rows[0].banned;
+}
+
+/**
+ * Fonction qui permet de mettre à jour le statut de vérification d'un utilisateur.
+ * @param {number} id - L'identifiant de la personne.
+ * @param {boolean} verified - 
+ */
+export async function updateVerified(id: number, verified: boolean): Promise<void> {
+    await Query(`update "User" set "verified"=$1 where "id"=$2;`, [verified, id]);
 }
 
 /**

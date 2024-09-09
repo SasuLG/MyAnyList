@@ -82,7 +82,6 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                 }
             }
         }
-        console.log(data);
         setSerie(data);
         setFetchDataFinished(true);
     };
@@ -136,7 +135,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ note, comment, newVote: serie.note === undefined }),
+            body: JSON.stringify({ note, comment, newVote: serie.note === null }),
         });
         if (response.ok) {
             await fetchSerie();
@@ -233,11 +232,13 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
      * @param {React.ChangeEvent<HTMLInputElement>}
      */
     const handleRatingChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newRating = parseFloat(event.target.value);
+        let newRating = parseFloat(event.target.value);
         if (!isNaN(newRating)) {
+            newRating = parseFloat(newRating.toFixed(2));
             setRating(newRating);
         }
     };
+    
     
     /**
      * Fonction pour formater le temps total.

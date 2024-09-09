@@ -122,6 +122,7 @@ type MinimalSerie = {
     origin_country: string[];
     episode_run_time: number;
     note?: number;
+    comment?: string;
     follow_date?: string;
     production_countries: ProductionCountry[];
     production_companies: ProductionCompany[];
