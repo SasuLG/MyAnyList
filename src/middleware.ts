@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_ID_COOKIE } from "@/constants/session.const";
-import { ERROR_ROUTE, HOME_ROUTE, LOGIN_ROUTE } from "./constants/app.route.const";
+import { ERROR_ROUTE, HOME_ROUTE, LOGIN_ROUTE, REGISTER_ROUTE } from "./constants/app.route.const";
 import { User } from "./bdd/model/user";
+import { deleteVerifToken } from "./bdd/requests/user.request";
 
 /**
  * Middleware appelé automatiquement au chargement de n'importe quel page pour vérifier si l'utilisateur à 
@@ -79,6 +80,11 @@ export default async function userAsASessionIDMiddleware(req: NextRequest) {
     }
 }
 
+/**
+ * Vérifie si la route est une route valide.
+ * @param req 
+ * @returns 
+ */
 async function isARoute(req: NextRequest) {
     const url = new URL(req.url);
     const pathname = url.pathname;
@@ -98,12 +104,12 @@ async function isARoute(req: NextRequest) {
         return true;
     }
 
-        const serieId = pathname.split("/series/")[1];
-        if (serieId) {
-            const serieExists = await checkSerieExists(serieId, req.url);
-            if (serieExists) {
-                return true;
-            }
+    const serieId = pathname.split("/series/")[1];
+    if (serieId) {
+        const serieExists = await checkSerieExists(serieId, req.url);
+        if (serieExists) {
+            return true;
+        }
     }
 
     const username = pathname.split("/user/profil/")[1];
@@ -121,9 +127,32 @@ async function isARoute(req: NextRequest) {
         }
     }
 
+    const isVerifRoute = pathname === "/verify-email";
+    if(isVerifRoute){
+        const verifToken = url.searchParams.get("token") ?? ""
+        const userExist = await checkVerifTokenExists(verifToken, req.url);
+        if(userExist){
+            const response = await fetch(new URL(`/api/user/auth/verifToken`, req.url), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ verifToken: verifToken })
+            });
+            if(response.status === 200) return NextResponse.redirect(new URL(`${LOGIN_ROUTE}`, req.url));
+            return NextResponse.redirect(new URL(`${REGISTER_ROUTE}`, req.url));
+        }
+    }
+
     return false;
 }
 
+/**
+ * Vérifie si l'utilisateur existe.
+ * @param username 
+ * @param reqUrl 
+ * @returns 
+ */
 async function checkUserExists(username: string, reqUrl: string): Promise<boolean> {
     const response = await fetch(new URL(`/api/user?username=${encodeURIComponent(username)}`, reqUrl));
     if (response.status === 400) { return false; }
@@ -131,9 +160,28 @@ async function checkUserExists(username: string, reqUrl: string): Promise<boolea
     return data !== undefined;
 }
 
+/**
+ * Vérifie si la série existe.
+ * @param serieId 
+ * @param reqUrl 
+ * @returns 
+ */
 async function checkSerieExists(serieId: string, reqUrl: string): Promise<boolean> {
     const response = await fetch(new URL(`/api/series/${encodeURIComponent(serieId)}/exists`, reqUrl));
     if (response.status === 400) { return false; }
     const data = await response.json();
     return data;
+}
+
+/**
+ * Vérifie si le token de vérification existe.
+ * @param token 
+ * @param reqUrl 
+ * @returns 
+ */
+async function checkVerifTokenExists(token: string, reqUrl: string): Promise<Boolean> {
+    const response = await fetch(new URL(`/api/user/auth/verifToken?verifToken=${encodeURIComponent(token)}`, reqUrl));
+    if (response.status === 400) { return false; }
+    const data = await response.json();
+    return data !== undefined;
 }

@@ -127,8 +127,8 @@ export default function ListUsers() {
                 bValue = b.web_token ? 1 : 0;
                 break;
             case 'verified':
-                aValue = a.verified ? 1 : 0;
-                bValue = b.verified ? 1 : 0;
+                aValue = a.verifToken ? 0 : 1;
+                bValue = b.verifToken ? 0 : 1;
                 break;
         }
     
@@ -170,7 +170,7 @@ export default function ListUsers() {
                         <tr 
                             key={index} 
                             style={{
-                                backgroundColor: u.verified ? 'transparent' : '#e6ffed'
+                                backgroundColor: u.verifToken ? '#e6ffed' : 'transparent',
                             }}
                         >
                             <td className="tableCell">{u.id}</td>
@@ -183,7 +183,7 @@ export default function ListUsers() {
                                 {u.email}
                             </td>
                             <td className="tableCell">{u.admin ? 'Yes' : 'No'}</td>
-                            <td className="tableCell">{u.verified ? 'Yes' : 'No'}</td>
+                            <td className="tableCell">{u.verifToken ? 'No' : 'Yes'}</td>
                             <td className="tableCell">{u.banned ? 'Yes' : 'No'}</td>
                             <td className="tableCell">
                                 <span

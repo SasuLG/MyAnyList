@@ -70,7 +70,7 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
             <div className="header-content">
                 <div className="header-items">
                     <Link href={HOME_ROUTE}>
-                        <Image src="/assets/images/_73117bf0-c91e-4bb6-85f0-64563fc48a5c-removebg-preview.png" alt="logo" width={60} height={60} />
+                        <Image unoptimized src="/assets/images/_73117bf0-c91e-4bb6-85f0-64563fc48a5c-removebg-preview.png" alt="logo" width={60} height={60} />
                     </Link>
                 </div>
                 <div className="header-items">

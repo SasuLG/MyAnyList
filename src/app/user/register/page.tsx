@@ -86,7 +86,7 @@ export default function Register() {
         const data = await response.json();
         setAlert(data);
         if (response.ok) {
-            router.push(LOGIN_ROUTE);
+            router.push(`${LOGIN_ROUTE}?verifToken=${data.verifToken}`);
         }
     }
 

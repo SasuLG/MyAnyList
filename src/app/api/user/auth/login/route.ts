@@ -42,7 +42,7 @@ export async function POST(req: Request): Promise<Response> {
         const foundUser: User | undefined = await authenticateUser(login, password);
 
         if (foundUser) {
-            if(!foundUser.verified){
+            if(foundUser.verifToken){
                 return new Response(JSON.stringify({ message: 'Votre compte n\'est pas vérifié !', redirect: '', valid: false }), {headers: {'Content-Type': 'application/json' }, status: 200 });
             }
             if(foundUser.banned){

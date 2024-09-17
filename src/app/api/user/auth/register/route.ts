@@ -2,6 +2,8 @@ import { User } from "@/bdd/model/user";
 import { createUser, getUserByLogin, getUserByMail } from "@/bdd/requests/user.request";
 import { WrongCredentials } from "@/lib/api/response/auth.response";
 import { ServerError } from "@/lib/api/response/server.response";
+import { sendEmail } from "@/lib/mail";
+import jwt from 'jsonwebtoken';
 
 /**
  * Route : /api/user/auth/register
@@ -28,9 +30,20 @@ export async function POST(req: Request): Promise<Response> {
             return new Response(JSON.stringify({ message: 'Ce login est déjà utilisé !', valid: false }), { status: 401 });
         }
 
-        const newUser = await createUser(login, password, email);
+        // Générer un token JWT
+        const emailVerificationToken = jwt.sign(
+            { login }, 
+            process.env.JWT_SECRET ?? "default", 
+            { expiresIn: '24h' } // Le token expire dans 24 heures
+        );
 
-        return new Response(JSON.stringify({ message: 'Inscription réussie !', valid: true }), { status: 200 });
+        // Envoyer l'email avec le lien de confirmation
+        const verificationUrl = `${process.env.MODE === "production" ? process.env.NEXT_PUBLIC_BASE_URL_PROD: process.env.NEXT_PUBLIC_BASE_URL_DEV}/verify-email?token=${emailVerificationToken}`;
+        await sendEmail(email, 'Vérifiez votre adresse email', `${verificationUrl}`);
+        
+        await createUser(login, password, email, emailVerificationToken);
+
+        return new Response(JSON.stringify({ message: 'Inscription réussie ! Veuillez vérifier votre email', valid: true }), { status: 200 });
     } catch (err) {
         return ServerError('/api/user/auth/register', err);
     }

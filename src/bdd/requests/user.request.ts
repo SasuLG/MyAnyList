@@ -6,9 +6,10 @@ import Query from "../postgre.middleware";
  * @param {string} username - Le nom d'utilisateur
  * @param {string} password - Le mot de passe
  * @param {string} email - L'email de l'utilisateur
+ * @param {string} verifToken - Le token de vérification de l'utilisateur
  */
-export async function createUser(login: string,  password: string, email: string): Promise<any> {
-    await Query('INSERT INTO "User" ("login", "password", "email") VALUES ($1, $2, $3)', [login, password, email]);
+export async function createUser(login: string,  password: string, email: string, verifToken: string): Promise<any> {
+    await Query('INSERT INTO "User" ("login", "password", "email", "verifToken") VALUES ($1, $2, $3, $4)', [login, password, email, verifToken]);
 }
 
 /**
@@ -70,6 +71,18 @@ export async function getUserByToken(webToken: string): Promise<User | undefined
 }
 
 /**
+ * Fonction qui permet de récupérer un utilisateur par son 'verifToken'.
+ * ! Le verifToken est unique dans la bdd !
+ *
+ * @param {string} verifToken - Le token de connexion de la personne.
+ * @return {User | undefined} L'utilisateur si trouvé ou undefined.
+ */
+export async function getUserByVerifToken(verifToken: string): Promise<User | undefined> {
+    const bddResponse = await Query(`select * from "User" where "verifToken"=$1;`, [verifToken]);
+    return bddResponse.rows[0] as User | undefined;
+}
+
+/**
  * Fonction qui permet de vérifier si un utilisateur est un administrateur.
  * @param {number} id - L'identifiant de la personne.
  * @returns - true si l'utilisateur est un administrateur, false sinon.
@@ -90,12 +103,11 @@ export async function isUserBanned(id: number): Promise<boolean> {
 }
 
 /**
- * Fonction qui permet de mettre à jour le statut de vérification d'un utilisateur.
- * @param {number} id - L'identifiant de la personne.
- * @param {boolean} verified - 
+ * Fonction qui permet de supprimer le verifToken de l'utilisateur par son verifToken
+ * @param {number} verifToken - Le verifToken de l'utilisateur
  */
-export async function updateVerified(id: number, verified: boolean): Promise<void> {
-    await Query(`update "User" set "verified"=$1 where "id"=$2;`, [verified, id]);
+export async function deleteVerifToken(verifToken: string): Promise<void> {
+    await Query(`update "User" set "verifToken"=null where "verifToken"=$1;`, [verifToken]);
 }
 
 /**
