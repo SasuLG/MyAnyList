@@ -1,4 +1,4 @@
-import { getUserById, getUserByVerifToken } from "@/bdd/requests/user.request";
+import { getUserByVerifToken } from "@/bdd/requests/user.request";
 import { ServerError } from "@/lib/api/response/server.response";
 import { sendEmail } from "@/lib/mail";
 
@@ -17,7 +17,8 @@ export async function POST(req: Request): Promise<Response> {
         const { verifToken } = requestBody;
         const user = await getUserByVerifToken(verifToken);
         if(user){
-            await sendEmail(user.email, 'Vérifiez votre adresse email', `${user.verifToken}`);
+            const verificationUrl = `${process.env.MODE === "production" ? process.env.NEXT_PUBLIC_BASE_URL_PROD: process.env.NEXT_PUBLIC_BASE_URL_DEV}/verify-email?token=${user.verifToken}`;
+            await sendEmail(user.email, 'Vérifiez votre adresse email', `${verificationUrl}`);
             return new Response(JSON.stringify({ valid: true, message: 'Un email de vérification vous a été envoyé.' }), { status: 200 });
         }
         return new Response(JSON.stringify({ valid: false, message: 'Utilisateur introuvable.' }), { status: 400 });

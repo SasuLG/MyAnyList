@@ -1,20 +1,20 @@
-import { deleteVerifToken, getUserByVerifToken } from "@/bdd/requests/user.request";
+import { deleteResetToken,  getUserByResetToken } from "@/bdd/requests/user.request";
 import { ServerError } from "@/lib/api/response/server.response";
 
 /**
- * Route : /api/user/auth/verifToken
+ * Route : /api/user/auth/resetToken
  * METHOD : GET
  * 
- * Route de l'api pour récupérer un utilisateur par son verifToken.
+ * Route de l'api pour récupérer un utilisateur par son resetToken.
  * 
  * @param {Request} req - La requête de connexion.
  * @returns {Response} La réponse de la requête de connexion.
  */
 export async function GET(req: Request, context: any): Promise<Response> {
     try {
-        const { params } = context;
-        const verifToken = decodeURIComponent(params.verifToken);
-        const userRequest = await getUserByVerifToken(verifToken);
+        const url = new URL(req.url);
+        const resetToken = url.searchParams.get('resetToken') || "";
+        const userRequest = await getUserByResetToken(resetToken);
         if(userRequest){
             return new Response(JSON.stringify(userRequest), {
                 headers: {
@@ -23,7 +23,7 @@ export async function GET(req: Request, context: any): Promise<Response> {
                 status: 200
             });
         }
-        return new Response(JSON.stringify({ message: 'VerifToken invalide', valid: false }), {
+        return new Response(JSON.stringify({ message: 'resetToken invalide', valid: false }), {
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -31,15 +31,15 @@ export async function GET(req: Request, context: any): Promise<Response> {
         });
 
     } catch (err) {
-        return ServerError('/api/user/auth/verifToken', err);
+        return ServerError('/api/user/auth/resetToken', err);
     }
 }
 
 /**
- * Route : /api/user/auth/verifToken
+ * Route : /api/user/auth/resetToken
  * METHOD : POST
  * 
- * Route de l'api pour permettre de supprimer un verifToken (donc de verifier un user)
+ * Route de l'api pour permettre de supprimer un resetToken
  * 
  * @param {Request} req - La requête de connexion.
  * @returns {Response} La réponse de la requête de connexion.
@@ -47,18 +47,17 @@ export async function GET(req: Request, context: any): Promise<Response> {
 export async function POST(req: Request): Promise<Response> {
     try {
         const requestBody = await req.json();
-        const { verifToken } = requestBody;
-        if(verifToken){
-            await deleteVerifToken(verifToken);
+        const { resetToken } = requestBody;
+        if(resetToken){
+            await deleteResetToken(resetToken);
         }
-        return new Response(JSON.stringify({ message: 'VerifToken supprimé', valid: true }), {
+        return new Response(JSON.stringify({ message: 'resetToken supprimé', valid: true }), {
             headers: {
                 'Content-Type': 'application/json'
             },
             status: 200
         });
     } catch (err) {
-        return ServerError('/api/user/auth/verifToken', err);
+        return ServerError('/api/user/auth/resetToken', err);
     }
 }
-

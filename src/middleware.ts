@@ -46,10 +46,11 @@ export default async function userAsASessionIDMiddleware(req: NextRequest) {
     const isAboutRoute = req.url.includes('about');
     const isSearchRoute = req.url.includes('series/search');
     const isDetailsRoute = req.url.includes('series/') && !req.url.includes('series/mylist');
+    const isResetRoute = req.url.includes('user/reset-password');
     
     if (sessionID === undefined) {
         // Autorisation seulement de la route LOGIN
-        if (isLoginRoute || isRegisterRoute || isHomeRoute || isMentionsRoute || isAboutRoute || isSearchRoute || isDetailsRoute) {
+        if (isLoginRoute || isRegisterRoute || isHomeRoute || isMentionsRoute || isAboutRoute || isSearchRoute || isDetailsRoute || isResetRoute) {
             return NextResponse.next();
         }
         return NextResponse.redirect(new URL(`${LOGIN_ROUTE}`, req.url));
@@ -144,6 +145,15 @@ async function isARoute(req: NextRequest) {
         }
     }
 
+    const isResetRoute = pathname === "/user/reset-password";
+    if(isResetRoute){
+        const resetToken = url.searchParams.get("token") ?? ""
+        const userExist = await checkResetTokenExists(resetToken, req.url);
+        if(userExist){
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -181,6 +191,19 @@ async function checkSerieExists(serieId: string, reqUrl: string): Promise<boolea
  */
 async function checkVerifTokenExists(token: string, reqUrl: string): Promise<Boolean> {
     const response = await fetch(new URL(`/api/user/auth/verifToken?verifToken=${encodeURIComponent(token)}`, reqUrl));
+    if (response.status === 400) { return false; }
+    const data = await response.json();
+    return data !== undefined;
+}
+
+/**
+ * Vérifie si le token de reset mdp existe.
+ * @param token 
+ * @param reqUrl 
+ * @returns 
+ */
+async function checkResetTokenExists(token: string, reqUrl: string): Promise<Boolean> {
+    const response = await fetch(new URL(`/api/user/auth/resetToken?resetToken=${encodeURIComponent(token)}`, reqUrl));
     if (response.status === 400) { return false; }
     const data = await response.json();
     return data !== undefined;

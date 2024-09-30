@@ -83,6 +83,18 @@ export async function getUserByVerifToken(verifToken: string): Promise<User | un
 }
 
 /**
+ * Fonction qui permet de récupérer un utilisateur par son 'resetToken'.
+ * ! Le resetToken est unique dans la bdd !
+ *
+ * @param {string} verifToken - Le token de connexion de la personne.
+ * @return {User | undefined} L'utilisateur si trouvé ou undefined.
+ */
+export async function getUserByResetToken(verifToken: string): Promise<User | undefined> {
+    const bddResponse = await Query(`select * from "User" where "resetToken"=$1;`, [verifToken]);
+    return bddResponse.rows[0] as User | undefined;
+}
+
+/**
  * Fonction qui permet de vérifier si un utilisateur est un administrateur.
  * @param {number} id - L'identifiant de la personne.
  * @returns - true si l'utilisateur est un administrateur, false sinon.
@@ -108,6 +120,14 @@ export async function isUserBanned(id: number): Promise<boolean> {
  */
 export async function deleteVerifToken(verifToken: string): Promise<void> {
     await Query(`update "User" set "verifToken"=null where "verifToken"=$1;`, [verifToken]);
+}
+
+/**
+ * Fonction qui permet de supprimer le verifToken de l'utilisateur par son resetToken
+ * @param {number} resetToken - Le resetToken de l'utilisateur
+ */
+export async function deleteResetToken(resetToken: string): Promise<void> {
+    await Query(`update "User" set "resetToken"=null where "resetToken"=$1;`, [resetToken]);
 }
 
 /**
@@ -157,6 +177,16 @@ export async function unbanUser(id: number): Promise<void> {
  */
 export async function updateUserWebToken(user: User, webToken: string) {
     await Query(`update "User" set "web_token"=$1 where "id"=$2;`, [webToken, user.id]);
+}
+
+/**
+ * Fonction qui permet de mettre à jour le 'resetToken' d'un utilisateur.
+ *
+ * @param {User} userId - L'id de l'utilisateur avec le 'resetToken' à mettre à jour.
+ * @param {string} resetToken - La nouvelle valeur de 'resetToken'.
+ */
+export async function createResetToken(userId: User, resetToken: string) {
+    await Query(`update "User" set "resetToken"=$1 where "id"=$2;`, [resetToken, userId]);
 }
 
 /**

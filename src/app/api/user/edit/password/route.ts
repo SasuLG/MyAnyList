@@ -19,7 +19,12 @@ export async function POST(req: Request): Promise<Response> {
         if (newPassword.trim() === '') { return ServerError('/api/user/edit/password', 'No password provided'); }
         
         await editUserPassword(userId, newPassword);
-        return new Response(JSON.stringify({ valid: true }), { status: 200 });
+        return new Response(JSON.stringify({ message: 'Password updated', valid: true }), {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            status: 200
+        });
     } catch (err) {
         return ServerError('/api/user/edit/password', err);
     }
