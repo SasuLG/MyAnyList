@@ -203,7 +203,7 @@ export default function Login() {
                                 <button style={{backgroundColor: "#dc3545", color: "#fff",}} className="button" type="button" onClick={() => setShowPopup(false)}>Annuler</button>
                             </form>
                             {!isResetClickable && (
-                                <p style={{ color: "#999", fontSize: "12px" }}>Vous pourrez renvoyer l'email dans {resetCountdown} secondes...</p>
+                                <p style={{ color: "#999", fontSize: "12px" }}>Vous pourrez renvoyer l&apos;email dans {resetCountdown} secondes...</p>
                             )}
                         </div>
                     </div>
@@ -238,13 +238,13 @@ export default function Login() {
                     <div style={{ marginBottom: "10px", fontSize: "14px", marginTop:"5px" }}>
                         <p style={{ color: "#666", marginBottom: "5px" }}>Message de confirmation envoyé</p>
                         {!isClickable ? (
-                            <p style={{ color: "#999", fontSize: "12px" }}>Vous pourrez renvoyer l'email dans {countdown} secondes...</p>
+                            <p style={{ color: "#999", fontSize: "12px" }}>Vous pourrez renvoyer l&apos;email dans {countdown} secondes...</p>
                         ) : (
                             <p 
                                 style={{ color: '#007BFF', cursor: 'pointer', fontSize: "12px", textDecoration: "underline" }} 
                                 onClick={handleClick}
                             >
-                                Cliquez ici pour renvoyer l'email de confirmation
+                                Cliquez ici pour renvoyer l&apos;email de confirmation
                             </p>
                         )}
                     </div>
