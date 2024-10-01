@@ -116,7 +116,7 @@ const Filters = ({
           placeholder="Search"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          style={{ width: '80%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', boxShadow: '0 4px 8px rgba(0,0,0,0.2)' }}
+          style={{ width: '80%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', boxShadow: '0 4px 8px rgba(0,0,0,0.2)', color:"var(--titre-color)" }}
         />
       </div>
 

@@ -325,7 +325,7 @@ export async function getSeriesFollowed(limit: number, page: number, userId: str
                 GROUP BY "gs"."serieId"
             ),
             "User_note" AS (
-                SELECT "n"."serie_id" AS "serieId", "n"."note" AS "note"
+                SELECT "n"."serie_id" AS "serieId", "n"."note" AS "note", "n"."comment" AS "comment"
                 FROM "User_note" AS "n"
                 WHERE "n"."user_id" = $3
             ),
@@ -395,6 +395,7 @@ export async function getSeriesFollowed(limit: number, page: number, userId: str
                 COALESCE("ProductionCountries"."production_countries", '[]'::jsonb) AS "production_countries",
                 COALESCE("ProductionCompanies"."production_companies", '[]'::jsonb) AS "production_companies",
                 COALESCE("User_note"."note", NULL) AS "note",
+                COALESCE("User_note"."comment", NULL) AS "comment",
                 COALESCE("Tags"."tags", '[]'::jsonb) AS "tags"
             FROM "SerieData"
             LEFT JOIN "Genres" ON "SerieData"."id" = "Genres"."serieId"

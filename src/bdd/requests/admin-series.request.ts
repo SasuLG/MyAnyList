@@ -10,14 +10,14 @@ export async function importSerie(serieData: Serie) {
         id, name, overview, poster_path, backdrop_path, media_type, original_name, status,
         first_air_date, last_air_date, episode_run_time, number_of_seasons, number_of_episodes, genres,
         spoken_languages, production_countries, production_companies, seasons, vote_average, vote_count, origin_country,
-        popularity, budget, revenue, tags, romaji_name
+        popularity, budget, revenue, tags, romaji_name, total_time
     } = serieData;
 
     try {
         // Insertion ou mise à jour de la série
         const { rows: serieRows } = await Query(`
-            INSERT INTO "Serie" ("tmdb_id", "title", "overview", "poster", "backdrop", "media", "original_name", "status", "first_air_date", "last_air_date", "episode_run_time", "nb_seasons", "nb_episodes", "vote_average", "vote_count", "popularity", "budget", "revenue", "romaji_name")
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+            INSERT INTO "Serie" ("tmdb_id", "title", "overview", "poster", "backdrop", "media", "original_name", "status", "first_air_date", "last_air_date", "episode_run_time", "nb_seasons", "nb_episodes", "vote_average", "vote_count", "popularity", "budget", "revenue", "romaji_name", "total_time")
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
             ON CONFLICT ("tmdb_id") DO UPDATE
             SET "title" = EXCLUDED."title",
                 "overview" = EXCLUDED."overview",
@@ -37,9 +37,10 @@ export async function importSerie(serieData: Serie) {
                 "budget" = EXCLUDED."budget",
                 "revenue" = EXCLUDED."revenue",
                 "romaji_name" = EXCLUDED."romaji_name",
-                "last_modified" = CURRENT_TIMESTAMP
+                "last_modified" = CURRENT_TIMESTAMP, 
+                "total_time" = EXCLUDED."total_time"
             RETURNING "id"
-        `, [id, name, overview, poster_path, backdrop_path, media_type, original_name, status, first_air_date, last_air_date, episode_run_time, number_of_seasons, number_of_episodes, vote_average, vote_count, popularity, budget, revenue, romaji_name]);
+        `, [id, name, overview, poster_path, backdrop_path, media_type, original_name, status, first_air_date, last_air_date, episode_run_time, number_of_seasons, number_of_episodes, vote_average, vote_count, popularity, budget, revenue, romaji_name, total_time]);
 
         if (serieRows.length === 0) {
             throw new Error('Impossible de récupérer l\'ID de la série après l\'insertion.');

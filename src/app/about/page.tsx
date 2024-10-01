@@ -31,7 +31,7 @@ export default function About() {
                 <p style={{ fontSize: '1.1rem', margin: '1rem 0' }}>
                     To start using MyAnyList, you need to create an account. Click on the &quot;Register&quot; button on the homepage, fill in your details, and you&apos;re ready to go! Already have an account? Just log in with your credentials.
                 </p>
-                <Image src="/assets/images/register-screenshot.png" alt="Register and Login Screenshot" width={1000} height={500} style={imgStyle} />
+                <Image unoptimized src="/assets/images/register-screenshot.png" alt="Register and Login Screenshot" width={1000} height={500} style={imgStyle} />
             </section>
 
             <section style={{ marginBottom: '2rem' }}>
@@ -39,7 +39,7 @@ export default function About() {
                 <p style={{ fontSize: '1.1rem', margin: '1rem 0' }}>
                     Once logged in, you&apos;ll be greeted by the homepage, which features personalized recommendations, the latest updated series, and trending content. This is your launchpad for exploring the vast collection of series available on MyAnyList.
                 </p>
-                <Image src="/assets/images/homepage-screenshot.png" alt="Homepage Overview Screenshot" width={1000} height={500} style={imgStyle} />
+                <Image unoptimized src="/assets/images/homepage-screenshot.png" alt="Homepage Overview Screenshot" width={1000} height={500} style={imgStyle} />
             </section>
 
             <section style={{ marginBottom: '2rem' }}>
@@ -48,13 +48,13 @@ export default function About() {
                 <p style={{ fontSize: '1.1rem', margin: '1rem 0' }}>
                     Use the search page to find any series in our extensive database. You can apply advanced filters to narrow down your search by genre, language, production country, and more. Once you find a series you like, click the &quot;Like&quot; button to add it to your watchlist.
                 </p>
-                <Image src="/assets/images/search-screenshot.png" alt="Search Page Screenshot" width={1000} height={500} style={imgStyle} />
+                <Image unoptimized src="/assets/images/search-screenshot.png" alt="Search Page Screenshot" width={1000} height={500} style={imgStyle} />
 
                 <h3 style={{ fontSize: '1.5rem', marginTop: '2rem', marginBottom: '1rem', color: 'var(--titre-color)' }}>Series Details</h3>
                 <p style={{ fontSize: '1.1rem', margin: '1rem 0' }}>
                     Click on any series to view detailed information, including seasons, episodes, genres, production companies, and more. You can also rate the series and leave a comment, which will be visible only to you. This feature allows you to keep personal notes and track your opinions without sharing them with others.
                 </p>
-                <Image src="/assets/images/series-details-screenshot.png" alt="Series Details Screenshot" width={1000} height={500} style={imgStyle} />
+                <Image unoptimized src="/assets/images/series-details-screenshot.png" alt="Series Details Screenshot" width={1000} height={500} style={imgStyle} />
             </section>
 
             <section style={{ marginBottom: '2rem' }}>
@@ -62,7 +62,7 @@ export default function About() {
                 <p style={{ fontSize: '1.1rem', margin: '1rem 0' }}>
                     Your &quot;MyList&quot; page allows you to see all the series you are following. You can apply filters here to sort your list by genre, progress, or rating. Stay on top of the latest episodes and never miss a release.
                 </p>
-                <Image src="/assets/images/mylist-screenshot.png" alt="MyList Screenshot" width={1000} height={500} style={imgStyle} />
+                <Image unoptimized src="/assets/images/mylist-screenshot.png" alt="MyList Screenshot" width={1000} height={500} style={imgStyle} />
             </section>
 
             <section style={{ marginBottom: '2rem' }}>
@@ -70,7 +70,7 @@ export default function About() {
                 <p style={{ fontSize: '1.1rem', margin: '1rem 0' }}>
                     Your profile page is where you can manage your account settings. You can change your username or password, adjust your theme color, and view detailed statistics about your watched series, such as the total time spent, the most followed genres, and your highest-rated shows.
                 </p>
-                <Image src="/assets/images/profil-screenshot.png" alt="Profile Settings Screenshot" width={1000} height={500} style={imgStyle} />
+                <Image unoptimized src="/assets/images/profil-screenshot.png" alt="Profile Settings Screenshot" width={1000} height={500} style={imgStyle} />
             </section>
 
             <section style={{ marginBottom: '2rem' }}>

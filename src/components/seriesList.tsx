@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import HoverToolBox from '@/components/hover';
 import { IMG_SRC } from '@/constants/tmdb.consts';
 import { MinimalSerie } from '@/tmdb/types/series.type';
 import { BrokenHeart, Heart } from './svg/heart.svg';
 import { BASE_DETAILS_SERIE_ROUTE } from '@/constants/app.route.const';
+import { useUserContext } from '@/userContext';
 
 const useMediaQuery = (query: string) => {
   const [matches, setMatches] = useState<boolean>(false);
@@ -102,8 +103,81 @@ const adjustSizes = (baseStyles: typeof sizeStyles[keyof typeof sizeStyles], isS
 };
 
 const SeriesList = ({ series, styleType, followedIds, onClickHeart, limit, size = 'normal', isMylist = true, isList = true }: SeriesListProps) => {
+
+  /**
+   * Hook qui qui permet de savoir si la souris est sur un élément
+   */
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
+  /**
+   * Récupération des informations de l'utilisateur.
+   */
+  const { user, setAlert } = useUserContext();
+
+  /**
+   * Hook qui permet de gérer la note de l'utilisateur.
+   */
+  const [inputValue, setInputValue] = useState<number | null>(null);
+
+  /**
+   * Fonction pour gérer le changement de note.
+   * @param {React.ChangeEvent<HTMLInputElement>}
+   */
+  const handleRatingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    if (!isNaN(value) && e.target.value.includes('.')) {
+      const [integer, decimal] = e.target.value.split('.');
+      if (decimal.length > 2) {
+        e.target.value = `${integer}.${decimal.substring(0, 2)}`;
+      }
+    }
+    setInputValue(parseFloat(e.target.value));
+  };
+
+  /**
+   * Fonction pour mettre à jour le vote de l'utilisateur.
+   */
+  const updateVote = async (note: number, serie: MinimalSerie) => {
+    if (!user) return;
+    if (note === null || note < 0 || note > 10) return setAlert({ message: "La note doit être comprise entre 0 et 10", valid: false });
+    const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/${encodeURIComponent(serie.id)}/vote`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ note, comment : serie.comment, newVote: serie.note === null }),
+    });
+    if (response.ok) {
+        setAlert({ message: "Vote ajouté", valid: true });
+        return true;
+    } else {
+        setAlert({ message: "Erreur lors de l'ajout du vote", valid: false });
+        return false;
+    }
+  };
+
+  /**
+   * Fonction pour gérer le blur de l'input.
+   */
+  const handleBlur = async (serie: MinimalSerie) => {
+    if (inputValue !== null) {
+      await updateVote(inputValue, serie);
+    }
+  };
+
+  /**
+   * Fonction pour gérer le keydown de l'input.
+   */
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>, serie: MinimalSerie) => {
+    if (e.key === 'Enter' && inputValue !== null) {
+      e.preventDefault();
+      await updateVote(inputValue, serie);
+    }
+  };
+
+  /**
+   * Variable qui permet de savoir si l'écran est petit
+   */
   const isSmallScreen = useMediaQuery('(max-width: 500px)');
 
   let adjustedSize: keyof typeof sizeStyles = size;
@@ -195,24 +269,19 @@ const SeriesList = ({ series, styleType, followedIds, onClickHeart, limit, size 
               {followedIds.includes(Number(serie.id)) ? <Heart width={heartSize} height={heartSize} /> : <BrokenHeart width={heartSize} height={heartSize} />}
             </div>
             {styleType === 'list' && isMylist && (
-              <input type="number" min="0" max="10" step="0.01"  onClick={(e) => { e.stopPropagation(); }} /*DEFAULTVALUE TODO */
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (!isNaN(value) && e.target.value.includes('.')) {
-                    const [integer, decimal] = e.target.value.split('.');
-                    if (decimal.length > 2) {
-                      e.target.value = `${integer}.${decimal.substring(0, 2)}`;
-                    }
-                  }
-                }}
+              <input type="number" min="0" max="10" step="0.01"  onClick={(e) => { e.stopPropagation(); }}
+                onChange={handleRatingChange}
+                onBlur={() => handleBlur(serie)}
+                onKeyDown={(e) => handleKeyDown(e, serie)}
+                defaultValue={serie.note ?? undefined}
                 className="no-spinners"
-                style={{ width: `${badgeSize}px`,  height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: '0', right: '0', borderRadius: '50%',zIndex: 1, transition: 'transform 0.3s', fontSize: `${badgeFontSize}px`, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',  border: 'none',   outline: 'none', textAlign: 'center',padding: '0', backgroundColor: 'transparent',  color: 'inherit',  appearance: 'none' }}/>
+                style={{ width: `${badgeSize}px`,  height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: '0', right: '0', borderRadius: '50%',zIndex: 1, transition: 'transform 0.3s', fontSize: `${badgeFontSize}px`, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',  border: 'none',   outline: 'none', textAlign: 'center',padding: '0', backgroundColor: 'transparent',  color: `${serie.note && serie.note < 4.5 ? "var(--color-red)" : serie.note && serie.note < 7 ? "orange" : serie.note && serie.note === 10 ? "cornflowerblue" : "var(--color-green)"}`,  appearance: 'none' }}/>
             )}
           </li>
         );
 
         return styleType === 'grid' ? (
-          <HoverToolBox serie={serie} key={serie.id}>
+          <HoverToolBox serie={serie} key={serie.id} isMyList={isMylist}>
             {content}
           </HoverToolBox>
         ) : (

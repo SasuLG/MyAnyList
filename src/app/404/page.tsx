@@ -6,7 +6,7 @@ export default function Custom404() {
     const numImage = Math.floor(Math.random() * 17) + 1;
     return (
         <div className="error-page" style={{height:"100%", display:"flex", justifyContent:"center", alignItems:"center", backgroundColor:"black", overflow:"hidden"}}>
-            <Image src={`/assets/images/404/error404-${numImage}.jpg`} alt="404" width={1024} height={1024} />
+            <Image unoptimized src={`/assets/images/404/error404-${numImage}.jpg`} alt="404" width={1024} height={1024} />
         </div>
     );
 }

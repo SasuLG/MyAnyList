@@ -2,7 +2,10 @@
 create table if not exists "User" (
     "id" serial primary key,
     "login" varchar unique not null, /* L'identifiant de connexion */
+    "email" varchar unique not null, /* L'adresse email */
     "password" varchar not null, /* Le mot de passe hashé en bcrypt */
+    "verifToken" varchar unique, /* Si l'email est vérifié */
+    "resetToken" varchar unique, /* Le token de réinitialisation du mot de passe */
     "banned" boolean not null default false, /* Si l'utilisateur est banni */
     "admin" boolean not null default false, /* Si l'utilisateur est administrateur */
     "createdAt" timestamp not null default current_timestamp, /* La date de création du compte */

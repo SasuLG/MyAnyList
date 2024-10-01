@@ -1,20 +1,16 @@
 
 "use client"
-import { API_REGISTER_ROUTE } from "@/constants/api.route.const";
 import { HashWord } from "@/lib/hash";
 import { FormEvent, useEffect, useState } from "react";
-import Link from "next/link";
 import { EyeOff, EyeOn } from "@/components/svg/eyes.svg";
 import { LOGIN_ROUTE } from "@/constants/app.route.const";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useUserContext } from "@/userContext";
 
-export default function Register() {
+export default function ResetMdp() {
 
-    /**
-     * Regex pour valider un email.
-     */
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const searchParams = useSearchParams();
+    const resetToken = searchParams.get('token') ?? "";
 
     /**
      * React hook pour permettre la navigation entre les différents endpoints de l'application web.
@@ -37,26 +33,15 @@ export default function Register() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     /**
-     * Fonction qui permet de soumettre le formulaire d'inscription.
+     * Fonction qui permet de soumettre le formulaire de reset mdp.
      * @param e - L'événement de soumission du formulaire.
      */
     const formSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const loginInput = (e.currentTarget.elements.namedItem('login') as HTMLInputElement);
-        const emailInput = (e.currentTarget.elements.namedItem('email') as HTMLInputElement);
         const passwordInput = (e.currentTarget.elements.namedItem('password') as HTMLInputElement);
         const confirmPasswordInput = (e.currentTarget.elements.namedItem('confirmPassword') as HTMLInputElement);
 
-        // Validation des champs
-        if (loginInput.value.includes(' ')) { 
-            setAlert({message:"Login incorrect", valid:false});
-            return; 
-        }
-        if (!emailRegex.test(emailInput.value)) { 
-            setAlert({message:"Email invalide", valid:false});
-            return; 
-        }
         if (passwordInput.value !== confirmPasswordInput.value) { 
             setAlert({message:"Le mot de passe doit être identique", valid:false});
             return; 
@@ -65,45 +50,41 @@ export default function Register() {
             setAlert({message:"Mot de passe trop court", valid:false});
             return; 
         }
-        if (loginInput.value.length < 3) { 
-            setAlert({message:"Login trop court", valid:false});
-            return; 
-        }
 
-        const response = await fetch(API_REGISTER_ROUTE, {
+        const userRequest = await fetch(`/api/user/auth/resetToken?resetToken=${encodeURIComponent(resetToken)}`);
+        const user = await userRequest.json();
+        if(!user) router.push(`${LOGIN_ROUTE}`);
+        const response = await fetch(`/api/user/edit/password`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                login: loginInput.value,
-                email: emailInput.value,
-                password: await HashWord(passwordInput.value),
-                admin: false,
-                banned: false
-            })
+            body: JSON.stringify({ userId: user.id, newPassword: await HashWord(passwordInput.value) })
         });
+
         const data = await response.json();
         setAlert(data);
         if (response.ok) {
-            router.push(`${LOGIN_ROUTE}?verifToken=${data.verifToken}`);
+            const response = await fetch(`/api/user/auth/resetToken`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ verifToken: user.verifToken })
+            });
+            if(response.status === 200) return router.push(`${LOGIN_ROUTE}`);
         }
     }
 
-    useEffect(() => setSelectedMenu("register"), [setSelectedMenu]);
+    useEffect(() => setSelectedMenu(""), [setSelectedMenu]);
 
     return (
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "130vh" }}>
             <div className="login-container">
-                <h1>Register</h1>
+                <h1>Reset password</h1>
                 <form onSubmit={formSubmit}>
-                    <label htmlFor="login" className="login-label">Login:</label>
-                    <input type="text" id="login" name="login" />
 
-                    <label htmlFor="email" className="login-label">Email:</label>
-                    <input className="login-label" type="email" id="email" name="email" />
-
-                    <label htmlFor="password" className="login-label">Password:</label>
+                    <label htmlFor="password" className="login-label">New Password:</label>
                     <div className="password-container">
                         <input 
                             type={showPassword ? "text" : "password"} 
@@ -133,9 +114,8 @@ export default function Register() {
                         </span>
                     </div>
 
-                    <button type="submit" className="login-button">Register</button>
+                    <button type="submit" className="login-button">Reset password</button>
                 </form>
-                <p className="login-route-change">Already registered? <Link href={LOGIN_ROUTE} style={{ color: "blue" }}>Login here</Link></p>
             </div>
         </div>
     );
