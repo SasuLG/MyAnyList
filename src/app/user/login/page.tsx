@@ -6,10 +6,9 @@ import { LoginResponse } from "@/types/api/auth/auth.type";
 import { useUserContext } from "@/userContext";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
-import jwt from 'jsonwebtoken';
+import { FormEvent, Suspense, useEffect, useState } from "react";
 
-export default function Login() {
+const LoginForm = () => {
 
     /**
      * React hook pour permettre la navigation entre les différents endpoints de l'application web.
@@ -257,3 +256,12 @@ export default function Login() {
         </div>
     );
 }
+const LoginPage = () => {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <LoginForm />
+        </Suspense>
+    );
+};
+
+export default LoginPage;

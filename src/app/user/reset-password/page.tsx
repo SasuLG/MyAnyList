@@ -1,13 +1,13 @@
 
 "use client"
 import { HashWord } from "@/lib/hash";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { EyeOff, EyeOn } from "@/components/svg/eyes.svg";
 import { LOGIN_ROUTE } from "@/constants/app.route.const";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUserContext } from "@/userContext";
 
-export default function ResetMdp() {
+const ResetMdpForm = () => {
 
     const searchParams = useSearchParams();
     const resetToken = searchParams.get('token') ?? "";
@@ -120,3 +120,13 @@ export default function ResetMdp() {
         </div>
     );
 }
+
+const ResetMdpPage = () => {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ResetMdpForm />
+        </Suspense>
+    );
+};
+
+export default ResetMdpPage;
