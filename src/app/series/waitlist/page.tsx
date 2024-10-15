@@ -87,7 +87,7 @@ export default function MyList(){
   /**
    * Hook pour stocker le tri sélectionné
    */
-  const [selectedSortBy, setSelectedSortBy] = useState<string>('Followed');
+  const [selectedSortBy, setSelectedSortBy] = useState<string>('Added');
 
   /**
    * Hook pour stocker la recherche
@@ -519,7 +519,7 @@ export default function MyList(){
       case 'Number episodes':
         filtered.sort((a, b) => b.number_of_episodes - a.number_of_episodes);
         break;
-      case 'Followed':
+      case 'Added':
         filtered.sort((a, b) => {
           const dateA = a.follow_date ? new Date(a.follow_date).getTime() : 0;
           const dateB = b.follow_date ? new Date(b.follow_date).getTime() : 0;
@@ -547,7 +547,7 @@ export default function MyList(){
   const clearAllFilters = () => {
     setSelectedGenres([]);
     setSelectedFormats([]);
-    setSelectedSortBy('Followed');
+    setSelectedSortBy('Added');
     setSearchQuery('');
     setSelectedStatuses([]);
     setSelectedOriginCountries([]);
@@ -642,7 +642,7 @@ export default function MyList(){
         formats={['tv', 'movie', 'anime', "film d'animation"]}
         selectedFormats={selectedFormats}
         onSelectFormats={setSelectedFormats}
-        sortByOptions={['Followed', 'Popularity', 'Start date', 'End date', 'Name', 'Note', 'Number episodes', 'Total time']}
+        sortByOptions={['Added', 'Popularity', 'Start date', 'End date', 'Name', 'Note', 'Number episodes', 'Total time']}
         selectedSortBy={selectedSortBy}
         onSelectSortBy={setSelectedSortBy}
         searchQuery={searchQuery}
