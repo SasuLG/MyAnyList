@@ -1,27 +1,26 @@
 "use client"
-import Loader from '@/components/loader';
-import SeriesList from '@/components/seriesList';
-import { MinimalSerie, ProductionCompany, ProductionCountry, Tag } from '@/tmdb/types/series.type';
-import { useUserContext } from '@/userContext';
-import React, { useEffect, useState } from 'react';
-import Filters from '@/components/filters';
+
+import Loader from "@/components/loader";
+import SeriesList from "@/components/seriesList";
+import { MinimalSerie, ProductionCompany, ProductionCountry, Tag } from "@/tmdb/types/series.type";
+import { useUserContext } from "@/userContext";
+import { useEffect, useState } from "react";
 import { Range } from '@/tmdb/types/series.type';
-import { Filter } from '@/components/svg/filter.svg';
-import { DecreaseSize, IncreaseSize, Settings, ToggleLayout } from '@/components/svg/buttons.svg';
+import { Filter } from "@/components/svg/filter.svg";
+import Filters from "@/components/filters";
+import { DecreaseSize, IncreaseSize, Settings, ToggleLayout } from "@/components/svg/buttons.svg";
+import Link from "next/link";
+import { SEARCH_ROUTE } from "@/constants/app.route.const";
 import { useRouter } from "next/navigation";
 import { LOGIN_ROUTE } from '@/constants/app.route.const';
 
-export default function SearchPage() {
+export default function MyList(){
+  const [windowWidth, setWindowWidth] = useState<number | undefined>(undefined);
 
   /**
    * React hook pour permettre la navigation entre les différents endpoints de l'application web.
    */
   const router = useRouter();
-
-  /**
-   * Hook pour stocker la largeur de la fenêtre
-   */
-  const [windowWidth, setWindowWidth] = useState<number | undefined>(undefined);
 
   /**
    * Récupérer les informations de l'utilisateur
@@ -34,19 +33,24 @@ export default function SearchPage() {
   const [series, setSeries] = useState<MinimalSerie[]>([]);
 
   /**
+   * Hook pour stocker l'id des séries suivies
+   */
+  const [seriesIdFollowed, setSeriesIdFollowed] = useState<number[]>([]);
+
+  /**
    * Hook pour stocker les séries filtrées
    */
   const [filteredSeries, setFilteredSeries] = useState<MinimalSerie[]>([]);
 
   /**
-   * Hook pour stocker le type de style (grille ou liste)
+   * Hook pour stocker le type de style
    */
   const [styleType, setStyleType] = useState<'grid' | 'list'>('grid');
 
   /**
    * Hook pour stocker la taille de l'affichage
    */
-  const [displaySize, setDisplaySize] = useState<'large' | 'normal' | 'small' | 'very-small' | 'extra-small'>('normal');
+  const [displaySize, setDisplaySize] = useState<'large'|'normal' | 'small' | 'very-small' | 'extra-small'>('normal');
 
   /**
    * Hook pour stocker l'état de la récupération des données
@@ -54,31 +58,16 @@ export default function SearchPage() {
   const [fetchDataFinished, setFetchDataFinished] = useState<boolean>(false);
 
   /**
-   * Hook pour stocker l'id des séries suivies
-   */
-  const [seriesIdFollowed, setSeriesIdFollowed] = useState<number[]>([]);
-  
-  /**
-   * Hook pour stocker l'id des séries en waitlist
-   */
-  const [seriesIdWaited, setSeriesIdWaited] = useState<number[]>([]);
-
-  /**
    * Hook pour stocker l'état de la récupération des filtres
    */
   const [filtersReady, setFiltersReady] = useState<boolean>(false);
 
   //FILTRES
-
+  
   /**
    * Hook pour stocker l'état de l'ordre des séries
    */
   const [orderAsc, setOrderAsc] = useState<boolean>(true);
-
-  /**
-   * Hook pour stocker l'état de l'affichage avec les séries suivies
-   */
-  const [withFollowed, setwithFollowed] = useState<boolean>(false);
 
   /**
    * Hook pour stocker les genres
@@ -188,28 +177,29 @@ export default function SearchPage() {
   const [Rotating, setRotating] = useState<boolean | undefined>(undefined);
 
   /**
-   * Fonction pour récupérer les données des séries
+   * Récupérer les séries
    */
   const fetchData = async () => {
-    const response = await fetch(`/api/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}`);
+    if(user === undefined){
+        return;
+    }
+    const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all?limit=${encodeURIComponent(200000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(true)}`);
     const data = await response.json();
-    setSeries(data);
     setFetchDataFinished(true);
 
-    if (user !== undefined) {
-      const responseFollowed = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all/id`);
-      const dataFollowed = await responseFollowed.json();
-      setSeriesIdFollowed(dataFollowed);
-
-      const responseWaited = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all/wait/id`);
-      const dataWaited = await responseWaited.json();
-      setSeriesIdWaited(dataWaited);
+    if(response.ok){
+        setSeries(data);
+        setFilteredSeries(data);
+    }else{
+        setAlert({ message: 'Erreur lors de la récupération des séries', valid: false });
     }
+    const responseFollowed = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all/id`);
+    const dataFollowed = await responseFollowed.json();
+    setSeriesIdFollowed(dataFollowed);
     if (data.length > 0) {
       const minYear = Math.min(...data.map((serie: MinimalSerie) => new Date(serie.first_air_date).getFullYear()));
       const maxEpisodes = Math.max(...data.map((serie: MinimalSerie) => serie.number_of_episodes));
       
-      // set initial range values
       setYearRange((prevRange) => ({
         ...prevRange,
         minimalRange: minYear,
@@ -222,11 +212,17 @@ export default function SearchPage() {
         maximalRange: maxEpisodes,
         max: maxEpisodes,
       }));
-
-      setFiltersReady(true);
-    }
+      await fetch(`/api/translate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ texts: data.map((serie: MinimalSerie) => serie.original_name) })
+      });
+    }    
+    setFiltersReady(true);
   };
-
+  
   /**
    * Fonction pour récupérer tous les genres
    */
@@ -270,13 +266,13 @@ export default function SearchPage() {
     const response = await fetch('/api/series/tags');
     const data = await response.json();
     setTags(data);
-  };  
+  };
 
   /**
-   * Fonction pour basculer entre les styles de disposition
+   * Basculer entre les styles de liste
    */
   const toggleLayout = () => {
-    setStyleType((prevStyleType) => (prevStyleType === 'grid' ? 'list' : 'grid'));
+      setStyleType((prevStyleType) => (prevStyleType === 'grid' ? 'list' : 'grid'));
   };
 
   /**
@@ -286,7 +282,7 @@ export default function SearchPage() {
     if (displaySize === 'large') return;
     const sizes = ['large','normal', 'small', 'very-small', 'extra-small'];
     const currentIndex = sizes.indexOf(displaySize);
-    setDisplaySize(sizes[currentIndex - 1] as 'large' | 'normal' | 'small' | 'very-small' | 'extra-small');
+    setDisplaySize(sizes[currentIndex - 1] as 'large'| 'normal' | 'small' | 'very-small' | 'extra-small');
   };
 
   /**
@@ -296,53 +292,62 @@ export default function SearchPage() {
     if (displaySize === 'extra-small') return;
     const sizes = ['large','normal', 'small', 'very-small', 'extra-small'];
     const currentIndex = sizes.indexOf(displaySize);
-    setDisplaySize(sizes[currentIndex + 1] as 'large' | 'normal' | 'small' | 'very-small' | 'extra-small');
+    setDisplaySize(sizes[currentIndex + 1] as 'large'|'normal' | 'small' | 'very-small' | 'extra-small');
   };
 
   /**
-   * Fonction pour suivre ou arrêter de suivre une série
-   * @param {MinimalSerie} serie - Série à suivre ou arrêter de suivre
+   * Fonction pour gérer le clic sur le coeur, qui permet de suivre ou de ne plus suivre une série
+   * @param {MinimalSerie} serie - La série
    * @returns 
    */
   const onClickHeart = async (serie: MinimalSerie) => {
-    if (user === undefined) {
-      router.push(LOGIN_ROUTE);
-      return;
+    if(user === undefined){
+        return;
     }
+    let route = `/api/${encodeURIComponent(user.web_token)}/series/follow`;
+
     if (seriesIdFollowed.includes(Number(serie.id))) {
+      route = `/api/${encodeURIComponent(user.web_token)}/series/unfollow`;
       const confirmUnfollow = confirm("Êtes-vous sûr de vouloir arrêter de suivre cette série ?");
       if (!confirmUnfollow) return;
-  }
-    const route = `/api/${encodeURIComponent(user.web_token)}/series/${seriesIdFollowed.includes(Number(serie.id)) ? 'un' : ''}follow`;
+    }
     const response = await fetch(route, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ serieId: serie.id }),
-    });
-    const data = await response.json();
-    setSeriesIdFollowed(data ? (seriesIdFollowed.includes(Number(serie.id)) ? seriesIdFollowed.filter((id) => id !== Number(serie.id)) : [...seriesIdFollowed, Number(serie.id)]) : seriesIdFollowed);
-    if(!route.includes('unfollow') && seriesIdWaited.includes(Number(serie.id))){
-      const route = `/api/${encodeURIComponent(user.web_token)}/series/${seriesIdWaited.includes(Number(serie.id)) ? 'un' : ''}waited`;
-      const response = await fetch(route, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ serieId: serie.id }),
-      });
-      const data = await response.json();
-      setSeriesIdWaited(data ? (seriesIdWaited.includes(Number(serie.id)) ? seriesIdWaited.filter((id) => id !== Number(serie.id)) : [...seriesIdWaited, Number(serie.id)]) : seriesIdWaited);
-    }
-    await fetch('/api/user/activity', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ login: user.login }),
+        body: JSON.stringify({ serieId: serie.id })
     });
-  };
+    
+    const data = await response.json();
+    setSeriesIdFollowed(data ? (seriesIdFollowed.includes(Number(serie.id)) ? seriesIdFollowed.filter((id) => id !== Number(serie.id)) : [...seriesIdFollowed, Number(serie.id)]) : seriesIdFollowed);
+    if(response.ok){
+        if(data){
+          if(!route.includes('unfollow')){
+            const route = `/api/${encodeURIComponent(user.web_token)}/series/${series.some(s => s.id === serie.id) ? 'un' : ''}waited`;
+            const response = await fetch(route, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ serieId: serie.id }),
+            });
+            setSeries(series.filter(s => s.id !== serie.id));
+          }
+          
+          await fetch('/api/user/activity', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ login: user.login }),
+          });
+        }
+    }else{
+        setAlert({ message: 'Erreur lors de la récupération des séries suivies', valid: false });
+    }
+  }
+
 
   /**
    * Fonction pour gérer le clic sur le sablier, qui permet de toggle la série en waitlist
@@ -353,7 +358,7 @@ export default function SearchPage() {
       router.push(LOGIN_ROUTE);
       return;
     }
-    const route = `/api/${encodeURIComponent(user.web_token)}/series/${seriesIdWaited.includes(Number(serie.id)) ? 'un' : ''}waited`;
+    const route = `/api/${encodeURIComponent(user.web_token)}/series/${series.some(s => s.id === serie.id) ? 'un' : ''}waited`;
     const response = await fetch(route, {
       method: 'POST',
       headers: {
@@ -362,7 +367,7 @@ export default function SearchPage() {
       body: JSON.stringify({ serieId: serie.id }),
     });
     const data = await response.json();
-    setSeriesIdWaited(data ? (seriesIdWaited.includes(Number(serie.id)) ? seriesIdWaited.filter((id) => id !== Number(serie.id)) : [...seriesIdWaited, Number(serie.id)]) : seriesIdWaited);
+    setSeries(data ? (series.some(s => s.id === serie.id) ? series.filter((s) => s.id !== serie.id) : [...series, serie]) : series);
     
     await fetch('/api/user/activity', {
       method: 'POST',
@@ -405,14 +410,6 @@ export default function SearchPage() {
   };
 
   /**
-   * Fonction pour gérer le changement de l'affichage avec les séries suivies
-   * @param {boolean} onlyFollowed - Afficher en plus les séries suivies
-   */
-  const handleWithFollowedChange = (onlyFollowed: boolean) => {
-    setwithFollowed(onlyFollowed);
-  };
-
-  /**
    * Fonction pour gérer le changement de l'ordre des séries
    * @param {boolean} order - Ordre des séries
    */
@@ -420,12 +417,12 @@ export default function SearchPage() {
     setOrderAsc(Boolean(order));
   };
 
-  /**
+   /**
    * Fonction pour retirer un filtre
    * @param {string} type - Type de filtre
    * @param {string} value - Valeur du filtre
    */
-  const removeFilter = (type: string, value: string) => {
+   const removeFilter = (type: string, value: string) => {
     switch (type) {
       case 'genre':
         setSelectedGenres(selectedGenres.filter((genre) => genre !== value));
@@ -469,51 +466,49 @@ export default function SearchPage() {
     applyFiltersAndSort();
   };
 
-  /**
+   /**
    * Fonction pour appliquer les filtres et le tri
    */
-  const applyFiltersAndSort = () => {
+   const applyFiltersAndSort = () => {
     if (!filtersReady) return;
   
     let filtered = series.filter(serie => {
-      if (!withFollowed && seriesIdFollowed.includes(Number(serie.id))) {
-        return false;
-      }
-  
-      // Apply format filters
       const matchesFormat = selectedFormats.length === 0 || selectedFormats.includes(serie.media_type) &&
-        (selectedFormats.includes('tv') && serie.media_type === 'tv' ) ||
-        (selectedFormats.includes('movie') && serie.media_type === 'movie' ) ||
+        (selectedFormats.includes('tv') && serie.media_type === 'tv') ||
+        (selectedFormats.includes('movie') && serie.media_type === 'movie') ||
         (selectedFormats.includes('anime') && serie.media_type === 'anime') ||
         (selectedFormats.includes('film d\'animation') && serie.media_type === 'film d\'animation');
-      
+  
       const matchesGenre = selectedGenres.length === 0 || selectedGenres.every(genre => serie.genres.some(g => g.name === genre));
-      const searchWords = searchQuery.toLowerCase().split(/\s+/);
+      const searchWords = searchQuery.toLowerCase().replace(/\s+/g, ''); 
+
       const matchesSearchQuery = [serie.name, serie.original_name, serie.romaji_name]
         .filter(name => name) 
-        .some(name => 
-          searchWords.every(word => name.toLowerCase().includes(word))
-        );
+        .some(name => {
+          const normalizedSerieName = name.toLowerCase().replace(/\s+/g, ''); 
+          return normalizedSerieName.includes(searchWords); 
+        });
+      
       const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(statusMapping[serie.status] || serie.status);
       const matchesOriginCountry = selectedOriginCountries.length === 0 || selectedOriginCountries.every(country => serie.origin_country.includes(country));
-      const matchesProductionCompany = selectedProductionCompanies.every(company => serie.production_companies.some(prod => prod.name === company));
+      const matchesProductionCompany = selectedProductionCompanies.every(company => serie.production_companies && serie.production_companies.some(prod => prod.name === company));
       const matchesProductionCountry = selectedProductionCountries.every(country => serie.production_countries.some(c => c.name === country));
       const matchesTags = selectedTags.every(tag => serie.tags.some(t => t.name === tag));
       const serieYear = new Date(serie.first_air_date).getFullYear();
       const matchesYearRange = serieYear >= yearRange.min && serieYear <= yearRange.max;
-      const matchesVoteRange = (serie.vote_average || 0) >= voteRange.min && (serie.vote_average || 0) <= voteRange.max;
+      const matchesVoteRange = (serie.note || 0) >= voteRange.min && (serie.note || 0) <= voteRange.max;
       const matchesEpisodeRange = serie.number_of_episodes >= episodeRange.min && serie.number_of_episodes <= episodeRange.max;
-  
+      
       return matchesFormat && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange && matchesTags;
     });
   
     // Apply sorting
     switch (selectedSortBy) {
-      case 'popularity':
+      case 'Popularity':
         filtered.sort((a, b) => b.popularity - a.popularity);
         break;
-      case 'Vote average':
-        filtered.sort((a, b) => b.vote_average - a.vote_average);
+      case 'Note':
+        filtered.sort((a, b) => (b.note || 0) - (a.note || 0));
         break;
       case 'Start date':
         filtered.sort((a, b) => new Date(b.first_air_date).getTime() - new Date(a.first_air_date).getTime());
@@ -525,7 +520,11 @@ export default function SearchPage() {
         filtered.sort((a, b) => b.number_of_episodes - a.number_of_episodes);
         break;
       case 'Added':
-        filtered.sort((a, b) => Number(b.id) - Number(a.id));
+        filtered.sort((a, b) => {
+          const dateA = a.follow_date ? new Date(a.follow_date).getTime() : 0;
+          const dateB = b.follow_date ? new Date(b.follow_date).getTime() : 0;
+          return dateB - dateA;
+        });
         break;
       case 'Name':
         filtered.sort((a, b) => a.name.localeCompare(b.name));
@@ -557,7 +556,6 @@ export default function SearchPage() {
     setYearRange({ min: 1900, max: new Date().getFullYear(), minimalRange: 1900, maximalRange: new Date().getFullYear() });
     setVoteRange({ min: 0, max: 10, minimalRange: 0, maximalRange: 10 });
     setEpisodeRange({ min: 1, max: 2000, minimalRange: 1, maximalRange: 2000 });
-    setwithFollowed(false);
     setSelectedTags([]);
     setOrderAsc(true);
   };
@@ -585,13 +583,13 @@ export default function SearchPage() {
     if (filtersReady) {
       applyFiltersAndSort();
     }
-  }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, withFollowed, seriesIdFollowed, orderAsc, selectedTags]);
-
+  }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, series, orderAsc, selectedTags]);
+  
   useEffect(() => {
     if(windowWidth) windowWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
   }, [windowWidth]);
 
-  useEffect(() => setSelectedMenu("search"), [setSelectedMenu]);
+  useEffect(() => setSelectedMenu("waitList"), [setSelectedMenu]);
 
   const hasActiveFilters = 
   selectedGenres.length > 0 ||
@@ -644,7 +642,7 @@ export default function SearchPage() {
         formats={['tv', 'movie', 'anime', "film d'animation"]}
         selectedFormats={selectedFormats}
         onSelectFormats={setSelectedFormats}
-        sortByOptions={['Added', 'Popularity', 'Start date', 'End date',  'Vote average', 'Name', 'Number episodes', 'Total time']}
+        sortByOptions={['Added', 'Popularity', 'Start date', 'End date', 'Name', 'Note', 'Number episodes', 'Total time']}
         selectedSortBy={selectedSortBy}
         onSelectSortBy={setSelectedSortBy}
         searchQuery={searchQuery}
@@ -655,7 +653,7 @@ export default function SearchPage() {
         originCountries={originCountries}
         selectedOriginCountries={selectedOriginCountries}
         onSelectOriginCountries={setSelectedOriginCountries}
-        productionCompanies={productionCompanies.map(pc=> pc.name)}
+        productionCompanies={productionCompanies.map(pc => pc.name)}
         selectedProductionCompanies={selectedProductionCompanies}
         onSelectProductionCompanies={setSelectedProductionCompanies}
         productionCountries={productionCountries.map(country => country.name)}
@@ -667,8 +665,6 @@ export default function SearchPage() {
         onVoteRangeChange={handleVoteRangeChange}
         episodeRange={filtersReady ? episodeRange : undefined}
         onEpisodeRangeChange={handleEpisodeRangeChange}
-        withFollowed={withFollowed}
-        onwithFollowedChange={handleWithFollowedChange}
         orderAsc={orderAsc}
         setOrderChange={handleOrderChange}
         tags={tags.map(tag => tag.name)}
@@ -728,17 +724,19 @@ export default function SearchPage() {
         </span>
       </div>
 
-      {fetchDataFinished === false ? (
+      {fetchDataFinished === false || filtersReady === false? (
         <div style={{ textAlign: "center", padding: "2rem" }}>
           <Loader />
         </div>
       ) : (
         series.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "2rem" }}>
-            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>No series found</span>
-          </div>
-        ):(
-        <SeriesList series={filteredSeries} styleType={styleType} followedIds={seriesIdFollowed} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} size={displaySize} isMylist={false}/>)
+            <div style={{ textAlign: "center", padding: "2rem" }}>
+                <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>No series found</span><br></br>
+                <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>To add a serie on the wait list click on the hourglass in the page <Link href={SEARCH_ROUTE}  style={{color:"var(--secondary-background-color)"}}>search series</Link></span>
+            </div>
+        ) : (
+            <SeriesList series={filteredSeries} styleType={styleType} followedIds={seriesIdFollowed} waitedIds={series.map(serie=>Number(serie.id))} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} size={displaySize}/>
+        )
       )}
     </div>
   );

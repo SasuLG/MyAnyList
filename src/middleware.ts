@@ -100,8 +100,9 @@ async function isARoute(req: NextRequest) {
     const isImportRoute = pathname === "/admin/import";
     const isUserListRoute = pathname === "/admin/users";
     const isAdminRoute = pathname === "/admin";
+    const isWaitListRoute = pathname === "/series/waitlist";
 
-    if (isLoginRoute || isRegisterRoute || isHomeRoute || isMentionsRoute || isAboutRoute || isImportRoute || isSearchRoute || isMyListRoute || isUserListRoute || isAdminRoute) {
+    if (isLoginRoute || isRegisterRoute || isHomeRoute || isMentionsRoute || isAboutRoute || isImportRoute || isSearchRoute || isMyListRoute || isUserListRoute || isAdminRoute || isWaitListRoute) {
         return true;
     }
 

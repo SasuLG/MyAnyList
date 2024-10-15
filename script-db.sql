@@ -151,6 +151,14 @@ create table if not exists "User_serie"(
     primary key ("user_id", "serie_id")
 );
 
+/* Création de la table user wait series */
+create table if not exists "User_wait_serie"(
+    "user_id" integer not null, /* L'identifiant de l'utilisateur */
+    "serie_id" integer not null, /* L'identifiant de la série */
+    "date" timestamp not null default current_timestamp, /* La date d'ajout de la série */
+    primary key ("user_id", "serie_id")
+);
+
 /* Création de la table user notes */
 create table if not exists "User_note"(
     "user_id" integer not null, /* L'identifiant de l'utilisateur */
@@ -175,6 +183,8 @@ alter table "Language_serie" add constraint fk_language_serie_serie foreign key 
 alter table "Language_serie" add constraint fk_language_serie_language foreign key ("languageId") references "Language" ("id");
 alter table "Episode" add constraint fk_episode_season foreign key ("season_id") references "Season" ("id");
 alter table "Season" add constraint fk_season_serie foreign key ("serie_id") references "Serie" ("id");
+alter table "User_wait_serie" add constraint fk_user_wait_serie_user foreign key ("user_id") references "User" ("id");
+alter table "User_wait_serie" add constraint fk_user_wait_serie_serie foreign key ("serie_id") references "Serie" ("id");
 
 -- Fonction pour mettre à jour le temps total de la saison
 CREATE OR REPLACE FUNCTION update_season_total_time()

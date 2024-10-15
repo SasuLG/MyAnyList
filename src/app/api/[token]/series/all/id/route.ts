@@ -1,4 +1,4 @@
-import { getSeriesFollowed, getSeriesIdFollowed } from "@/bdd/requests/series.request";
+import { getSeriesIdFollowed } from "@/bdd/requests/series.request";
 import { getUserByToken } from "@/bdd/requests/user.request";
 import { ServerError } from "@/lib/api/response/server.response";
 

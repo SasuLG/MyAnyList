@@ -11,6 +11,7 @@ import SeriesList from "@/components/seriesList";
 import MultiSelectDropdown from "@/components/multiSelectDropdown";
 import { Order } from "@/components/svg/filter.svg";
 import ThemeSwitcher from "@/components/themeSwitcher";
+import { LOGIN_ROUTE } from "@/constants/app.route.const";
 
 export default function Profil({ params }: { params: { name: string } }) {
 
@@ -33,6 +34,11 @@ export default function Profil({ params }: { params: { name: string } }) {
      * Hook pour gérer les séries suivies par l'utilisateur.
      */
     const [seriesFollowed, setSeriesFollowed] = useState<MinimalSerie[]>([]);
+
+    /**
+     * Hook pour stocker l'id des séries en waitlist
+     */
+    const [seriesIdWaited, setSeriesIdWaited] = useState<number[]>([]);
 
     /**
      * Hook pour gérer les éléments survolés.
@@ -100,8 +106,8 @@ export default function Profil({ params }: { params: { name: string } }) {
     const fetchSeriesFollowed = useCallback(async () => {
         if (userProfil === null) return;
         try {
-            let route = `/api/${encodeURIComponent(userProfil.web_token)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}`;
-            if(userProfil.login !== user?.login) route = `/api/user/${encodeURIComponent(userProfil.id)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}`;
+            let route = `/api/${encodeURIComponent(userProfil.web_token)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`;
+            if(userProfil.login !== user?.login) route = `/api/user/${encodeURIComponent(userProfil.id)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`;
             const response = await fetch(route);
             const data = await response.json();
             if (response.ok) {
@@ -114,6 +120,26 @@ export default function Profil({ params }: { params: { name: string } }) {
             }
         } catch (error) {
             setAlert({ message: 'Failed to fetch series followed', valid: false });
+        }
+    }, [userProfil, setAlert]);
+
+    /**
+     * Fonction pour récupérer les séries en waitlist de l'utilisateur.
+     */
+    const fetchWaitList = useCallback(async () => {
+        if (userProfil === null) return;
+        try {
+            let route = `/api/${encodeURIComponent(userProfil.web_token)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(true)}`;
+            if(userProfil.login !== user?.login) route = `/api/user/${encodeURIComponent(userProfil.id)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(true)}`;
+            const response = await fetch(route);
+            const data = await response.json();
+            if (response.ok) {
+                setSeriesIdWaited(data.map((serie: MinimalSerie) => serie.id));
+            } else {
+                setAlert({ message: data.message, valid: false });
+            }
+        } catch (error) {
+            setAlert({ message: 'Failed to fetch series waited', valid: false });
         }
     }, [userProfil, setAlert]);
 
@@ -208,6 +234,82 @@ export default function Profil({ params }: { params: { name: string } }) {
         }else{
             setAlert({message:"Erreur lors de la modification du mot de passe", valid:response.ok});
         }
+    }
+
+    /**
+     * Fonction pour gérer le clic sur le coeur, qui permet de suivre ou de ne plus suivre une série
+     * @param {MinimalSerie} serie - La série
+     * @returns 
+     */
+    const onClickHeart = async (serie: MinimalSerie) => {
+        if(user === undefined){
+            router.push(LOGIN_ROUTE);
+            return;
+        }
+        if (serie.follow_date) {
+            const confirmUnfollow = confirm("Êtes-vous sûr de vouloir arrêter de suivre cette série ?");
+            if (!confirmUnfollow) return;
+        }
+        let route = `/api/${encodeURIComponent(user.web_token)}/series/follow`;
+        if(seriesFollowed.map(serie=>serie.id.toString()).includes(serie.id.toString())){
+            route = `/api/${encodeURIComponent(user.web_token)}/series/unfollow`;
+        }
+        const response = await fetch(route, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ serieId: serie.id })
+        });
+        if(response.ok){
+            const data = await response.json();
+            if(data){
+            if(route.includes('unfollow')){
+                setSeriesFollowed(seriesFollowed.filter(s=>s.id.toString()!==serie.id.toString()));
+            }else{
+                setSeriesFollowed([...seriesFollowed, serie]);
+            }
+            
+            await fetch('/api/user/activity', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ login: user.login }),
+            });
+            }
+        }else{
+            setAlert({ message: 'Erreur lors de la récupération des séries suivies', valid: false });
+        }
+    }
+
+    /**
+     * Fonction pour gérer le clic sur le sablier, qui permet de toggle la série en waitlist
+     * @param {MinimalSerie} serie - La série
+    */
+    const onClickHourGlass = async (serie: MinimalSerie) => {
+        if (user === undefined) {
+            router.push(LOGIN_ROUTE);
+            return;
+        }
+        const route = `/api/${encodeURIComponent(user.web_token)}/series/${seriesIdWaited.includes(Number(serie.id)) ? 'un' : ''}waited`;
+        const response = await fetch(route, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ serieId: serie.id }),
+        });
+        const data = await response.json();
+        setSeriesIdWaited(data ? (seriesIdWaited.includes(Number(serie.id)) ? seriesIdWaited.filter((id) => id !== Number(serie.id)) : [...seriesIdWaited, Number(serie.id)]) : seriesIdWaited);
+        
+        await fetch('/api/user/activity', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ login: user.login }),
+        });
     }
 
     /**
@@ -388,7 +490,8 @@ export default function Profil({ params }: { params: { name: string } }) {
 
     useEffect(() => {
         fetchSeriesFollowed();
-    }, [fetchSeriesFollowed]);
+        fetchWaitList();
+    }, [fetchSeriesFollowed, fetchWaitList]);
 
     useEffect(() => {
         setSelectedMenu("userProfil");
@@ -671,7 +774,7 @@ export default function Profil({ params }: { params: { name: string } }) {
                     <div style={{   display: 'flex', alignItems: 'center',   position: 'relative',   cursor: 'pointer',  marginRight: '-1.5rem', width:"max-content"}}  onClick={() => setOrderAscRecent(!orderAscRecent)}  >
                         <Order  width={30}    height={30}  orderAsc={orderAscRecent} />
                     </div>
-                    <SeriesList series={recentSeries} styleType={"grid"} followedIds={recentSeries.map(serie=>Number(serie.id))} onClickHeart={editPassword} limit={8} size="very-small" isList={false}/>
+                    <SeriesList series={recentSeries} styleType={"grid"} followedIds={recentSeries.map(serie=>Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} limit={8} size="very-small" isList={false}/>
                 </div>
     
                 <div>
@@ -683,7 +786,7 @@ export default function Profil({ params }: { params: { name: string } }) {
                     <div style={{   display: 'flex', alignItems: 'center',   position: 'relative',   cursor: 'pointer',  marginRight: '-1.5rem',width:"max-content"}}  onClick={() => setOrderAscRating(!orderAscRating)}  >
                         <Order  width={30}    height={30}  orderAsc={orderAscRating} />
                     </div>
-                    <SeriesList series={ratedSeries} styleType={"grid"} followedIds={ratedSeries.map(serie=>Number(serie.id))} onClickHeart={editPassword} limit={8} size="very-small" isList={false}/>
+                    <SeriesList series={ratedSeries} styleType={"grid"} followedIds={ratedSeries.map(serie=>Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} limit={8} size="very-small" isList={false}/>
                 </div>
 
                 <div>
@@ -695,7 +798,7 @@ export default function Profil({ params }: { params: { name: string } }) {
                     <div style={{   display: 'flex', alignItems: 'center',   position: 'relative',   cursor: 'pointer',  marginRight: '-1.5rem',width:"max-content"}}  onClick={() => setOrderAscTime(!orderAscTime)}  >
                         <Order  width={30}    height={30}  orderAsc={orderAscTime} />
                     </div>
-                    <SeriesList series={longSeries} styleType={"grid"} followedIds={longSeries.map(serie=>Number(serie.id))} onClickHeart={editPassword} limit={8} size="very-small" isList={false}/>
+                    <SeriesList series={longSeries} styleType={"grid"} followedIds={longSeries.map(serie=>Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} limit={8} size="very-small" isList={false}/>
                 </div>
             </div>
         </div>

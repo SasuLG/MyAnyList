@@ -2,14 +2,14 @@ import { memo, useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useUserContext } from "@/userContext";
 import { API_LOGOUT_ROUTE, API_RESTORE_SESSION_ROUTE } from "@/constants/api.route.const";
-import { ADMIN_ROUTE, HOME_ROUTE, LOGIN_ROUTE, MYLIST_ROUTE, REGISTER_ROUTE, SEARCH_ROUTE, PROFILE_BASE_ROUTE, USER_LIST_ROUTE } from "@/constants/app.route.const";
+import { ADMIN_ROUTE, HOME_ROUTE, LOGIN_ROUTE, MYLIST_ROUTE, REGISTER_ROUTE, SEARCH_ROUTE, PROFILE_BASE_ROUTE, USER_LIST_ROUTE, WAITLIST_ROUTE } from "@/constants/app.route.const";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AdminKey } from "./svg/key.svg";
 import { ProfilCircle } from "./svg/profil.svg";
 import { Logout } from "./svg/logout.svg";
 
-export type MenuList = "search" | "login" | "register" | "myList" | "userProfil" | "home" |  "";
+export type MenuList = "search" | "login" | "register" | "myList" | "userProfil" | "home" | "waitList" | "";
 
 export type HeaderProps = {
     selected_menu: MenuList;
@@ -76,7 +76,10 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                 <div className="header-items">
                     <Link href={SEARCH_ROUTE} className={selected_menu === "search" ? "selected" : ""}>Search</Link>
                     {user && (
-                        <Link href={MYLIST_ROUTE} className={selected_menu === "myList" ? "selected" : ""}>My list</Link>
+                        <>
+                            <Link href={WAITLIST_ROUTE} className={selected_menu === "waitList" ? "selected" : ""}>Wait List</Link>
+                            <Link href={MYLIST_ROUTE} className={selected_menu === "myList" ? "selected" : ""}>My list</Link>
+                        </>
                     )}
                 </div>
                 <div className="header-items">

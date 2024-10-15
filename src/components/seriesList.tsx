@@ -6,6 +6,7 @@ import { MinimalSerie } from '@/tmdb/types/series.type';
 import { BrokenHeart, Heart } from './svg/heart.svg';
 import { BASE_DETAILS_SERIE_ROUTE } from '@/constants/app.route.const';
 import { useUserContext } from '@/userContext';
+import { HourGlass } from './svg/hourglass.svg';
 
 const useMediaQuery = (query: string) => {
   const [matches, setMatches] = useState<boolean>(false);
@@ -26,7 +27,9 @@ type SeriesListProps = {
   series: MinimalSerie[];
   styleType: 'grid' | 'list';
   followedIds: number[];
+  waitedIds: number[];
   onClickHeart: (serie: MinimalSerie) => void;
+  onClickHourGlass: (serie: MinimalSerie) => void;
   limit?: number;
   size?: 'normal' | 'small' | 'very-small' | 'extra-small' | 'large';
   isMylist?: boolean;
@@ -102,10 +105,10 @@ const adjustSizes = (baseStyles: typeof sizeStyles[keyof typeof sizeStyles], isS
   };
 };
 
-const SeriesList = ({ series, styleType, followedIds, onClickHeart, limit, size = 'normal', isMylist = true, isList = true }: SeriesListProps) => {
+const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, onClickHourGlass, limit, size = 'normal', isMylist = true, isList = true }: SeriesListProps) => {
 
   /**
-   * Hook qui qui permet de savoir si la souris est sur un élément
+   * Hook qui permet de savoir si la souris est sur un élément
    */
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -118,6 +121,11 @@ const SeriesList = ({ series, styleType, followedIds, onClickHeart, limit, size 
    * Hook qui permet de gérer la note de l'utilisateur.
    */
   const [inputValue, setInputValue] = useState<number | null>(null);
+
+  /**
+   * Hook qui permet de gérer l'ouverture de la popup pour suivre ou wait une série.
+   */
+  const [openPopupIndex, setOpenPopupIndex] = useState<number | null>(null);
 
   /**
    * Fonction pour gérer le changement de note.
@@ -262,11 +270,27 @@ const SeriesList = ({ series, styleType, followedIds, onClickHeart, limit, size 
                 )}
               </div>
             </Link>
+            {openPopupIndex === index && (
+              <div 
+                style={{position: "absolute", top: styleType === 'grid' ? '-28px' : "-43px", right: styleType === 'grid' ? '-10px' : "79rem", display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '50px', zIndex: 1, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.8)', padding: '0', gap: '2px', width: 'auto', height: `${badgeSize}px`}}>
+                <div 
+                  onClick={(e) => { e.stopPropagation(); onClickHourGlass(serie); setOpenPopupIndex(null);}} 
+                  style={{width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer', backgroundColor: waitedIds.includes(Number(serie.id)) ? '#FFDDDD' : '#EEEEEE', transition: 'background-color 0.3s', padding: '0', margin: '0'}}>
+                  <HourGlass width={heartSize} height={heartSize} check={waitedIds.includes(Number(serie.id))} />
+                </div>
+                <div 
+                  onClick={(e) => { e.stopPropagation(); onClickHeart(serie); setOpenPopupIndex(null);}} 
+                  style={{width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer', backgroundColor: followedIds.includes(Number(serie.id)) ? '#FFDDDD' : '#EEEEEE', transition: 'background-color 0.3s', padding: '0', margin: '0'}}>
+                  {followedIds.includes(Number(serie.id)) ? (<Heart width={heartSize} height={heartSize} />) : (<BrokenHeart width={heartSize} height={heartSize} />)}
+                </div>
+              </div>
+            )}
+
             <div
-              onClick={(e) => { e.stopPropagation(); onClickHeart(serie); }}
+              onClick={(e) => { e.stopPropagation(); setOpenPopupIndex(openPopupIndex === index ? null : index); }}
               style={{ width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: styleType === 'grid' ? '10px' : "0", right: styleType === 'grid' ? '10px' : "0", left: styleType === 'list' ? '0' : "", borderRadius: '50%', zIndex: 1, transition: 'transform 0.3s', fontSize: `${badgeFontSize}px`, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}
             >
-              {followedIds.includes(Number(serie.id)) ? <Heart width={heartSize} height={heartSize} /> : <BrokenHeart width={heartSize} height={heartSize} />}
+              {followedIds.includes(Number(serie.id)) ? <Heart width={heartSize} height={heartSize} /> : waitedIds.includes(Number(serie.id)) ? <HourGlass width={heartSize} height={heartSize} check={true}/> : <BrokenHeart width={heartSize} height={heartSize} />}
             </div>
             {styleType === 'list' && isMylist && (
               <input type="number" min="0" max="10" step="0.01"  onClick={(e) => { e.stopPropagation(); }}

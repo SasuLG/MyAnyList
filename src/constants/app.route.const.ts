@@ -54,6 +54,12 @@ export const USER_LIST_ROUTE = '/admin/users';
 export const MYLIST_ROUTE = '/series/mylist';
 
 /**
+ * Variable qui représente la valeur de la route de waitList
+ */
+export const WAITLIST_ROUTE = '/series/waitlist';
+
+
+/**
  * Variable qui représente la valeur de base de la route de profil
  */
 export const PROFILE_BASE_ROUTE = '/user/profil';

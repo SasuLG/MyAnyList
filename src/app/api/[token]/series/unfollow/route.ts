@@ -6,10 +6,10 @@ import { ServerError } from "@/lib/api/response/server.response";
  * Route : /api/[token]/series/unfollow
  * METHOD : POST
  * 
- * Route de l'api pour permettre la connexion des utilisateurs.
+ * Route de l'api pour ne plus suivre une série.
  * 
- * @param {Request} req - La requête de connexion.
- * @returns {Response} La réponse de la requête de connexion.
+ * @param {Request} req - La requête d'unfollow.
+ * @returns {Response} La réponse de la requête d'unfollow.
  */
 export async function POST(req: Request, context: any): Promise<Response> {
     try {

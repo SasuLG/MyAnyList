@@ -20,8 +20,9 @@ export async function GET(req: Request, context: any): Promise<Response>{
             const url = new URL(req.url);
             const limit = Number(url.searchParams.get('limit')) || 10;
             const page = Number(url.searchParams.get('page')) || 1;
-            
-            const data = await getSeriesFollowed(limit, page, userRequest.id);
+            const isWaitList = url.searchParams.get('waitList') === 'true';
+
+            const data = await getSeriesFollowed(limit, page, userRequest.id, isWaitList);
             return new Response(JSON.stringify(data), {
                 headers: {
                     'Content-Type': 'application/json'

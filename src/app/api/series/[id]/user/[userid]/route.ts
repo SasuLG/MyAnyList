@@ -2,7 +2,7 @@ import { getUserSerieDetails } from "@/bdd/requests/series.request";
 import { ServerError } from "@/lib/api/response/server.response";
 
 /**
- * Route : /api/series/[id]user/[userid]
+ * Route : /api/series/[id]/user/[userid]
  * METHOD : GET
  * 
  * Route de l'api pour récupérer les détails d'une série
