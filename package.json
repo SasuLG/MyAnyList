@@ -16,7 +16,7 @@
     "crypto-js": "^4.2.0",
     "jsonwebtoken": "^9.0.2",
     "kuromoji": "^0.1.2",
-    "next": "14.2.5",
+    "next": "14.2.10",
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.15",
     "pg": "^8.12.0",
