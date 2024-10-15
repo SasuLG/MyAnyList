@@ -1,8 +1,9 @@
-import { getSeriesFollowed } from "@/bdd/requests/series.request";
+import { getSeriesIdWaited } from "@/bdd/requests/series.request";
+import { getUserByToken } from "@/bdd/requests/user.request";
 import { ServerError } from "@/lib/api/response/server.response";
 
 /**
- * Route : /api/series/followed/[id]
+ * Route : /api/[token]/series/all/wait/id
  * METHOD : GET
  * 
  * Route de l'api pour récupérer toutes les séries.
@@ -12,13 +13,11 @@ import { ServerError } from "@/lib/api/response/server.response";
 export async function GET(req: Request, context: any): Promise<Response> {
     try {
         const { params } = context;
-        const id = decodeURIComponent(params.id);
+        const webToken = decodeURIComponent(params.token);
+        const userRequest = await getUserByToken(webToken);
         
-        if (id) {
-            const url = new URL(req.url);
-            const limit = Number(url.searchParams.get('limit')) || 10;
-            const page = Number(url.searchParams.get('page')) || 1;
-            const data = await getSeriesFollowed(limit, page, id);
+        if (userRequest) {
+            const data = await getSeriesIdWaited(userRequest.id);
             return new Response(JSON.stringify(data), {
                 headers: {
                     'Content-Type': 'application/json'
@@ -36,6 +35,6 @@ export async function GET(req: Request, context: any): Promise<Response> {
 
 
     } catch (err) {
-        return ServerError('GET : /api/series/followed/[id]', err);
+        return ServerError('GET :/api/[token]/series/all/wait/id', err);
     }
 }

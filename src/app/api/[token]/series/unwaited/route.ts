@@ -1,29 +1,28 @@
-import { followSerie } from "@/bdd/requests/series.request";
+import { removeWaitSerie } from "@/bdd/requests/series.request";
 import { getUserByToken } from "@/bdd/requests/user.request";
 import { ServerError } from "@/lib/api/response/server.response";
 
 /**
- * Route : /api/[token]/series/follow
+ * Route : /api/[token]/series/unwaited
  * METHOD : POST
  * 
- * Route de l'api pour suivre une série.
+ * Route de l'api pour supprimer une série de la waitList.
  * 
- * @param {Request} req - La requête de follow.
- * @returns {Response} La réponse de la requête de follow.
+ * @returns {Response} La réponse de la requête de suppression de la série de la waitList.
  */
 export async function POST(req: Request, context: any): Promise<Response> {
     try {
         const { params } = context;
         const webToken = decodeURIComponent(params.token);
         const userRequest = await getUserByToken(webToken);
-
+        
         if(userRequest){
             const requestBody = await req.json();
             const { serieId } = requestBody;
             if(serieId){
-                const response = await followSerie(userRequest.id, serieId);
+                const response = await removeWaitSerie(userRequest.id, serieId);
                 if(response){
-                    return new Response(JSON.stringify({ message: 'Serie followed' }), {
+                    return new Response(JSON.stringify({ message: 'Serie remove from the waitList' }), {
                         headers: {
                             'Content-Type': 'application/json'
                         },
@@ -51,6 +50,6 @@ export async function POST(req: Request, context: any): Promise<Response> {
             status: 404
         });
     } catch (err) {
-        return ServerError('/api/[token]/series/follow', err);
+        return ServerError('/api/[token]/series/unwaited', err);
     }
 }

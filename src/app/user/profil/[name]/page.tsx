@@ -100,8 +100,8 @@ export default function Profil({ params }: { params: { name: string } }) {
     const fetchSeriesFollowed = useCallback(async () => {
         if (userProfil === null) return;
         try {
-            let route = `/api/${encodeURIComponent(userProfil.web_token)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}`;
-            if(userProfil.login !== user?.login) route = `/api/user/${encodeURIComponent(userProfil.id)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}`;
+            let route = `/api/${encodeURIComponent(userProfil.web_token)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`;
+            if(userProfil.login !== user?.login) route = `/api/user/${encodeURIComponent(userProfil.id)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`;
             const response = await fetch(route);
             const data = await response.json();
             if (response.ok) {

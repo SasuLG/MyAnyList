@@ -278,11 +278,12 @@ export async function getSeries(limit: number, page: number): Promise<MinimalSer
  * @param {number} limit - Nombre de séries à récupérer
  * @param {number} page - Page de séries à récupérer
  * @param {string} userId - Identifiant de l'utilisateur
+ * @param {boolean} waited - Indique si on récupère les séries en waitlist
  * @returns {Promise<MinimalSerie[]>}
  */
-export async function getSeriesFollowed(limit: number, page: number, userId: string): Promise<MinimalSerie[]> {
+export async function getSeriesFollowed(limit: number, page: number, userId: string, waited: boolean=false): Promise<MinimalSerie[]> {
     const offset = (page - 1) * limit;
-
+    const table = waited ? 'User_wait_serie' : 'User_serie';
     try {
         const result = await Query(`
             WITH "SerieData" AS (
@@ -305,7 +306,7 @@ export async function getSeriesFollowed(limit: number, page: number, userId: str
                     "us"."date" AS "follow_date",
                     "s"."total_time" AS "total_time"
                 FROM "Serie" AS "s"
-                JOIN "User_serie" AS "us" ON "s"."id" = "us"."serie_id"
+                JOIN "${table}" AS "us" ON "s"."id" = "us"."serie_id"
                 WHERE "us"."user_id" = $3
                 LIMIT $1 OFFSET $2
             ),
@@ -415,8 +416,8 @@ export async function getSeriesFollowed(limit: number, page: number, userId: str
 
 /**
  * Fonction qui permet de récupérer les détails d'une série suivie par un utilisateur.
- * @param {string} serieId 
- * @param {string} userId 
+ * @param {string} serieId - Identifiant de la série 
+ * @param {string} userId - Identifiant de l'utilisateur
  * @returns 
  */
 export async function getUserSerieDetails(serieId: string, userId: string): Promise<{ note: number | null, follow_date: string | null, comment: string | null } | null> {
@@ -468,6 +469,26 @@ export async function getSeriesIdFollowed(userId: string): Promise<TmdbId[]> {
 }
 
 /**
+ * Fonction qui permet de récupérer les identifiants des séries en waitlist pour un utilisateur.
+ * @param {string} userId - Identifiant de l'utilisateur
+ * @returns 
+ */
+export async function getSeriesIdWaited(userId: string): Promise<TmdbId[]> {
+    try {
+        return (await Query(`
+            SELECT
+                "s"."id"
+            FROM "Serie" AS "s"
+            JOIN "User_wait_serie" AS "us" ON "s"."id" = "us"."serie_id"
+            WHERE "us"."user_id" = $1
+        `, [userId])).rows.map((row) => row.id);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des séries en waitlist:', error);
+        throw error;
+    }
+}
+
+/**
  * Fonction qui permet de vérifier si une série existe par son id.
  * @param {number} id 
  */
@@ -513,6 +534,46 @@ export async function unFollowSerie(userId: string, serieId: string): Promise<bo
         return true;
     } catch (error) {
         console.error('Erreur lors du désabonnement de la série:', error);
+        return false;
+    }
+}
+
+/**
+ * Fonction qui permet de mettre une série en waitlist.
+ * @param {string} userId - L'identifiant de l'utilisateur
+ * @param {string} serieId - L'dentifiant de la série
+ * @returns 
+ */
+export async function addWaitSerie(userId: string, serieId: string): Promise<boolean> {
+    try {
+        await Query(`
+            INSERT INTO "User_wait_serie" ("user_id", "serie_id")
+            VALUES ($1, $2)
+        `, [userId, serieId]);
+
+        return true;
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout de la série en waitlist:', error);
+        return false;
+    }
+}
+
+/**
+ * Fonction qui permet de retirer une série de la waitlist.
+ * @param {string} userId - Identifiant de l'utilisateur
+ * @param {string} serieId - Identifiant de la série
+ * @returns 
+ */
+export async function removeWaitSerie(userId: string, serieId: string): Promise<boolean> {
+    try {
+        await Query(`
+            DELETE FROM "User_wait_serie"
+            WHERE "user_id" = $1 AND "serie_id" = $2
+        `, [userId, serieId]);
+
+        return true;
+    } catch (error) {
+        console.error('Erreur lors de la suppression de la série en waitlist:', error);
         return false;
     }
 }

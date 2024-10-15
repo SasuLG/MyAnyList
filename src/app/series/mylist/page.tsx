@@ -9,9 +9,19 @@ import { Range } from '@/tmdb/types/series.type';
 import { Filter } from "@/components/svg/filter.svg";
 import Filters from "@/components/filters";
 import { DecreaseSize, IncreaseSize, Settings, ToggleLayout } from "@/components/svg/buttons.svg";
+import { TierList } from "@/components/svg/tierList.svg";
+import Link from "next/link";
+import { SEARCH_ROUTE } from "@/constants/app.route.const";
+import { useRouter } from "next/navigation";
+import { LOGIN_ROUTE } from '@/constants/app.route.const';
 
 export default function MyList(){
   const [windowWidth, setWindowWidth] = useState<number | undefined>(undefined);
+
+  /**
+   * React hook pour permettre la navigation entre les différents endpoints de l'application web.
+   */
+  const router = useRouter();
 
   /**
    * Récupérer les informations de l'utilisateur
@@ -22,6 +32,11 @@ export default function MyList(){
    * Hook pour stocker les séries
    */
   const [series, setSeries] = useState<MinimalSerie[]>([]);
+
+  /**
+   * Hook pour stocker les séries en waitlist
+   */
+  const [seriesIdWaited, setSeriesIdWaited] = useState<number[]>([]);
 
   /**
    * Hook pour stocker les séries filtrées
@@ -167,9 +182,10 @@ export default function MyList(){
    */
   const fetchData = async () => {
     if(user === undefined){
-        return;
+      router.push(LOGIN_ROUTE);
+      return;
     }
-    const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all?limit=${encodeURIComponent(200000)}&page=${encodeURIComponent(1)}`);
+    const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all?limit=${encodeURIComponent(200000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`);
     const data = await response.json();
     setFetchDataFinished(true);
 
@@ -179,6 +195,11 @@ export default function MyList(){
     }else{
         setAlert({ message: 'Erreur lors de la récupération des séries', valid: false });
     }
+
+    const responseWaited = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all/wait/id`);
+    const dataWaited = await responseWaited.json();
+    setSeriesIdWaited(dataWaited);
+
     if (data.length > 0) {
       const minYear = Math.min(...data.map((serie: MinimalSerie) => new Date(serie.first_air_date).getFullYear()));
       const maxEpisodes = Math.max(...data.map((serie: MinimalSerie) => serie.number_of_episodes));
@@ -195,16 +216,15 @@ export default function MyList(){
         maximalRange: maxEpisodes,
         max: maxEpisodes,
       }));
-      const namesResponse = await fetch(`/api/translate`, {
+      await fetch(`/api/translate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ texts: data.map((serie: MinimalSerie) => serie.original_name) })
       });
-      const namesData = await namesResponse.json();
-      setFiltersReady(true);
     }    
+    setFiltersReady(true);
   };
   
   /**
@@ -279,6 +299,10 @@ export default function MyList(){
     setDisplaySize(sizes[currentIndex + 1] as 'large'|'normal' | 'small' | 'very-small' | 'extra-small');
   };
 
+  const generateTierList = async () => {
+    //TODO
+  };
+
   /**
    * Fonction pour gérer le clic sur le coeur, qui permet de suivre ou de ne plus suivre une série
    * @param {MinimalSerie} serie - La série
@@ -286,7 +310,8 @@ export default function MyList(){
    */
   const onClickHeart = async (serie: MinimalSerie) => {
     if(user === undefined){
-        return;
+      router.push(LOGIN_ROUTE);
+      return;
     }
     if (serie.follow_date) {
       const confirmUnfollow = confirm("Êtes-vous sûr de vouloir arrêter de suivre cette série ?");
@@ -323,6 +348,35 @@ export default function MyList(){
     }else{
         setAlert({ message: 'Erreur lors de la récupération des séries suivies', valid: false });
     }
+  }
+
+  /**
+   * Fonction pour gérer le clic sur le sablier, qui permet de toggle la série en waitlist
+   * @param {MinimalSerie} serie - La série
+   */
+  const onClickHourGlass = async (serie: MinimalSerie) => {
+    if (user === undefined) {
+      router.push(LOGIN_ROUTE);
+      return;
+    }
+    const route = `/api/${encodeURIComponent(user.web_token)}/series/${seriesIdWaited.includes(Number(serie.id)) ? 'un' : ''}waited`;
+    const response = await fetch(route, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ serieId: serie.id }),
+    });
+    const data = await response.json();
+    setSeriesIdWaited(data ? (seriesIdWaited.includes(Number(serie.id)) ? seriesIdWaited.filter((id) => id !== Number(serie.id)) : [...seriesIdWaited, Number(serie.id)]) : seriesIdWaited);
+    
+    await fetch('/api/user/activity', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ login: user.login }),
+    });
   }
 
   /**
@@ -579,6 +633,12 @@ export default function MyList(){
             onClick={decreaseSize} onMouseOver={(e) => e.currentTarget.style.opacity = "1"}onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"} >
             <DecreaseSize width={25} height={25} />
           </button>
+
+          <button
+            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={generateTierList} onMouseOver={(e) => e.currentTarget.style.opacity = "1"}onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"} >
+            <TierList width={40} height={40} />
+          </button>
         </div>
       )}
 
@@ -676,7 +736,13 @@ export default function MyList(){
           <Loader />
         </div>
       ) : (
-        <SeriesList series={filteredSeries} styleType={styleType} followedIds={series.map(serie=>Number(serie.id))} onClickHeart={onClickHeart} size={displaySize}/>
+        series.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>No series followed</span>
+            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>To follow a serie click on the heart in the page <Link href={SEARCH_ROUTE} style={{color:"var(--secondary-background-color)"}}>search series</Link></span>
+          </div>
+        ):(
+        <SeriesList series={filteredSeries} styleType={styleType} followedIds={series.map(serie=>Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} size={displaySize}/>)
       )}
     </div>
   );
