@@ -9,11 +9,12 @@ import { Range } from '@/tmdb/types/series.type';
 import { Filter } from "@/components/svg/filter.svg";
 import Filters from "@/components/filters";
 import { DecreaseSize, IncreaseSize, Settings, ToggleLayout } from "@/components/svg/buttons.svg";
-import { TierList } from "@/components/svg/tierList.svg";
 import Link from "next/link";
 import { SEARCH_ROUTE } from "@/constants/app.route.const";
 import { useRouter } from "next/navigation";
 import { LOGIN_ROUTE } from '@/constants/app.route.const';
+import TierListGenerator from "@/components/tierListGenerator";
+import { IMG_SRC } from "@/constants/tmdb.consts";
 
 export default function MyList(){
   const [windowWidth, setWindowWidth] = useState<number | undefined>(undefined);
@@ -182,7 +183,6 @@ export default function MyList(){
    */
   const fetchData = async () => {
     if(user === undefined){
-      router.push(LOGIN_ROUTE);
       return;
     }
     const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all?limit=${encodeURIComponent(200000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`);
@@ -297,10 +297,6 @@ export default function MyList(){
     const sizes = ['large','normal', 'small', 'very-small', 'extra-small'];
     const currentIndex = sizes.indexOf(displaySize);
     setDisplaySize(sizes[currentIndex + 1] as 'large'|'normal' | 'small' | 'very-small' | 'extra-small');
-  };
-
-  const generateTierList = async () => {
-    //TODO
   };
 
   /**
@@ -636,12 +632,89 @@ export default function MyList(){
 
           <button
             style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            onClick={generateTierList} onMouseOver={(e) => e.currentTarget.style.opacity = "1"}onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"} >
-            <TierList width={40} height={40} />
+            onMouseOver={(e) => e.currentTarget.style.opacity = "1"}onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"} >
+            {series.length>0 && (
+            <TierListGenerator tiers={[
+              {
+              title: "Banger",
+              color: "#ff7f7f",
+              minNote: 9.5,
+              maxNote: 10,
+              images: [
+              ...series.filter(serie => serie.note && serie.note >= 9).map(serie => IMG_SRC+serie.poster_path)
+              ],
+              },
+              {
+              title: "Amazing",
+              color: "#ffbf7f",
+              minNote: 8.5,
+              maxNote: 9.49,
+              images: [
+              ...series.filter(serie => serie.note && serie.note >= 8 && serie.note < 9).map(serie => IMG_SRC+serie.poster_path)
+              ],
+              },
+              {
+              title: "Very good",
+              color: "#ffdf7f", 
+              minNote: 7.5,
+              maxNote: 8.49,
+              images: [
+              ...series.filter(serie => serie.note && serie.note >= 7 && serie.note < 8).map(serie => IMG_SRC+serie.poster_path)
+              ],
+              },
+              {
+              title: "Good",
+              color: "#FFFF7F", 
+              minNote: 6.5,
+              maxNote: 7.49,
+              images: [
+              ...series.filter(serie => serie.note && serie.note >= 6 && serie.note < 7).map(serie => IMG_SRC+serie.poster_path)
+              ],
+              },
+              {
+              title: "Ok Tier",
+              color: "#bfff7f", 
+              minNote: 5,
+              maxNote: 6.49,
+              images: [
+              ...series.filter(serie => serie.note && serie.note < 6).map(serie => IMG_SRC+serie.poster_path)
+              ],
+              },
+              {
+              title: "Bof Tier",
+              color: "#7fff7f",
+              minNote: 3.5,
+              maxNote: 4.99,
+              images: [
+              ...series.filter(serie => !serie.note).map(serie => IMG_SRC+serie.poster_path)
+              ],
+              },
+              {
+              title: "Bad Tier",
+              color: "#7fffff",
+              minNote: 2,
+              maxNote: 3.45,
+              images: [
+              ...series.filter(serie => serie.note && serie.note < 3).map(serie => IMG_SRC+serie.poster_path)
+              ],
+              },
+              {
+              title: "Shit Tier",
+              color: "#7fbfff",
+              minNote: 0,
+              maxNote: 1.9,
+              images: [
+              ...series.filter(serie => serie.note && serie.note === 0).map(serie => IMG_SRC+serie.poster_path)
+              ],
+              }
+            ]} />
+            )}
+            {/* #ff7f7f, #ffbf7f, #ffdf7f, #FFFF7F, #bfff7f, #7fff7f */}
+          {/* #7fffff, #7fbfff, #7f7fff, #ff7fff */}
           </button>
         </div>
       )}
-
+      
       <Filters
         genres={genres}
         selectedGenres={selectedGenres}
