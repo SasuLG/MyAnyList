@@ -14,6 +14,7 @@ import "@/styles/admin.style.css";
 import "@/styles/alert.box.style.css";
 import "@/styles/popup.style.css";
 import "@/styles/slider.caroussel.style.css";
+import "@/styles/tierlist.style.css";
 
 
 const inter = Inter({ subsets: ["latin"] });
