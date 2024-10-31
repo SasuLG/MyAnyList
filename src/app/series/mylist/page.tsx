@@ -633,7 +633,7 @@ export default function MyList(){
           <button
             style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onMouseOver={(e) => e.currentTarget.style.opacity = "1"}onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"} >
-            {series.length>0 && (
+            {filteredSeries.length>0 && (
             <TierListGenerator tiers={[
               {
               title: "Banger",
@@ -641,7 +641,7 @@ export default function MyList(){
               minNote: 9.5,
               maxNote: 10,
               images: [
-              ...series.filter(serie => serie.note && serie.note >= 9).map(serie => IMG_SRC+serie.poster_path)
+              ...filteredSeries.filter(serie => serie.note && serie.note >= 9.5).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC+serie.poster_path)
               ],
               },
               {
@@ -650,7 +650,7 @@ export default function MyList(){
               minNote: 8.5,
               maxNote: 9.49,
               images: [
-              ...series.filter(serie => serie.note && serie.note >= 8 && serie.note < 9).map(serie => IMG_SRC+serie.poster_path)
+              ...filteredSeries.filter(serie => serie.note && serie.note >= 8.5 && serie.note < 9.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC+serie.poster_path)
               ],
               },
               {
@@ -659,7 +659,7 @@ export default function MyList(){
               minNote: 7.5,
               maxNote: 8.49,
               images: [
-              ...series.filter(serie => serie.note && serie.note >= 7 && serie.note < 8).map(serie => IMG_SRC+serie.poster_path)
+              ...filteredSeries.filter(serie => serie.note && serie.note >= 7.5 && serie.note < 8.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC+serie.poster_path)
               ],
               },
               {
@@ -668,7 +668,7 @@ export default function MyList(){
               minNote: 6.5,
               maxNote: 7.49,
               images: [
-              ...series.filter(serie => serie.note && serie.note >= 6 && serie.note < 7).map(serie => IMG_SRC+serie.poster_path)
+              ...filteredSeries.filter(serie => serie.note && serie.note >= 6.5 && serie.note < 7.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC+serie.poster_path)
               ],
               },
               {
@@ -677,7 +677,7 @@ export default function MyList(){
               minNote: 5,
               maxNote: 6.49,
               images: [
-              ...series.filter(serie => serie.note && serie.note < 6).map(serie => IMG_SRC+serie.poster_path)
+              ...filteredSeries.filter(serie => serie.note && serie.note >= 5 && serie.note < 6.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC+serie.poster_path)
               ],
               },
               {
@@ -686,25 +686,25 @@ export default function MyList(){
               minNote: 3.5,
               maxNote: 4.99,
               images: [
-              ...series.filter(serie => !serie.note).map(serie => IMG_SRC+serie.poster_path)
+              ...filteredSeries.filter(serie => serie.note && serie.note >= 3.5 && serie.note < 4.99).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC+serie.poster_path)
               ],
               },
               {
               title: "Bad Tier",
               color: "#7fffff",
               minNote: 2,
-              maxNote: 3.45,
+              maxNote: 3.49,
               images: [
-              ...series.filter(serie => serie.note && serie.note < 3).map(serie => IMG_SRC+serie.poster_path)
+              ...filteredSeries.filter(serie => serie.note && serie.note >= 2 && serie.note < 3.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC+serie.poster_path)
               ],
               },
               {
               title: "Shit Tier",
               color: "#7fbfff",
               minNote: 0,
-              maxNote: 1.9,
+              maxNote: 1.99,
               images: [
-              ...series.filter(serie => serie.note && serie.note === 0).map(serie => IMG_SRC+serie.poster_path)
+              ...filteredSeries.filter(serie => (serie.note ?? 0) < 2).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC+serie.poster_path)
               ],
               }
             ]} />

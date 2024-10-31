@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react"; // Ajouté useEffect
+import React, { useState, useEffect } from "react";
 import { jsPDF } from "jspdf";
 import { TierList } from './svg/tierList.svg';
+import { useUserContext } from "@/userContext";
+import { IMG_SRC } from "@/constants/tmdb.consts";
 
 export type Tier = {
   title: string;
@@ -56,6 +58,11 @@ const hexToRgb = (hex: string): [number, number, number] => {
 const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
 
   /**
+   * Récupérer les informations de l'utilisateur
+   */
+  const { user } = useUserContext();
+
+  /**
    * Hooks d'état pour gérer l'ouverture et la fermeture de la popup
    */
   const [openPopupTierList, setOpenPopupTierList] = useState<boolean>(false);
@@ -63,7 +70,7 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
   /**
    * Hooks d'état pour gérer les tiers édités et l'index de couleur
    */
-  const [editedTiers, setEditedTiers] = useState<Tier[]>([]);
+  const [editedTiers, setEditedTiers] = useState<Tier[]>(tiers);
 
   /**
    * Hooks d'état pour gérer l'index de couleur et l'affichage de la liste d'attente
@@ -83,17 +90,15 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
    * Effet pour initialiser les tiers édités
    */
   useEffect(() => {
-    const initialTiers = [...tiers];
-    if (showWaitlist) {
-      const waitlistTier: Tier = {
-        title: "Waitlist",
-        color: "#CCCCCC",
-        images: [],
-      };
-      initialTiers.push(waitlistTier);
-    }
-    setEditedTiers(initialTiers);
-  }, [tiers, showWaitlist]);
+    const nonWaitlistTiers = editedTiers.filter(tier => tier.title !== "Waitlist");
+    
+    const finalTiers = showWaitlist 
+      ? [...nonWaitlistTiers, { title: "Waitlist", color: "#CCCCCC", images: [] }]
+      : [...nonWaitlistTiers];
+    
+    setEditedTiers(finalTiers);
+  }, [showWaitlist]);
+  
 
   const openPopup = () => setOpenPopupTierList(true);
   const closePopup = () => setOpenPopupTierList(false);
@@ -127,7 +132,10 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
       maxNote: 10,
       images: [],
     };
-    setEditedTiers([...editedTiers, newTier]);
+    const updatedTiers = showWaitlist
+    ? [...editedTiers.filter(tier => tier.title !== "Waitlist"), newTier, editedTiers.find(tier => tier.title === "Waitlist")!]
+    : [...editedTiers, newTier];
+    setEditedTiers(updatedTiers);
   };
 
   /**
@@ -166,16 +174,7 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
     doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
     doc.rect(0, 0, pageWidth, pageHeight, 'F'); // Remplit tout le fond de la page
 
-    // Si la waitlist est cochée, effectuer un fetch pour obtenir les données
-    if (showWaitlist) {
-      try {
-        const waitlistData = await fetchWaitlistData(); // Appel à la fonction de fetch
-        // Traitez les données obtenues ici si nécessaire
-        console.log("Waitlist data received:", waitlistData);
-      } catch (error) {
-        console.error("Error fetching waitlist data:", error);
-      }
-    }
+    if (showWaitlist) await fetchWaitlistData();
 
     for (const tier of editedTiers) {
       const { title, images, color } = tier;
@@ -256,11 +255,20 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
   };
 
   /**
-   * Fonction pour récupérer les séries de la waitlist
+   * Fonction pour récupérer les images des séries de la waitlist
    * @returns 
    */
   const fetchWaitlistData = async () => {
-    //TODO
+    if (!user) return;
+    const response = await fetch(`/api/user/${encodeURIComponent(user.id)}/series/image?waitList=${encodeURIComponent(true)}`);
+    let data = await response.json();
+    const waitlistTierIndex = editedTiers.findIndex(tier => tier.title === "Waitlist");
+    if (waitlistTierIndex !== -1) {
+      const updatedTiers = [...editedTiers];
+      data = data.map((img: any) => IMG_SRC + img);
+      updatedTiers[waitlistTierIndex].images = data;
+      setEditedTiers(updatedTiers);
+    }
   };
   
   /**
@@ -326,7 +334,7 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
                     </>
                   )}
                   {tier.title !== "Waitlist" && (
-                    <button className="tier-button-remove" onClick={() => handleRemoveTier(index)}>Remove</button>
+                    <div className="tier-button-remove" onClick={() => handleRemoveTier(index)} style={{ cursor: 'pointer' }}>Remove</div>
                   )}
                 </div>
               )

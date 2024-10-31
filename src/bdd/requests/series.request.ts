@@ -488,6 +488,24 @@ export async function getSeriesIdWaited(userId: string): Promise<TmdbId[]> {
     }
 }
 
+export async function getImageSerie(userId: string, isWaitList: boolean): Promise<string[]> {
+    try {
+        const table = isWaitList ? 'User_wait_serie' : 'User_serie';
+        const result = await Query(`
+            SELECT
+                "s"."poster" AS "poster_path"
+            FROM "Serie" AS "s"
+            JOIN "${table}" AS "us" ON "s"."id" = "us"."serie_id"
+            WHERE "us"."user_id" = $1
+        `, [userId]);
+
+        return result.rows.map(row => row.poster_path);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des images des séries suivies:', error);
+        throw error;
+    }
+}
+
 /**
  * Fonction qui permet de vérifier si une série existe par son id.
  * @param {number} id 
