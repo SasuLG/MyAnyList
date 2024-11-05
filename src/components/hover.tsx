@@ -96,7 +96,7 @@ const HoverToolBox = ({ serie, children, isMyList }: HoverToolBoxProps) => {
                         <div className="hover-info-items">
                             <span>{serie.media_type} </span>
                             <span className="circle"></span>
-                            <span>{serie.media_type === "movie" ? `${hours}h ${minutes}min` : serie.number_of_episodes} {serie.media_type === "movie" ? "" : "épisodes"}</span>
+                            <span>{serie.media_type === "movie" || serie.media_type === "film d'animation" ? `${hours}h ${minutes}min` : serie.number_of_episodes} {serie.media_type === "movie" || serie.media_type === "film d'animation" ? "" : "épisodes"}</span>
                         </div>
                         <div className="hover-info-items hover-info-genres">
                             {serie.genres.slice(0, 3).map((genre) => (

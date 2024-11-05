@@ -56,7 +56,7 @@ const hexToRgb = (hex: string): [number, number, number] => {
  * @returns 
  */
 const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
-
+  
   /**
    * Récupérer les informations de l'utilisateur
    */
@@ -82,6 +82,13 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
    */
   const [showWaitlist, setShowWaitlist] = useState<boolean>(withWaitList);
 
+  /**
+   * Hooks d'état pour gérer les images des séries
+   */
+  const [seriesImages, setSeriesImages] = useState(() =>
+    tiers.map((tier) => ({ title: tier.title, images: tier.images }))
+  );
+
   // Exclure les couleurs déjà utilisées pour les nouveaux tiers
   const usedColors = new Set(tiers.map(tier => tier.color));
   const availableColors = predefinedColors.filter(color => !usedColors.has(color));
@@ -99,7 +106,6 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
     setEditedTiers(finalTiers);
   }, [showWaitlist]);
   
-
   const openPopup = () => setOpenPopupTierList(true);
   const closePopup = () => setOpenPopupTierList(false);
 
@@ -107,15 +113,26 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
    * Fonction pour gérer le changement d'un tier
    * @param {number} index - Index du tier
    * @param {string} field - Champ à modifier
-   * @param {string | value} value - Valeur à assigner
+   * @param {string | number} value - Valeur à assigner
    */
   const handleTierChange = (index: number, field: string, value: string | number) => {
     const updatedTiers = [...editedTiers];
+    const oldTitle = updatedTiers[index].title;
+
+    // Mise à jour du tier
     updatedTiers[index] = {
       ...updatedTiers[index],
       [field]: value
     };
     setEditedTiers(updatedTiers);
+
+    // Si le champ modifié est le titre, mettre à jour également `seriesImages`
+    if (field === 'title' && typeof value === 'string') {
+      const updatedSeriesImages = seriesImages.map(tier =>
+        tier.title === oldTitle ? { ...tier, title: value } : tier
+      );
+      setSeriesImages(updatedSeriesImages);
+    }
   };
 
   /**
@@ -174,84 +191,140 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
     doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
     doc.rect(0, 0, pageWidth, pageHeight, 'F'); // Remplit tout le fond de la page
 
-    if (showWaitlist) await fetchWaitlistData();
+    let waitlistImages = [];
+    if (showWaitlist) {
+        waitlistImages = await fetchWaitlistData();
+    }
+    const allSeriesImages = showWaitlist 
+        ? [
+            ...seriesImages, 
+            ...(seriesImages.some(tier => tier.title === "Waitlist") 
+                ? [] 
+                : [{ title: "Waitlist", images: waitlistImages }]
+            ),
+          ].map(tier => 
+            tier.title === "Waitlist" ? { ...tier, images: waitlistImages } : tier
+        )
+        : seriesImages;
 
     for (const tier of editedTiers) {
-      const { title, images, color } = tier;
-      const rgbColor = hexToRgb(color);
-      const nbImages = images ? images.length : 0;
-      const imagesPerRow = Math.floor((pageWidth - titleWidth) / (imageWidth + spaceBetweenImages));
-      const totalRowsNeeded = Math.ceil(nbImages / imagesPerRow);
-      const rowCount = nbImages > 0 ? totalRowsNeeded : 1;
+        const images = allSeriesImages.find((t) => t.title === tier.title)?.images || [];
+        const { title, color } = tier;
+        const rgbColor = hexToRgb(color);
+        const nbImages = images.length;
+        const imagesPerRow = Math.floor((pageWidth - titleWidth) / (imageWidth + spaceBetweenImages));
+        const totalRowsNeeded = Math.ceil(nbImages / imagesPerRow);
+        const rowCount = nbImages > 0 ? totalRowsNeeded : 1;
 
-      // Fond de la section des images
-      doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
-      doc.rect(titleWidth, yPos, pageWidth - titleWidth, imageHeight * rowCount, 'F');
-
-      // Fond de la colonne des titres
-      doc.setFillColor(rgbColor[0], rgbColor[1], rgbColor[2]);
-      doc.rect(0, yPos, titleWidth, imageHeight * rowCount, 'F');
-
-      // Texte du titre au milieu
-      const textWidth = doc.getTextWidth(title);
-      const tierTextYPos = yPos + (imageHeight * rowCount) / 2;
-      let xPos = (titleWidth / 2) - (textWidth / 2);
-      doc.setTextColor(0, 0, 0);
-      doc.text(title, xPos, tierTextYPos, { baseline: "middle" });
-
-      // Séparateur vertical
-      doc.setFillColor(0, 0, 0);
-      doc.rect(titleWidth, yPos, verticalSeparatorWidth, imageHeight * rowCount, 'F');
-
-      // Ajout des images
-      xPos = titleWidth;
-      try {
-        if (!images) {
-          return;
-        }
-        const imgDataArray = await loadImages(images);
-
-        imgDataArray.forEach((imgData, index) => {
-          doc.addImage(imgData, "PNG", xPos, yPos, imageWidth, imageHeight);
-          xPos += imageWidth + spaceBetweenImages;
-
-          if ((index + 1) % imagesPerRow === 0) {
-            xPos = titleWidth;
-            yPos += imageHeight;
-
-            if (yPos + imageHeight > pageHeight) {
-              doc.addPage();
-              yPos = 0;
-
-              // Fond général en noir clair pour la nouvelle page
-              doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
-              doc.rect(0, 0, pageWidth, pageHeight, "F");
-            }
-          }
-        });
-      } catch (error) {
-        console.error("Error loading images:", error);
-      }
-
-      yPos += imageHeight;
-
-      // Séparateur horizontal
-      doc.setFillColor(0, 0, 0);
-      doc.rect(0, yPos, pageWidth, separatorHeight, 'F');
-      yPos += separatorHeight;
-
-      // Gérer le cas où il n'y a pas assez d'espace pour ajouter plus d'images
-      if (yPos + imageHeight > pageHeight) {
-        doc.addPage();
-        yPos = 0;
-
-        // Fond général en noir clair pour la nouvelle page
+        // Fond de la section des images
         doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
-        doc.rect(0, 0, pageWidth, pageHeight, "F");
-      }
+        doc.rect(titleWidth, yPos, pageWidth - titleWidth, imageHeight * rowCount, 'F');
+
+        // Fond de la colonne des titres
+        doc.setFillColor(rgbColor[0], rgbColor[1], rgbColor[2]);
+        doc.rect(0, yPos, titleWidth, imageHeight * rowCount, 'F');
+
+        // Texte du titre au milieu
+        const textWidth = doc.getTextWidth(title);
+        const tierTextYPos = yPos + (imageHeight * rowCount) / 2;
+        let xPos = (titleWidth / 2) - (textWidth / 2);
+        doc.setTextColor(0, 0, 0);
+        doc.text(title, xPos, tierTextYPos, { baseline: "middle" });
+
+        // Séparateur vertical
+        doc.setFillColor(0, 0, 0);
+        doc.rect(titleWidth, yPos, verticalSeparatorWidth, imageHeight * rowCount, 'F');
+
+        // Ajout des images
+        xPos = titleWidth;
+        try {
+            const imgDataArray = await loadImages(images);
+
+            imgDataArray.forEach((imgData, index) => {
+                if (imgData) { // Vérifie que imgData n'est pas undefined
+                    doc.addImage(imgData, "PNG", xPos, yPos, imageWidth, imageHeight);
+                    xPos += imageWidth + spaceBetweenImages;
+
+                    if ((index + 1) % imagesPerRow === 0) {
+                        xPos = titleWidth;
+                        yPos += imageHeight;
+
+                        if (yPos + imageHeight > pageHeight) {
+                            doc.addPage();
+                            yPos = 0;
+
+                            // Fond général en noir clair pour la nouvelle page
+                            doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
+                            doc.rect(0, 0, pageWidth, pageHeight, "F");
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error("Error loading images:", error);
+        }
+
+        yPos += imageHeight;
+
+        // Séparateur horizontal
+        doc.setFillColor(0, 0, 0);
+        doc.rect(0, yPos, pageWidth, separatorHeight, 'F');
+        yPos += separatorHeight;
+
+        // Gérer le cas où il n'y a pas assez d'espace pour ajouter plus d'images
+        if (yPos + imageHeight > pageHeight) {
+            doc.addPage();
+            yPos = 0;
+
+            // Fond général en noir clair pour la nouvelle page
+            doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
+            doc.rect(0, 0, pageWidth, pageHeight, "F");
+        }
     }
 
     doc.save("tierlist.pdf");
+  };
+
+  /**
+  * Fonction pour charger les images par lots
+  * @param {string[]} urls - Liste des URLs des images
+  * @returns 
+  */
+  const loadImages = async (urls: string[]): Promise<string[]> => {
+    const batchSize = 10;
+    const results = [];
+    for (let i = 0; i < urls.length; i += batchSize) {
+        const batchUrls = urls.slice(i, i + batchSize);
+        try {
+            const batchResult = await fetchImages(batchUrls);
+            results.push(...batchResult);
+        } catch (error) {
+            console.error("Erreur lors du chargement d'un lot d'images:", error);
+        }
+    }
+    return results;
+  };
+
+  /**
+  * Fonction pour récupérer les images à partir de l'API
+  * @param {string[]} urls - Liste des URLs des images
+  * @returns 
+  */
+  const fetchImages = (urls: string[]): Promise<string[]> => {
+    return fetch("/api/images", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrls: urls })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Erreur lors du chargement des images");
+        }
+        return response.json();
+    })
+    .then(data => {
+        return data.map((img: { image: string }) => img ? img.image : "defaultImageBase64");
+    });
   };
 
   /**
@@ -259,47 +332,27 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
    * @returns 
    */
   const fetchWaitlistData = async () => {
-    if (!user) return;
-    const response = await fetch(`/api/user/${encodeURIComponent(user.id)}/series/image?waitList=${encodeURIComponent(true)}`);
-    let data = await response.json();
-    const waitlistTierIndex = editedTiers.findIndex(tier => tier.title === "Waitlist");
-    if (waitlistTierIndex !== -1) {
-      const updatedTiers = [...editedTiers];
-      data = data.map((img: any) => IMG_SRC + img);
-      updatedTiers[waitlistTierIndex].images = data;
-      setEditedTiers(updatedTiers);
+    if (!user) return [];
+  
+    try {
+      const response = await fetch(`/api/user/${encodeURIComponent(user.id)}/series/image?waitList=${encodeURIComponent(true)}`);
+      let data = await response.json();
+      data = data.map((img: string) => IMG_SRC + img);
+  
+      console.log("Images récupérées pour Waitlist:", data);
+  
+      // Retourner directement les données
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la récupération des données de la waitlist:", error);
+      return [];
     }
   };
   
-  /**
-   * Fonction pour charger les images
-   * @param {string[]} urls - Liste des URLs des images
-   * @returns 
-   */
-  const loadImages = (urls: string[]): Promise<string[]> => {
-    return new Promise((resolve, reject) => {
-      const imagesUrl = "/api/images";
 
-      fetch(imagesUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrls: urls }),
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Error loading images");
-          }
-          return response.json();
-        })
-        .then((data) => {
-          const base64Images = data.map((img: any) => img.image);
-          resolve(base64Images);
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
-  };
+  useEffect(() => {
+    setSeriesImages(tiers.map((tier) => ({ title: tier.title, images: tier.images })));
+  }, [tiers]);
 
   return (
     <>
