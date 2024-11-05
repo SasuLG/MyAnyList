@@ -338,10 +338,7 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
       const response = await fetch(`/api/user/${encodeURIComponent(user.id)}/series/image?waitList=${encodeURIComponent(true)}`);
       let data = await response.json();
       data = data.map((img: string) => IMG_SRC + img);
-  
-      console.log("Images récupérées pour Waitlist:", data);
-  
-      // Retourner directement les données
+    
       return data;
     } catch (error) {
       console.error("Erreur lors de la récupération des données de la waitlist:", error);
