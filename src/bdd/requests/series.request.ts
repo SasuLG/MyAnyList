@@ -619,6 +619,28 @@ export async function addVote(userId: string, serieId: string, note: number, com
 }
 
 /**
+ * Fonction qui permet de mettre à jour la date de suivi d'une série.
+ * @param {string} userId - Identifiant de l'utilisateur
+ * @param {string} serieId - Identifiant de la série
+ * @param {Date} date - Nouvelle date de suivi
+ * @returns 
+ */
+export async function updateDateFollowSerie(userId: string, serieId: string, date: Date): Promise<boolean> {
+    try {
+        await Query(`
+            UPDATE "User_serie"
+            SET "date" = $3
+            WHERE "user_id" = $1 AND "serie_id" = $2
+        `, [userId, serieId, date]);
+
+        return true;
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour de la date de suivi de la série:', error);
+        return false;
+    }
+}
+
+/**
  * Fonction qui permet de mettre à jour une note pour une série.
  * @param {string} userId - Identifiant de l'utilisateur
  * @param {string} serieId - Identifiant de la série

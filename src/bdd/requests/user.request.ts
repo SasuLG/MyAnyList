@@ -234,30 +234,26 @@ export async function unsetAdmin(userId: number) {
 }
 
 /**
- * Fonction qui permet de supprimer un utilisateur.
- * @param {string} userId 
- * @returns 
+ * Fonction qui permet de supprimer un utilisateur et toutes les données associées.
+ * @param {number} userId - L'identifiant de l'utilisateur à supprimer.
  */
-export async function deleteUser(userId: string): Promise<boolean> {
+export async function deleteUser(userId: number) {
     try {
-        await Query(`
-            DELETE FROM "User_serie"
-            WHERE "user_id" = $1
-        `, [userId]);
+        await Query(`BEGIN;`);
         
-        await Query(`
-            DELETE FROM "User_note"
-            WHERE "user_id" = $1
-        `, [userId]);
+        await Query(`DELETE FROM "User_serie" WHERE "user_id" = $1;`, [userId]);
 
-        await Query(`
-            DELETE FROM "User"
-            WHERE "id" = $1
-        `, [userId]);
+        await Query(`DELETE FROM "User_wait_serie" WHERE "user_id" = $1;`, [userId]);
 
+        await Query(`DELETE FROM "User_note" WHERE "user_id" = $1;`, [userId]);
+
+        await Query(`DELETE FROM "User" WHERE "id" = $1;`, [userId]);
+
+        await Query(`COMMIT;`);
         return true;
     } catch (error) {
-        console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+        await Query(`ROLLBACK;`);
+        console.error("Erreur lors de la suppression de l'utilisateur:", error);
         return false;
     }
 }

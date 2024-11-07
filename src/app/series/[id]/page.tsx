@@ -56,6 +56,16 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
     const [showMoreInfo, setShowMoreInfo] = useState<boolean>(false);
 
     /**
+     * Hook qui permet de stocker la date de follow.
+     */
+    const [followDate, setFollowDate] = useState<string | null>(null);
+
+    /**
+     * Hook qui permet de stocker l'état du changement de date de follow.
+     */
+    const [isChangeDate, setIsChangeDate] = useState<boolean>(false);
+
+    /**
      * Fonction pour récupérer les informations de la série.
      */
     const fetchSerie = async () => {
@@ -65,9 +75,9 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
             return;
         }
         const data: Serie = await response.json();
-        if(data.seasons) data.seasons.sort((a, b) => a.season_number - b.season_number);
+        if (data.seasons) data.seasons.sort((a, b) => a.season_number - b.season_number);
         data.seasons.forEach(season => {
-            if(season.episodes) season.episodes.sort((a, b) => a.episode_number - b.episode_number);
+            if (season.episodes) season.episodes.sort((a, b) => a.episode_number - b.episode_number);
         });
 
         if (user) {
@@ -79,6 +89,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                     data.follow_date = userData.follow_date;
                     data.comment = userData.comment;
                     setRating(userData.note);
+                    setFollowDate(userData.follow_date);
                 }
             }
         }
@@ -94,7 +105,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
 
         if (serie.follow_date) {
             const confirmUnfollow = confirm("Êtes-vous sûr de vouloir arrêter de suivre cette série ?");
-            if (!confirmUnfollow) return; 
+            if (!confirmUnfollow) return;
         }
         let route = `/api/${encodeURIComponent(user.web_token)}/series/follow`;
         if (serie.follow_date) {
@@ -146,15 +157,40 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
     };
 
     /**
+     * Fonction pour mettre à jour la date de follow de l'utilisateur.
+     */
+    const updateDateFollow = async () => {
+        if (!user || !serie) return;
+        if (!followDate) return setAlert({ message: "Veuillez renseigner une date et une heure", valid: false });
+
+        const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/follow/date`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ serieId: serie.id, newDate: new Date(followDate) }),
+        });
+
+        if (response.ok) {
+            await fetchSerie();
+            setAlert({ message: "Date de suivi modifiée", valid: true });
+        } else {
+            setAlert({ message: "Erreur lors de la modification de la date de suivi", valid: false });
+        }
+    };
+
+    /**
      * Fonction pour gérer l'événement de touche enfoncée.
      * @param {React.KeyboardEvent<HTMLInputElement>} event 
      */
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
-            if(isEditing) setIsEditing(false);
+            if (isEditing) setIsEditing(false);
+            if (isChangeDate) updateDateFollow(); setIsChangeDate(false);
         }
+        if (event.key === 'Escape' || event.key === "Backspace") setIsEditing(false); setIsChangeDate(false); setFollowDate(null);
     };
-    
+
     /**
      * Fonction pour gérer le changement de note.
      * @param {number} - newRating
@@ -238,8 +274,15 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
             setRating(newRating);
         }
     };
-    
-    
+
+    const handleDateChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        let newDate = event.target.value;
+        if (!isNaN(Date.parse(newDate))) {
+            newDate = newDate;
+            setFollowDate(newDate);
+        }
+    };
+
     /**
      * Fonction pour formater le temps total.
      */
@@ -268,37 +311,48 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
                 {user && (
                     <>
-                    <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        {[...Array(10)].map((_, index) => (
-                            <span key={index} onClick={(e) => handleClick(index, e)} onMouseEnter={(e) => handleMouseEnter(index, e)} onMouseLeave={handleMouseLeave} onMouseMove={(e) => handleMouseEnter(index, e)} style={{ cursor: "pointer" }}>
-                                {getStarIcon(index)}
+                        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                {[...Array(10)].map((_, index) => (
+                                    <span key={index} onClick={(e) => handleClick(index, e)} onMouseEnter={(e) => handleMouseEnter(index, e)} onMouseLeave={handleMouseLeave} onMouseMove={(e) => handleMouseEnter(index, e)} style={{ cursor: "pointer" }}>
+                                        {getStarIcon(index)}
+                                    </span>
+                                ))}
+                            </div>
+                            {isEditing ? (
+                                <input type="number" value={rating ?? 0} onChange={handleRatingChange} onBlur={() => { setIsEditing(false) }} onKeyDown={handleKeyDown} min="0" max="10" step="1" style={{ fontSize: "1.6rem", fontWeight: "bold", width: "70px", textAlign: "center", border: "1px solid #ddd", borderRadius: "8px", padding: "6px", outline: "none" }} />
+                            ) : (
+                                <>
+                                    <span style={{ fontSize: "1.6rem", fontWeight: "bold", cursor: "pointer" }} tabIndex={0} onClick={() => setIsEditing(true)}>
+                                        {formatRating(rating ?? 0)}
+                                    </span>
+                                    <button onClick={(e) => { updateVote(); setIsEditing(false) }} style={{ background: "none", border: "none", cursor: `${serie.note === rating ? "default" : "pointer"}`, marginLeft: "-2px", fontSize: "1rem", color: `${serie.note === rating ? "var(--titre-color)" : "#007bff"}` }} disabled={serie.note === rating}>
+                                        ✎
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                        <div className="test" style={{ display: "flex", alignItems: "center", cursor: "pointer" }} >
+                            <span onClick={() => onClickHeart(serie)} style={{ marginRight: "10px" }}>
+                                {serie.follow_date ? <Heart width={30} height={30} /> : <BrokenHeart width={30} height={30} />}
                             </span>
-                        ))}
-                    </div>
-                    {isEditing ? (
-                        <input type="number" value={rating ?? 0} onChange={handleRatingChange} onBlur={() => { setIsEditing(false) }} onKeyDown={handleKeyDown} min="0" max="10" step="1" style={{ fontSize: "1.6rem", fontWeight: "bold", width: "70px", textAlign: "center", border: "1px solid #ddd", borderRadius: "8px", padding: "6px", outline: "none" }} />
-                    ) : (
-                        <>
-                            <span style={{ fontSize: "1.6rem", fontWeight: "bold", cursor: "pointer" }} tabIndex={0} onClick={() => setIsEditing(true)}>
-                                {formatRating(rating ?? 0)}
-                            </span>
-                            <button onClick={(e) => { updateVote(); setIsEditing(false) }} style={{ background: "none", border: "none", cursor: `${serie.note === rating ? "default" : "pointer"}`, marginLeft: "-2px", fontSize: "1rem", color: `${serie.note === rating ? "var(--titre-color)" : "#007bff"}` }} disabled={serie.note === rating}>
-                                ✎
-                            </button>
-                        </>
-                    )}
-                </div>
-                    <div style={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={() => onClickHeart(serie)}>
-                        <span style={{ marginRight: "10px" }}>
-                            {serie.follow_date ? <Heart width={30} height={30} /> : <BrokenHeart width={30} height={30} />}
-                        </span>
-                        <span style={{ fontWeight: "bold" }}>{serie.follow_date ? `Suivi depuis le ${new Date(serie.follow_date).toLocaleDateString()}` : "Suivre cette série"}</span>
-                    </div>
+                            {isChangeDate ? (
+                                <input
+                                    type="datetime-local"
+                                    value={followDate ? new Date(followDate).toISOString().slice(0, 16) : serie.follow_date ? new Date(serie.follow_date).toISOString().slice(0, 16) : ''}
+                                    onChange={handleDateChange} onBlur={() => { setIsChangeDate(false) }} onKeyDown={handleKeyDown}
+                                    style={{fontSize: "1.6rem", fontWeight: "bold", width: "auto", textAlign: "center", border: "1px solid #ddd", borderRadius: "8px", padding: "6px", outline: "none" }}
+                                />
+                            ) : (
+                                <span style={{ fontWeight: "bold" }} onClick={() => setIsChangeDate(true)}>
+                                    {serie.follow_date ? `Suivi depuis le ${new Date(serie.follow_date).toLocaleString()}` : "Suivre cette série"}
+                                </span>
+                            )}
+                        </div>
                     </>
                 )}
             </div>
-    
+
             <div style={{ display: "flex", gap: "20px", marginBottom: "40px" }}>
                 <img src={`${IMG_SRC}${serie.poster_path}`} alt={serie.name} style={{ width: "300px", height: "450px", borderRadius: "10px", objectFit: "cover", boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} />
                 <div style={{ flex: 1 }}>
@@ -310,6 +364,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Nom Original:</strong> {serie.original_name}</p>
                                 {serie.romaji_name && <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Nom Romaji:</strong> {serie.romaji_name}</p>}
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Status:</strong> {serie.status}</p>
+                                <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Format:</strong> {serie.media_type != "tv" ? serie.media_type.charAt(0).toUpperCase() + serie.media_type.slice(1) : serie.media_type}</p>
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Date de Première Diffusion:</strong> {new Date(serie.first_air_date).toLocaleDateString()}</p>
                             </div>
                             <div style={{ flex: 1, textAlign: "right" }}>
@@ -330,7 +385,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                             )}
                         </p>
                     </div>
-    
+
                     {showMoreInfo ? (
                         <div style={{ marginBottom: "40px" }}>
                             {serie.budget && (
@@ -346,11 +401,11 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                             <ul style={{ listStyleType: "none", paddingLeft: "0", fontSize: "1.1rem", color: "#555" }}>
                                 {serie.production_companies
                                     .filter((company, index, self) =>
-                                    index === self.findIndex(c => c.name === company.name) 
+                                        index === self.findIndex(c => c.name === company.name)
                                     )
                                     .map((company) => (
-                                    <li key={company.id} style={{ marginBottom: "5px" }}>{company.name}</li>
-                                ))}
+                                        <li key={company.id} style={{ marginBottom: "5px" }}>{company.name}</li>
+                                    ))}
                             </ul>
                             <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Spoken Languages</h2>
                             <ul style={{ listStyleType: "none", paddingLeft: "0", fontSize: "1.1rem", color: "#555" }}>
@@ -369,7 +424,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                                 Voir moins
                             </button>
                         </div>
-                    ):(
+                    ) : (
                         <button onClick={() => setShowMoreInfo(true)} style={{ padding: "10px 20px", backgroundColor: "#007bff", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
                             Voir plus de détails
                         </button>
@@ -377,7 +432,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
 
                 </div>
             </div>
-    
+
             {user && (
                 <div style={{ marginTop: "40px" }}>
                     <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Commentaire</h2>
@@ -387,7 +442,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                     </button>
                 </div>
             )}
-            
+
             {(serie.media_type === "anime" || serie.media_type === "tv") && (
                 <div style={{ marginTop: "40px" }}>
                     <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Saisons</h2>
@@ -395,7 +450,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                         <select onChange={(e) => setSelectedSeason(Number(e.target.value))} value={selectedSeason} style={{ padding: "10px", marginBottom: "20px", fontSize: "1rem", borderRadius: "5px", border: "1px solid #ccc", cursor: "pointer" }}>
                             {serie.seasons.map((season, index) => (
                                 <option key={season.id} value={index}>
-                                    Saison {season.season_number}: {season.name} ({season.episodes ? season.episodes.length:0} épisodes)
+                                    Saison {season.season_number}: {season.name} ({season.episodes ? season.episodes.length : 0} épisodes)
                                 </option>
                             ))}
                         </select>

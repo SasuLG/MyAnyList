@@ -179,6 +179,11 @@ export default function MyList(){
   const [Rotating, setRotating] = useState<boolean | undefined>(undefined);
 
   /**
+   * Hook qui permet de savoir si des filtres d'odre sont actifs
+   */
+  const [isOrdering, setIsOrdering] = useState<boolean>(false);
+
+  /**
    * Récupérer les séries
    */
   const fetchData = async () => {
@@ -472,9 +477,9 @@ export default function MyList(){
     let filtered = series.filter(serie => {
       const matchesFormat = selectedFormats.length === 0 || selectedFormats.includes(serie.media_type) &&
         (selectedFormats.includes('tv') && serie.media_type === 'tv') ||
-        (selectedFormats.includes('movie') && serie.media_type === 'movie') ||
-        (selectedFormats.includes('anime') && serie.media_type === 'anime') ||
-        (selectedFormats.includes('film d\'animation') && serie.media_type === 'film d\'animation');
+        (selectedFormats.includes('Movie') && serie.media_type === 'movie') ||
+        (selectedFormats.includes('Anime') && serie.media_type === 'anime') ||
+        (selectedFormats.includes('Film d\'animation') && serie.media_type === 'film d\'animation');
   
       const matchesGenre = selectedGenres.length === 0 || selectedGenres.every(genre => serie.genres.some(g => g.name === genre));
       const searchWords = searchQuery.toLowerCase().replace(/\s+/g, ''); 
@@ -719,7 +724,7 @@ export default function MyList(){
         genres={genres}
         selectedGenres={selectedGenres}
         onSelectGenres={setSelectedGenres}
-        formats={['tv', 'movie', 'anime', "film d'animation"]}
+        formats={['tv', 'Movie', 'Anime', "Film d'animation"]}
         selectedFormats={selectedFormats}
         onSelectFormats={setSelectedFormats}
         sortByOptions={['Followed', 'Popularity', 'Start date', 'End date', 'Name', 'Note', 'Number episodes', 'Total time']}
