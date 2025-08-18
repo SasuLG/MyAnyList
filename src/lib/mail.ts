@@ -63,3 +63,39 @@ export const sendPasswordResetEmail = async (to: string, url: string) => {
 
   await transporter.sendMail(mailOptions);
 };
+
+export const sendSeriesUpdateEmail = async (to: string, modifiedSeries: any[]) => {
+
+  const mailOptions = {
+    from: `"MyAnyList" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: 'Mises à jour des séries',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+        <h2 style="color: #333;">Mises à jour des séries</h2>
+        <p style="color: #555; line-height: 1.6;">
+          Voici les dernières modifications sur vos séries :
+        </p>
+        <ul>
+          ${modifiedSeries.map(s => `
+            <li>
+              <strong>${s.name}</strong>
+              <ul>
+                ${s.changes.map((c: { important: any; description: any; }) => `
+                  <li style="color: ${c.important ? 'red' : 'inherit'};">
+                    ${c.description}
+                  </li>
+                `).join('')}
+              </ul>
+            </li>
+          `).join('')}
+        </ul>
+        <p style="color: #999; font-size: 12px; margin-top: 30px;">
+          Cordialement,<br>L'équipe MyAnyList
+        </p>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};

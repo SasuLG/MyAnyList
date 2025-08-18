@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ABOUT_ROUTE, HOME_ROUTE, LOGIN_ROUTE, MENTIONS_ROUTE, REGISTER_ROUTE } from "@/constants/app.route.const";

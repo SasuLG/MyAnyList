@@ -57,7 +57,9 @@ export default function Home() {
     if (!user) return;
     const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/recommanded?limit=10&page=1`);
     const data = await response.json();
-    setRecommendedSeries(data);
+    if (data.length){
+      setRecommendedSeries(data);
+    }
   };
 
   /**

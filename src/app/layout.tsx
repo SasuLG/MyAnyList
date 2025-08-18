@@ -24,9 +24,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   return (
     <html lang="fr">
+      <head>
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <title>MyAnyList</title>
+        <meta name="theme-color" content="#ffffff" />
+      </head>
       <body className={inter.className}>
         <UserContextProvider>
           <div className="main">

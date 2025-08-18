@@ -107,7 +107,7 @@ export default function Profil({ params }: { params: { name: string } }) {
         if (userProfil === null) return;
         try {
             let route = `/api/${encodeURIComponent(userProfil.web_token)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`;
-            if(userProfil.login !== user?.login) route = `/api/user/${encodeURIComponent(userProfil.id)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`;
+            if (userProfil.login !== user?.login) route = `/api/user/${encodeURIComponent(userProfil.id)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`;
             const response = await fetch(route);
             const data = await response.json();
             if (response.ok) {
@@ -130,7 +130,7 @@ export default function Profil({ params }: { params: { name: string } }) {
         if (userProfil === null) return;
         try {
             let route = `/api/${encodeURIComponent(userProfil.web_token)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(true)}`;
-            if(userProfil.login !== user?.login) route = `/api/user/${encodeURIComponent(userProfil.id)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(true)}`;
+            if (userProfil.login !== user?.login) route = `/api/user/${encodeURIComponent(userProfil.id)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(true)}`;
             const response = await fetch(route);
             const data = await response.json();
             if (response.ok) {
@@ -164,11 +164,11 @@ export default function Profil({ params }: { params: { name: string } }) {
      * Fonction pour éditer le nom de l'utilisateur
      */
     const editName = async () => {
-        if(userProfil === null){return;}
+        if (userProfil === null) { return; }
         const newName = (document.getElementById('editName') as HTMLInputElement).value;
-        if(newName === userProfil.login){setAlert({message:"Login identique", valid: false});return;}
-        if(newName.includes(' ')){setAlert({message:"Login incorrecte", valid: false});return;}
-        if(newName.length < 3){setAlert({message:"Login trop court", valid: false});return;}
+        if (newName === userProfil.login) { setAlert({ message: "Login identique", valid: false }); return; }
+        if (newName.includes(' ')) { setAlert({ message: "Login incorrecte", valid: false }); return; }
+        if (newName.length < 3) { setAlert({ message: "Login trop court", valid: false }); return; }
         const response = await fetch(`/api/user/edit/login`, {
             method: 'POST',
             headers: {
@@ -181,18 +181,18 @@ export default function Profil({ params }: { params: { name: string } }) {
         });
         const data = await response.json();
 
-        if(response.ok){
-            setAlert({message:"Login modifié avec succès", valid:response.ok});
+        if (response.ok) {
+            setAlert({ message: "Login modifié avec succès", valid: response.ok });
             await fetch('/api/user/activity', {
                 method: 'POST',
                 headers: {
-                  'Content-Type': 'application/json',
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ login: newName }),
             });
             router.push(`/user/profil/${newName}`);
-        }else{
-            setAlert({message:"Erreur lors de la modification du login", valid:response.ok});
+        } else {
+            setAlert({ message: "Erreur lors de la modification du login", valid: response.ok });
         }
     }
 
@@ -200,14 +200,14 @@ export default function Profil({ params }: { params: { name: string } }) {
      * Fonction pour éditer le mot de passe de l'utilisateur
      */
     const editPassword = async () => {
-        if(userProfil === null){return;}
+        if (userProfil === null) { return; }
         const password = (document.getElementById('editPassword') as HTMLInputElement).value;
         const oldPassword = (document.getElementById('oldPassword') as HTMLInputElement).value;
-        if(password === oldPassword){setAlert({message:"Mot de passe identique", valid: false});return;}
-        if(password === userProfil.password){setAlert({message:"Mot de passe identique", valid: false});return;}
-        if(password.length < 3){setAlert({message:"Mot de passe trop court", valid: false});return;}
+        if (password === oldPassword) { setAlert({ message: "Mot de passe identique", valid: false }); return; }
+        if (password === userProfil.password) { setAlert({ message: "Mot de passe identique", valid: false }); return; }
+        if (password.length < 3) { setAlert({ message: "Mot de passe trop court", valid: false }); return; }
 
-        if(!bcrypt.compare(password, oldPassword) || userProfil.login != user?.login && user?.admin){setAlert({message:"Ancien mot de passe incorrecte", valid: false});return;}
+        if (!bcrypt.compare(password, oldPassword) || userProfil.login != user?.login && user?.admin) { setAlert({ message: "Ancien mot de passe incorrecte", valid: false }); return; }
 
         const response = await fetch(`/api/user/edit/password`, {
             method: 'POST',
@@ -221,18 +221,18 @@ export default function Profil({ params }: { params: { name: string } }) {
         });
         const data = await response.json();
 
-        if(response.ok){
-            setAlert({message:"Modification du mot de passe réussi", valid:response.ok});
+        if (response.ok) {
+            setAlert({ message: "Modification du mot de passe réussi", valid: response.ok });
             (document.getElementById('editPassword') as HTMLInputElement).value = '';
             await fetch('/api/user/activity', {
                 method: 'POST',
                 headers: {
-                  'Content-Type': 'application/json',
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ login: userProfil.login }),
             });
-        }else{
-            setAlert({message:"Erreur lors de la modification du mot de passe", valid:response.ok});
+        } else {
+            setAlert({ message: "Erreur lors de la modification du mot de passe", valid: response.ok });
         }
     }
 
@@ -242,7 +242,7 @@ export default function Profil({ params }: { params: { name: string } }) {
      * @returns 
      */
     const onClickHeart = async (serie: MinimalSerie) => {
-        if(user === undefined){
+        if (user === undefined) {
             router.push(LOGIN_ROUTE);
             return;
         }
@@ -251,7 +251,7 @@ export default function Profil({ params }: { params: { name: string } }) {
             if (!confirmUnfollow) return;
         }
         let route = `/api/${encodeURIComponent(user.web_token)}/series/follow`;
-        if(seriesFollowed.map(serie=>serie.id.toString()).includes(serie.id.toString())){
+        if (seriesFollowed.map(serie => serie.id.toString()).includes(serie.id.toString())) {
             route = `/api/${encodeURIComponent(user.web_token)}/series/unfollow`;
         }
         const response = await fetch(route, {
@@ -261,24 +261,24 @@ export default function Profil({ params }: { params: { name: string } }) {
             },
             body: JSON.stringify({ serieId: serie.id })
         });
-        if(response.ok){
+        if (response.ok) {
             const data = await response.json();
-            if(data){
-            if(route.includes('unfollow')){
-                setSeriesFollowed(seriesFollowed.filter(s=>s.id.toString()!==serie.id.toString()));
-            }else{
-                setSeriesFollowed([...seriesFollowed, serie]);
+            if (data) {
+                if (route.includes('unfollow')) {
+                    setSeriesFollowed(seriesFollowed.filter(s => s.id.toString() !== serie.id.toString()));
+                } else {
+                    setSeriesFollowed([...seriesFollowed, serie]);
+                }
+
+                await fetch('/api/user/activity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ login: user.login }),
+                });
             }
-            
-            await fetch('/api/user/activity', {
-                method: 'POST',
-                headers: {
-                'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ login: user.login }),
-            });
-            }
-        }else{
+        } else {
             setAlert({ message: 'Erreur lors de la récupération des séries suivies', valid: false });
         }
     }
@@ -302,7 +302,7 @@ export default function Profil({ params }: { params: { name: string } }) {
         });
         const data = await response.json();
         setSeriesIdWaited(data ? (seriesIdWaited.includes(Number(serie.id)) ? seriesIdWaited.filter((id) => id !== Number(serie.id)) : [...seriesIdWaited, Number(serie.id)]) : seriesIdWaited);
-        
+
         await fetch('/api/user/activity', {
             method: 'POST',
             headers: {
@@ -355,77 +355,11 @@ export default function Profil({ params }: { params: { name: string } }) {
     /**
      * Fonction pour appliquer les filtres et trier les séries récentes.
      */
-    const applyFiltersAndSortRecent = () => {       
+    const applyFiltersAndSortRecent = () => {
         let filteredSeries: MinimalSerie[] = [];
-        
+
         const formatSet = new Set(selectedRecentFormats);
-    
-        if (formatSet.size === 0) {
-            filteredSeries = [...seriesFollowed];
-        } else {
-            filteredSeries = seriesFollowed.filter(serie => {
-                const isTv = serie.media_type === 'tv';
-                const isMovie = serie.media_type === 'movie' ;
-                const isAnime = serie.media_type === 'anime';
-                const isFilmAnimation = serie.media_type === 'film d\'animation';
-                
-                return (formatSet.has('tv') && isTv) ||
-                       (formatSet.has('movie') && isMovie) ||
-                       (formatSet.has('anime') && isAnime) ||
-                       (formatSet.has('film d\'animation') && isFilmAnimation);
-            });
-        }
-        filteredSeries.sort((a, b) => {
-            const dateA = a.follow_date ? new Date(a.follow_date).getTime() : 0; 
-            const dateB = b.follow_date ? new Date(b.follow_date).getTime() : 0; 
-            return dateB - dateA;
-        });
-    
-        if (!orderAscRecent) {
-            filteredSeries.reverse();
-        }
-    
-        setRecentSeries(filteredSeries.slice(0, 8));
-    };
-    
-    /**
-     * Fonction pour appliquer les filtres et trier les séries les mieux notées.
-     */
-    const applyFiltersAndSortRating = () => {
-        let filteredSeries: MinimalSerie[] = [];
-        
-        const formatSet = new Set(selectedRatingFormats);
-    
-        if (formatSet.size === 0) {
-            filteredSeries = [...seriesFollowed];
-        } else {
-            filteredSeries = seriesFollowed.filter(serie => {
-                const isTv = serie.media_type === 'tv';
-                const isMovie = serie.media_type === 'movie' ;
-                const isAnime = serie.media_type === 'anime';
-                const isFilmAnimation = serie.media_type === 'film d\'animation';
-                
-                return (formatSet.has('tv') && isTv) ||
-                       (formatSet.has('movie') && isMovie) ||
-                       (formatSet.has('anime') && isAnime) ||
-                       (formatSet.has('film d\'animation') && isFilmAnimation);
-            });
-        }
-    
-        filteredSeries.sort((a, b) => (b.note || 0) - (a.note || 0));
-        if (!orderAscRating) filteredSeries.reverse();
-    
-        setRatedSeries(filteredSeries.slice(0, 5));
-    };
-    
-    /**
-     * Fonction pour appliquer les filtres et trier les séries les plus longues.
-     */
-    const applyFiltersAndSortTime = () => {
-        let filteredSeries: MinimalSerie[] = [];
-        
-        const formatSet = new Set(selectedLongFormats);
-    
+
         if (formatSet.size === 0) {
             filteredSeries = [...seriesFollowed];
         } else {
@@ -434,17 +368,83 @@ export default function Profil({ params }: { params: { name: string } }) {
                 const isMovie = serie.media_type === 'movie';
                 const isAnime = serie.media_type === 'anime';
                 const isFilmAnimation = serie.media_type === 'film d\'animation';
-                
+
                 return (formatSet.has('tv') && isTv) ||
-                       (formatSet.has('movie') && isMovie) ||
-                       (formatSet.has('anime') && isAnime) ||
-                       (formatSet.has('film d\'animation') && isFilmAnimation);
+                    (formatSet.has('movie') && isMovie) ||
+                    (formatSet.has('anime') && isAnime) ||
+                    (formatSet.has('film d\'animation') && isFilmAnimation);
             });
         }
-    
+        filteredSeries.sort((a, b) => {
+            const dateA = a.follow_date ? new Date(a.follow_date).getTime() : 0;
+            const dateB = b.follow_date ? new Date(b.follow_date).getTime() : 0;
+            return dateB - dateA;
+        });
+
+        if (!orderAscRecent) {
+            filteredSeries.reverse();
+        }
+
+        setRecentSeries(filteredSeries.slice(0, 8));
+    };
+
+    /**
+     * Fonction pour appliquer les filtres et trier les séries les mieux notées.
+     */
+    const applyFiltersAndSortRating = () => {
+        let filteredSeries: MinimalSerie[] = [];
+
+        const formatSet = new Set(selectedRatingFormats);
+
+        if (formatSet.size === 0) {
+            filteredSeries = [...seriesFollowed];
+        } else {
+            filteredSeries = seriesFollowed.filter(serie => {
+                const isTv = serie.media_type === 'tv';
+                const isMovie = serie.media_type === 'movie';
+                const isAnime = serie.media_type === 'anime';
+                const isFilmAnimation = serie.media_type === 'film d\'animation';
+
+                return (formatSet.has('tv') && isTv) ||
+                    (formatSet.has('movie') && isMovie) ||
+                    (formatSet.has('anime') && isAnime) ||
+                    (formatSet.has('film d\'animation') && isFilmAnimation);
+            });
+        }
+
+        filteredSeries.sort((a, b) => (b.note || 0) - (a.note || 0));
+        if (!orderAscRating) filteredSeries.reverse();
+
+        setRatedSeries(filteredSeries.slice(0, 5));
+    };
+
+    /**
+     * Fonction pour appliquer les filtres et trier les séries les plus longues.
+     */
+    const applyFiltersAndSortTime = () => {
+        let filteredSeries: MinimalSerie[] = [];
+
+        const formatSet = new Set(selectedLongFormats);
+
+        if (formatSet.size === 0) {
+            filteredSeries = [...seriesFollowed];
+        } else {
+            filteredSeries = seriesFollowed.filter(serie => {
+                const isTv = serie.media_type === 'tv';
+                const isMovie = serie.media_type === 'movie';
+                const isAnime = serie.media_type === 'anime';
+                const isFilmAnimation = serie.media_type === 'film d\'animation';
+
+                return (formatSet.has('tv') && isTv) ||
+                    (formatSet.has('movie') && isMovie) ||
+                    (formatSet.has('anime') && isAnime) ||
+                    (formatSet.has('film d\'animation') && isFilmAnimation);
+            });
+        }
+
         filteredSeries.sort((a, b) => (b.total_time || 0) - (a.total_time || 0));
         if (!orderAscTime) filteredSeries.reverse();
-    
+
         setLongSeries(filteredSeries.slice(0, 5));
     };
 
@@ -477,7 +477,7 @@ export default function Profil({ params }: { params: { name: string } }) {
         });
         return { genreCount, episodeCount, timeCount };
     }, []);
-    
+
     useEffect(() => {
         if (user) {
             if (params.name !== user?.login && user.admin) {
@@ -512,7 +512,7 @@ export default function Profil({ params }: { params: { name: string } }) {
     const totalTimePercentage = useCallback((time: number, total: number) => total === 0 ? '0%' : ((time / total) * 100).toFixed(1) + '%', []);
     const totalEpisodesPercentage = useCallback((episodes: number, total: number) => total === 0 ? '0%' : ((episodes / total) * 100).toFixed(1) + '%', []);
 
-    const tvGenreData = useMemo(() => getGenreData(seriesFollowed.filter(serie => serie.media_type === 'tv' )), [seriesFollowed, getGenreData]);
+    const tvGenreData = useMemo(() => getGenreData(seriesFollowed.filter(serie => serie.media_type === 'tv')), [seriesFollowed, getGenreData]);
     const movieGenreData = useMemo(() => getGenreData(seriesFollowed.filter(serie => serie.media_type === 'movie' || serie.media_type === 'film d\'animation')), [seriesFollowed, getGenreData]);
     const animeGenreData = useMemo(() => getGenreData(seriesFollowed.filter(serie => serie.media_type === 'anime')), [seriesFollowed, getGenreData]);
 
@@ -525,20 +525,20 @@ export default function Profil({ params }: { params: { name: string } }) {
 
     return (
         <div style={{ margin: '20px' }}>
-            <h1 style={{ fontSize: '2rem', color: 'var(--titre-color)', marginBottom:"3rem" }}>Profil : {userProfil?.login}</h1>
+            <h1 style={{ fontSize: '2rem', color: 'var(--titre-color)', marginBottom: "3rem" }}>Profil : {userProfil?.login}</h1>
             {/* <ThemeSwitcher /> */}
             <div style={{ display: "flex", flexDirection: "row", gap: "1rem", width: "100%" }}>
                 <div style={{ flex: "1" }}>
-                    <h3 style={{color:"var(--titre-color)"}}>Modifier le nom</h3>
+                    <h3 style={{ color: "var(--titre-color)" }}>Modifier le nom</h3>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <input type="text" id="editName" placeholder="Nouveau nom" defaultValue={userProfil?.login} style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", height: "2.5rem", boxSizing: "border-box", color:"var(--titre-color)"}} />
-                        <button className="button-validate" onClick={() => setShowConfirmEditName(true)} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#007bff", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", transform:"translate(0px, -12px)" }}>Modifier</button>
+                        <input type="text" id="editName" placeholder="Nouveau nom" defaultValue={userProfil?.login} style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", height: "2.5rem", boxSizing: "border-box", color: "var(--titre-color)" }} />
+                        <button className="button-validate" onClick={() => setShowConfirmEditName(true)} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#007bff", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", transform: "translate(0px, -12px)" }}>Modifier</button>
                     </div>
                     {showConfirmEditName && (
                         <div className="overlay" style={{ position: "fixed", left: "0", top: "0", backgroundColor: "rgba(0, 0, 0, 0.5)", width: "100%", height: "100%", zIndex: "10" }}>
                             <div className="overlay-content" style={{ margin: "18% auto", padding: "3rem 5rem", borderRadius: "15px" }}>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                                    <p style={{color:"var(--titre-color)"}}>Êtes-vous sûr de vouloir modifier le nom ?</p>
+                                    <p style={{ color: "var(--titre-color)" }}>Êtes-vous sûr de vouloir modifier le nom ?</p>
                                     <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
                                         <button className="button" onClick={() => { editName(); setShowConfirmEditName(false); }} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#28a745", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>Confirmer</button>
                                         <button className="button" onClick={() => setShowConfirmEditName(false)} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#dc3545", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>Annuler</button>
@@ -550,18 +550,18 @@ export default function Profil({ params }: { params: { name: string } }) {
                 </div>
 
                 <div style={{ flex: "1" }}>
-                    <h3 style={{color:"var(--titre-color)"}}>Modifier le mot de passe</h3>
+                    <h3 style={{ color: "var(--titre-color)" }}>Modifier le mot de passe</h3>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <input type="password" id="editPassword" placeholder="Nouveau mot de passe" style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", height: "2.5rem", boxSizing: "border-box", color:"var(--titre-color)" }} />
-                        <button className="button-validate" onClick={() => setShowConfirmEditPassword(true)} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#007bff", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", transform:"translate(0px, -12px)" }}>Modifier</button>
+                        <input type="password" id="editPassword" placeholder="Nouveau mot de passe" style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", height: "2.5rem", boxSizing: "border-box", color: "var(--titre-color)" }} />
+                        <button className="button-validate" onClick={() => setShowConfirmEditPassword(true)} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#007bff", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", transform: "translate(0px, -12px)" }}>Modifier</button>
                     </div>
                     {showConfirmEditPassword && (
                         <div className="overlay" style={{ position: "fixed", left: "0", top: "0", backgroundColor: "rgba(0, 0, 0, 0.5)", width: "100%", height: "100%", zIndex: "10" }}>
                             <div className="overlay-content" style={{ margin: "18% auto", padding: "3rem 5rem", borderRadius: "15px" }}>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                                    <p style={{color:"var(--titre-color)"}}>Êtes-vous sûr de vouloir modifier le mot de passe ?</p>
+                                    <p style={{ color: "var(--titre-color)" }}>Êtes-vous sûr de vouloir modifier le mot de passe ?</p>
                                     {userProfil && userProfil.login === user?.login && (
-                                        <input type="password" id="oldPassword" placeholder="Ancien mot de passe" style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", marginBottom: "1rem", height: "2.5rem", boxSizing: "border-box", color:"var(--titre-color)" }} />
+                                        <input type="password" id="oldPassword" placeholder="Ancien mot de passe" style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", marginBottom: "1rem", height: "2.5rem", boxSizing: "border-box", color: "var(--titre-color)" }} />
                                     )}
                                     <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
                                         <button className="button" onClick={() => { editPassword(); setShowConfirmEditPassword(false); }} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#28a745", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>Confirmer</button>
@@ -647,7 +647,7 @@ export default function Profil({ params }: { params: { name: string } }) {
                                     {Object.keys(tvGenreData.episodeCount).map(genre => (
                                         <p key={genre} style={{ display: 'flex', gap: '0.5rem', color: '#333' }}>
                                             <span><strong>{genre} :</strong> {tvGenreData.genreCount[genre]} , {tvGenreData.episodeCount[genre] || 0} épisodes</span>
-                                            <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(tvGenreData.episodeCount[genre] || 0, totalEpisodes)}</span>
+                                            <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(tvGenreData.episodeCount[genre] || 0, totalEpisodesTv)}</span>
                                         </p>
                                     ))}
                                     <p style={{ fontWeight: 'bold' }}><strong>Total :</strong> {totalEpisodesTv} épisodes ({totalEpisodesPercentage(totalEpisodesTv, totalEpisodes)})</p>
@@ -692,7 +692,7 @@ export default function Profil({ params }: { params: { name: string } }) {
                                     {Object.keys(animeGenreData.episodeCount).map(genre => (
                                         <p key={genre} style={{ display: 'flex', gap: '1rem', color: '#333' }}>
                                             <span><strong>{genre} :</strong> {animeGenreData.genreCount[genre]} , {animeGenreData.episodeCount[genre] || 0} épisodes</span>
-                                            <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(animeGenreData.episodeCount[genre] || 0, totalEpisodes)}</span>
+                                            <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(animeGenreData.episodeCount[genre] || 0, totalEpisodesAnime)}</span>
                                         </p>
                                     ))}
                                     <p style={{ fontWeight: 'bold' }}><strong>Total :</strong> {totalEpisodesAnime} épisodes ({totalEpisodesPercentage(totalEpisodesAnime, totalEpisodes)})</p>
@@ -737,7 +737,7 @@ export default function Profil({ params }: { params: { name: string } }) {
                                     {Object.keys(movieGenreData.episodeCount).map(genre => (
                                         <p key={genre} style={{ display: 'flex', gap: '1rem', color: '#333' }}>
                                             <span><strong>{genre} :</strong> {movieGenreData.genreCount[genre]} , {movieGenreData.episodeCount[genre] || 0} épisodes</span>
-                                            <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(movieGenreData.episodeCount[genre] || 0, totalEpisodes)}</span>
+                                            <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(movieGenreData.episodeCount[genre] || 0, totalEpisodesMovie)}</span>
                                         </p>
                                     ))}
                                     <p style={{ fontWeight: 'bold' }}><strong>Total :</strong> {totalEpisodesMovie} épisodes ({totalEpisodesPercentage(totalEpisodesMovie, totalEpisodes)})</p>
@@ -764,41 +764,41 @@ export default function Profil({ params }: { params: { name: string } }) {
             </div>
 
             <div>
-                <h1 style={{color:"var(--titre-color)"}}>TOP</h1>
+                <h1 style={{ color: "var(--titre-color)" }}>TOP</h1>
                 <div>
-                    <h2 style={{color:"var(--titre-color)"}}>Récemment vue</h2>
+                    <h2 style={{ color: "var(--titre-color)" }}>Récemment vue</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                        <span style={{color:"var(--titre-color)"}}>Format</span>
-                        <MultiSelectDropdown options={['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedRecentFormats} onSelect={setSelectedRecentFormats}/>
+                        <span style={{ color: "var(--titre-color)" }}>Format</span>
+                        <MultiSelectDropdown options={['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedRecentFormats} onSelect={setSelectedRecentFormats} />
                     </div>
-                    <div style={{   display: 'flex', alignItems: 'center',   position: 'relative',   cursor: 'pointer',  marginRight: '-1.5rem', width:"max-content"}}  onClick={() => setOrderAscRecent(!orderAscRecent)}  >
-                        <Order  width={30}    height={30}  orderAsc={orderAscRecent} />
+                    <div style={{ display: 'flex', alignItems: 'center', position: 'relative', cursor: 'pointer', marginRight: '-1.5rem', width: "max-content" }} onClick={() => setOrderAscRecent(!orderAscRecent)}  >
+                        <Order width={30} height={30} orderAsc={orderAscRecent} />
                     </div>
-                    <SeriesList series={recentSeries} styleType={"grid"} followedIds={recentSeries.map(serie=>Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} limit={8} size="very-small" isList={false}/>
-                </div>
-    
-                <div>
-                    <h2 style={{color:"var(--titre-color)"}}>Les mieux notés</h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                        <span style={{color:"var(--titre-color)"}}>Format</span>
-                        <MultiSelectDropdown options={['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedRatingFormats} onSelect={setSelectedRatingFormats}/>
-                    </div>
-                    <div style={{   display: 'flex', alignItems: 'center',   position: 'relative',   cursor: 'pointer',  marginRight: '-1.5rem',width:"max-content"}}  onClick={() => setOrderAscRating(!orderAscRating)}  >
-                        <Order  width={30}    height={30}  orderAsc={orderAscRating} />
-                    </div>
-                    <SeriesList series={ratedSeries} styleType={"grid"} followedIds={ratedSeries.map(serie=>Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} limit={8} size="very-small" isList={false}/>
+                    <SeriesList series={recentSeries} styleType={"grid"} followedIds={recentSeries.map(serie => Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} limit={8} size="very-small" isList={false} />
                 </div>
 
                 <div>
-                    <h2 style={{color:"var(--titre-color)"}}>Les plus longs</h2>
+                    <h2 style={{ color: "var(--titre-color)" }}>Les mieux notés</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                        <span style={{color:"var(--titre-color)"}}>Format</span>
-                        <MultiSelectDropdown options={['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedLongFormats} onSelect={setSelectedLongFormats}/>
+                        <span style={{ color: "var(--titre-color)" }}>Format</span>
+                        <MultiSelectDropdown options={['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedRatingFormats} onSelect={setSelectedRatingFormats} />
                     </div>
-                    <div style={{   display: 'flex', alignItems: 'center',   position: 'relative',   cursor: 'pointer',  marginRight: '-1.5rem',width:"max-content"}}  onClick={() => setOrderAscTime(!orderAscTime)}  >
-                        <Order  width={30}    height={30}  orderAsc={orderAscTime} />
+                    <div style={{ display: 'flex', alignItems: 'center', position: 'relative', cursor: 'pointer', marginRight: '-1.5rem', width: "max-content" }} onClick={() => setOrderAscRating(!orderAscRating)}  >
+                        <Order width={30} height={30} orderAsc={orderAscRating} />
                     </div>
-                    <SeriesList series={longSeries} styleType={"grid"} followedIds={longSeries.map(serie=>Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} limit={8} size="very-small" isList={false}/>
+                    <SeriesList series={ratedSeries} styleType={"grid"} followedIds={ratedSeries.map(serie => Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} limit={8} size="very-small" isList={false} />
+                </div>
+
+                <div>
+                    <h2 style={{ color: "var(--titre-color)" }}>Les plus longs</h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                        <span style={{ color: "var(--titre-color)" }}>Format</span>
+                        <MultiSelectDropdown options={['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedLongFormats} onSelect={setSelectedLongFormats} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', position: 'relative', cursor: 'pointer', marginRight: '-1.5rem', width: "max-content" }} onClick={() => setOrderAscTime(!orderAscTime)}  >
+                        <Order width={30} height={30} orderAsc={orderAscTime} />
+                    </div>
+                    <SeriesList series={longSeries} styleType={"grid"} followedIds={longSeries.map(serie => Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} limit={8} size="very-small" isList={false} />
                 </div>
             </div>
         </div>

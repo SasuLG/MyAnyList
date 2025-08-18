@@ -23,12 +23,10 @@ const HoverToolBox = ({ serie, children, isMyList }: HoverToolBoxProps) => {
         const rect = element.getBoundingClientRect();
         const top = rect.top + window.pageYOffset;
         let left = rect.left + rect.width + 10;
-
         // Adjust position if tooltip exceeds viewport width
-        if (left + 350 > window.innerWidth) {
+        if (left + 150 > window.innerWidth) {
             left = rect.left - 10 - 350;
         }
-
         // Adjust position if tooltip exceeds viewport height
         const tooltipHeight = 300; // Assume the tooltip's height is around 300px
         let topAdjusted = top;
@@ -94,7 +92,7 @@ const HoverToolBox = ({ serie, children, isMyList }: HoverToolBoxProps) => {
                             <span>{serie.status === "Ended" ? "✔️" : "🔄"}</span>
                         </div>
                         <div className="hover-info-items">
-                            <span>{serie.media_type} </span>
+                            <span>{serie.media_type != "tv" ? serie.media_type.charAt(0).toUpperCase() + serie.media_type.slice(1) : serie.media_type} </span>
                             <span className="circle"></span>
                             <span>{serie.media_type === "movie" || serie.media_type === "film d'animation" ? `${hours}h ${minutes}min` : serie.number_of_episodes} {serie.media_type === "movie" || serie.media_type === "film d'animation" ? "" : "épisodes"}</span>
                         </div>
