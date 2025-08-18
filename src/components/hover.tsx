@@ -23,12 +23,10 @@ const HoverToolBox = ({ serie, children, isMyList }: HoverToolBoxProps) => {
         const rect = element.getBoundingClientRect();
         const top = rect.top + window.pageYOffset;
         let left = rect.left + rect.width + 10;
-
         // Adjust position if tooltip exceeds viewport width
-        if (left + 350 > window.innerWidth) {
+        if (left + 150 > window.innerWidth) {
             left = rect.left - 10 - 350;
         }
-
         // Adjust position if tooltip exceeds viewport height
         const tooltipHeight = 300; // Assume the tooltip's height is around 300px
         let topAdjusted = top;

@@ -294,11 +294,6 @@ export async function deleteSerie(serieId: number) {
             WHERE "serieId" = $1
         `, [serieId]);
 
-        await Query(`
-            DELETE FROM "Country_serie"
-            WHERE "serieId" = $1
-        `, [serieId]);
-
         // Suppression des associations dans la table ProductionCompany_serie
         await Query(`
             DELETE FROM "ProductionCompany_serie"

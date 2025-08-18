@@ -26,9 +26,16 @@ export default function Import() {
     };
 
     const detailsSeries = async () => {
-        const response = await fetch(`/api/admin/series/search/details?id=${encodeURIComponent(204832)}&media_type=tv`);
-        const data = await response.json();
-        console.log(data);
+        // const response = await fetch(`/api/admin/series/search/details?id=${encodeURIComponent(204832)}&media_type=tv`);
+        // const data = await response.json();
+        // console.log(data);
+        const response = await fetch('/api/admin/series/updateAll', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),
+        });
     };
 
     const detailsSeason = async () => {
@@ -42,10 +49,10 @@ export default function Import() {
             // Récupérer les détails de la série
             const detailsResponse = await fetch(`/api/admin/series/search/details?id=${encodeURIComponent(serie.id)}&media_type=${encodeURIComponent(serie.media_type)}`);
             const detailsData = await detailsResponse.json();
-        
+
             // Vérifier si c'est un film ou une série
             const isMovie = serie.media_type === 'movie';
-        
+
             // Préparer les détails de chaque saison si ce n'est pas un film
             let seasonDetailsDataArray: any[] = [];
             if (!isMovie && detailsData.seasons) {
@@ -55,21 +62,22 @@ export default function Import() {
                 const seasonDetailsResponses = await Promise.all(seasonDetailsPromises);
                 seasonDetailsDataArray = await Promise.all(seasonDetailsResponses.map(response => response.json()));
             }
-        
+
             // Récupérer les tags associés à la série
             const tagsResponse = await fetch(`/api/admin/series/search/tags?id=${encodeURIComponent(serie.id)}&media_type=${encodeURIComponent(serie.media_type)}`);
             const tagsData = await tagsResponse.json();
-        
+
             // Déterminer le champ contenant les tags
             const tags = tagsData.results || tagsData.keywords || [];
-        
+
             // Si pas d'episode run_time pour une série, on prend la moyenne des run_time des épisodes
             const totalEpisodes = seasonDetailsDataArray.reduce((total: number, season: any) => total + season.episodes.length, 0);
             const totalTime = seasonDetailsDataArray.reduce((total: number, season: any) => {
                 return total + season.episodes.reduce((episodeTotal: number, episode: any) => episodeTotal + (episode.runtime || 0), 0);
             }, 0);
             const averageTime = totalEpisodes > 0 ? Math.round(totalTime / totalEpisodes) : 0;
-        
+            console.log("serie")
+            console.log(serie)
             // Préparer l'objet ImportSeries avec les données reçues
             const importSeriesData: Serie = {
                 id: serie.id,
@@ -104,17 +112,17 @@ export default function Import() {
                     const seasonEpisodes = (seasonDetailsDataArray[index]?.episodes || []).map((e: any) => ({
                         ...e,
                         season_id: season.id,
-                        runtime: e.runtime || detailsData.episode_run_time[0] || averageTime  
+                        runtime: e.runtime || detailsData.episode_run_time[0] || averageTime
                     }));
-                    return { 
-                        ...season, 
-                        poster_path: seasonPosterPath, 
+                    return {
+                        ...season,
+                        poster_path: seasonPosterPath,
                         episodes: seasonEpisodes,
                         total_time: (season.episodes || []).reduce((total: number, episode: any) => total + (episode.runtime || 0), 0)
                     };
                 }) : []
             };
-        
+
             // Vérification du media type "Released"
             if (importSeriesData.status === 'Released') {
                 importSeriesData.status = 'Ended';
@@ -124,16 +132,21 @@ export default function Import() {
             const additionalGenres = ["romance", "ecchi", "slice of life", "anime"];
             const existingGenresResponse = await fetch(`/api/admin/series/genre`);
             const existingGenresData = await existingGenresResponse.json();
-        
+
             // Créer un dictionnaire pour accéder aux genres existants par leur nom en minuscules
             const existingGenresMap = new Map<string, any>();
             existingGenresData.forEach((genre: any) => {
                 existingGenresMap.set(genre.name.toLowerCase(), genre);
             });
-            
+
             // Liste des genres à ajouter
             const genresToAdd: any[] = [];
             let mediaType = serie.media_type; // Conserver le media type initial
+            detailsData.genres.forEach((genre: any) => {
+                if (genre.name.toLowerCase() === "animation") {
+                    mediaType = "anime";
+                }
+            })
             let hasAnimationGenre = false;
             tags.forEach((tag: any) => {
                 const lowerTag = tag.name.toLowerCase();
@@ -158,26 +171,26 @@ export default function Import() {
                     } else {
                         // Genre n'existe pas, créer un nouvel objet genre
                         genresToAdd.push({
-                            id: tag.id, 
-                            name: tag.name.charAt(0).toUpperCase() + tag.name.slice(1) 
+                            id: tag.id,
+                            name: tag.name.charAt(0).toUpperCase() + tag.name.slice(1)
                         });
                     }
                 }
             });
-    
+
             // Vérifier si le genre "animation" est présent
             if (importSeriesData.genres.some((g: any) => g.name.toLowerCase() === "animation")) {
                 hasAnimationGenre = true;
             }
-    
+
             // Modifier le media type si le genre "animation" est présent et que le media type est "movie"
             if (hasAnimationGenre && isMovie) {
                 mediaType = "film d'animation";
             }
-    
+
             // Ajouter les nouveaux genres à la liste des genres de la série
             importSeriesData.genres.push(...genresToAdd);
-        
+
             // Ajouter le media type modifié à l'objet importSeriesData
             importSeriesData.media_type = mediaType;
             console.log(importSeriesData);
@@ -190,10 +203,10 @@ export default function Import() {
                 body: JSON.stringify({ texts: [serie.original_name] })
             });
             const namesData = await namesResponse.json();
-            importSeriesData.romaji_name = namesData.texts[0]; 
-        
+            importSeriesData.romaji_name = namesData.texts[0];
+
             console.log(importSeriesData);
-        
+
             // Envoyer les données d'importation à l'API
             const response = await fetch(`/api/admin/series/import`, {
                 method: "POST",
@@ -202,7 +215,7 @@ export default function Import() {
                 },
                 body: JSON.stringify(importSeriesData)
             });
-            
+
             setAlert(await response.json());
             getImportedSeriesIds();
             if (!response.ok) {
@@ -214,8 +227,8 @@ export default function Import() {
             throw error;
         }
     };
-    
-    
+
+
     const getImportedSeriesIds = async () => {
         const response = await fetch(`/api/admin/series/import`, {
             method: "GET",
@@ -223,15 +236,15 @@ export default function Import() {
                 "Content-Type": "application/json"
             }
         });
-        if(response.ok) {
+        if (response.ok) {
             const data = await response.json() as TmdbId[];
-            setImportedSeriesIds(data.map((id) => id.tmdb_id.toString())); 
+            setImportedSeriesIds(data.map((id) => id.tmdb_id.toString()));
         }
     }
 
     const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
-            event.preventDefault(); 
+            event.preventDefault();
             searchSeries();
         }
     };
@@ -248,10 +261,11 @@ export default function Import() {
         <div style={{ height: "100%", padding: "2rem", backgroundColor: "var(--background-color)" }}>
             <h1 style={{ color: "var(--titre-color)", textAlign: "center", marginBottom: "2rem" }}>Import page</h1>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
-                <input onKeyDown={handleKeyPress} style={{ width: "60%", padding: "0.5rem", border: "1px solid var(--border)", borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)", color:"var(--titre-color)", backgroundColor:"var(--background-color)" }} type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search series" />
+                <input onKeyDown={handleKeyPress} style={{ width: "60%", padding: "0.5rem", border: "1px solid var(--border)", borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)", color: "var(--titre-color)", backgroundColor: "var(--background-color)" }} type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search series" />
                 <div style={{ display: "flex", gap: "1rem" }}>
                     <button style={{ padding: "0.9rem" }} className="button-validate" onClick={searchSeries}>Search series</button>
-                    <button style={{ padding: "0.9rem" }} className="button-validate" onClick={detailsSeries}>Details series</button>
+                    {/* <button style={{ padding: "0.9rem" }} className="button-validate" onClick={detailsSeries}>Details series</button> */}
+                    <button style={{ padding: "0.9rem" }} className="button-validate" onClick={detailsSeries}>Update All</button>
                     <button style={{ padding: "0.9rem" }} className="button-validate" onClick={detailsSeason}>Details season</button>
                     <button style={{ padding: "0.9rem" }} className="button-validate" onClick={() => setStyleType(styleType === 'grid' ? 'list' : 'grid')}>
                         Toggle Layout
@@ -263,7 +277,7 @@ export default function Import() {
                 <Loader />
             ) : (
                 series.length > 0 ? (
-                    <ul style={{ listStyle: "none", padding: 0, display: styleType === 'grid' ? 'grid' : 'flex', gridTemplateColumns: styleType === 'grid' ? 'repeat(auto-fit, minmax(250px, 1fr))' : 'none', gap: "1rem", flexDirection:"column" }}>
+                    <ul style={{ listStyle: "none", padding: 0, display: styleType === 'grid' ? 'grid' : 'flex', gridTemplateColumns: styleType === 'grid' ? 'repeat(auto-fit, minmax(250px, 1fr))' : 'none', gap: "1rem", flexDirection: "column" }}>
                         {series.map((serie) => {
                             const isImported = importedSeriesIds.includes(serie.id.toString());
                             return serie.media_type !== "person" && (
@@ -271,14 +285,14 @@ export default function Import() {
                                     {styleType === 'list' && (
                                         <>
                                             <div style={{ marginRight: "1rem" }}>
-                                                {serie.poster_path && <Image unoptimized src={`${IMG_SRC}${serie.poster_path}`} alt={serie.name}  width={100} height={150}  style={{ borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)" }}  />}
+                                                {serie.poster_path && <Image unoptimized src={`${IMG_SRC}${serie.poster_path}`} alt={serie.name} width={100} height={150} style={{ borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)" }} />}
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <h2 style={{ color: "var(--titre-color)" }}>{serie.name}</h2>
-                                                <p style={{ color: !isImported?"var(--main-text-color)":"var(--secondary-text-color)" }}>{serie.overview}</p>
+                                                <p style={{ color: !isImported ? "var(--main-text-color)" : "var(--secondary-text-color)" }}>{serie.overview}</p>
                                                 <h2 style={{ color: "var(--titre-color)" }}>{serie.media_type}</h2>
                                                 <h2 style={{ color: "var(--titre-color)" }}>{serie.first_air_date.substring(0, 4)}</h2>
-    
+
                                                 <button style={{ marginTop: "1rem" }} className="button-validate" onClick={() => importSerie(serie)}>
                                                     {isImported ? "Update" : "Import"}
                                                 </button>
@@ -289,7 +303,7 @@ export default function Import() {
                             );
                         })}
                     </ul>
-                ) : ( fetchDataFinished && <h2 style={{ color: "var(--titre-color)", textAlign: "center", marginTop: "2rem" }}>No series found</h2>)
+                ) : (fetchDataFinished && <h2 style={{ color: "var(--titre-color)", textAlign: "center", marginTop: "2rem" }}>No series found</h2>)
             )}
         </div>
     );

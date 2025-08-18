@@ -80,7 +80,7 @@ create table if not exists "Serie" (
     "popularity" float, /* La popularité */
     "budget" integer, /* Le budget */
     "revenue" integer, /* Les recettes */
-    "last_modified" timestamp not null default current_timestamp, /* La date de dernière modification */
+    "last_modified" timestamp not null default current_timestamp /* La date de dernière modification */
     /*networks*/
 );
 
@@ -235,7 +235,9 @@ EXECUTE FUNCTION update_serie_total_time();
 create role "Manyl-User" with login password 'D@*987d7v?YLsEL2_it';
 
 ALTER DATABASE "MyAnyList" OWNER TO "Manyl-User";
-
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO "Manyl-User";
+GRANT SELECT, USAGE ON ALL SEQUENCES IN SCHEMA public TO "Manyl-User";
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, USAGE ON SEQUENCES TO "Manyl-User";
 
 /*
 

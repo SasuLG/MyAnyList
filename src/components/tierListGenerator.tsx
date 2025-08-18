@@ -56,7 +56,7 @@ const hexToRgb = (hex: string): [number, number, number] => {
  * @returns 
  */
 const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
-  
+
   /**
    * Récupérer les informations de l'utilisateur
    */
@@ -98,14 +98,14 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
    */
   useEffect(() => {
     const nonWaitlistTiers = editedTiers.filter(tier => tier.title !== "Waitlist");
-    
-    const finalTiers = showWaitlist 
+
+    const finalTiers = showWaitlist
       ? [...nonWaitlistTiers, { title: "Waitlist", color: "#CCCCCC", images: [] }]
       : [...nonWaitlistTiers];
-    
+
     setEditedTiers(finalTiers);
   }, [showWaitlist]);
-  
+
   const openPopup = () => setOpenPopupTierList(true);
   const closePopup = () => setOpenPopupTierList(false);
 
@@ -150,8 +150,8 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
       images: [],
     };
     const updatedTiers = showWaitlist
-    ? [...editedTiers.filter(tier => tier.title !== "Waitlist"), newTier, editedTiers.find(tier => tier.title === "Waitlist")!]
-    : [...editedTiers, newTier];
+      ? [...editedTiers.filter(tier => tier.title !== "Waitlist"), newTier, editedTiers.find(tier => tier.title === "Waitlist")!]
+      : [...editedTiers, newTier];
     setEditedTiers(updatedTiers);
   };
 
@@ -162,7 +162,7 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
   const handleRemoveTier = (index: number) => {
     const tierTitle = editedTiers[index].title;
     const confirmation = window.confirm(`Êtes-vous sûr de vouloir supprimer le tier "${tierTitle}" ?`);
-    
+
     if (confirmation) {
       const updatedTiers = editedTiers.filter((_, i) => i !== index);
       setEditedTiers(updatedTiers);
@@ -193,93 +193,93 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
 
     let waitlistImages = [];
     if (showWaitlist) {
-        waitlistImages = await fetchWaitlistData();
+      waitlistImages = await fetchWaitlistData();
     }
-    const allSeriesImages = showWaitlist 
-        ? [
-            ...seriesImages, 
-            ...(seriesImages.some(tier => tier.title === "Waitlist") 
-                ? [] 
-                : [{ title: "Waitlist", images: waitlistImages }]
-            ),
-          ].map(tier => 
-            tier.title === "Waitlist" ? { ...tier, images: waitlistImages } : tier
-        )
-        : seriesImages;
+    const allSeriesImages = showWaitlist
+      ? [
+        ...seriesImages,
+        ...(seriesImages.some(tier => tier.title === "Waitlist")
+          ? []
+          : [{ title: "Waitlist", images: waitlistImages }]
+        ),
+      ].map(tier =>
+        tier.title === "Waitlist" ? { ...tier, images: waitlistImages } : tier
+      )
+      : seriesImages;
 
     for (const tier of editedTiers) {
-        const images = allSeriesImages.find((t) => t.title === tier.title)?.images || [];
-        const { title, color } = tier;
-        const rgbColor = hexToRgb(color);
-        const nbImages = images.length;
-        const imagesPerRow = Math.floor((pageWidth - titleWidth) / (imageWidth + spaceBetweenImages));
-        const totalRowsNeeded = Math.ceil(nbImages / imagesPerRow);
-        const rowCount = nbImages > 0 ? totalRowsNeeded : 1;
+      const images = allSeriesImages.find((t) => t.title === tier.title)?.images || [];
+      const { title, color } = tier;
+      const rgbColor = hexToRgb(color);
+      const nbImages = images.length;
+      const imagesPerRow = Math.floor((pageWidth - titleWidth) / (imageWidth + spaceBetweenImages));
+      const totalRowsNeeded = Math.ceil(nbImages / imagesPerRow);
+      const rowCount = nbImages > 0 ? totalRowsNeeded : 1;
 
-        // Fond de la section des images
+      // Fond de la section des images
+      doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
+      doc.rect(titleWidth, yPos, pageWidth - titleWidth, imageHeight * rowCount, 'F');
+
+      // Fond de la colonne des titres
+      doc.setFillColor(rgbColor[0], rgbColor[1], rgbColor[2]);
+      doc.rect(0, yPos, titleWidth, imageHeight * rowCount, 'F');
+
+      // Texte du titre au milieu
+      const textWidth = doc.getTextWidth(title);
+      const tierTextYPos = yPos + (imageHeight * rowCount) / 2;
+      let xPos = (titleWidth / 2) - (textWidth / 2);
+      doc.setTextColor(0, 0, 0);
+      doc.text(title, xPos, tierTextYPos, { baseline: "middle" });
+
+      // Séparateur vertical
+      doc.setFillColor(0, 0, 0);
+      doc.rect(titleWidth, yPos, verticalSeparatorWidth, imageHeight * rowCount, 'F');
+
+      // Ajout des images
+      xPos = titleWidth;
+      try {
+        const imgDataArray = await loadImages(images);
+
+        imgDataArray.forEach((imgData, index) => {
+          if (imgData) { // Vérifie que imgData n'est pas undefined
+            doc.addImage(imgData, "PNG", xPos, yPos, imageWidth, imageHeight);
+            xPos += imageWidth + spaceBetweenImages;
+
+            if ((index + 1) % imagesPerRow === 0) {
+              xPos = titleWidth;
+              yPos += imageHeight;
+
+              if (yPos + imageHeight > pageHeight) {
+                doc.addPage();
+                yPos = 0;
+
+                // Fond général en noir clair pour la nouvelle page
+                doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
+                doc.rect(0, 0, pageWidth, pageHeight, "F");
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error("Error loading images:", error);
+      }
+
+      yPos += imageHeight;
+
+      // Séparateur horizontal
+      doc.setFillColor(0, 0, 0);
+      doc.rect(0, yPos, pageWidth, separatorHeight, 'F');
+      yPos += separatorHeight;
+
+      // Gérer le cas où il n'y a pas assez d'espace pour ajouter plus d'images
+      if (yPos + imageHeight > pageHeight) {
+        doc.addPage();
+        yPos = 0;
+
+        // Fond général en noir clair pour la nouvelle page
         doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
-        doc.rect(titleWidth, yPos, pageWidth - titleWidth, imageHeight * rowCount, 'F');
-
-        // Fond de la colonne des titres
-        doc.setFillColor(rgbColor[0], rgbColor[1], rgbColor[2]);
-        doc.rect(0, yPos, titleWidth, imageHeight * rowCount, 'F');
-
-        // Texte du titre au milieu
-        const textWidth = doc.getTextWidth(title);
-        const tierTextYPos = yPos + (imageHeight * rowCount) / 2;
-        let xPos = (titleWidth / 2) - (textWidth / 2);
-        doc.setTextColor(0, 0, 0);
-        doc.text(title, xPos, tierTextYPos, { baseline: "middle" });
-
-        // Séparateur vertical
-        doc.setFillColor(0, 0, 0);
-        doc.rect(titleWidth, yPos, verticalSeparatorWidth, imageHeight * rowCount, 'F');
-
-        // Ajout des images
-        xPos = titleWidth;
-        try {
-            const imgDataArray = await loadImages(images);
-
-            imgDataArray.forEach((imgData, index) => {
-                if (imgData) { // Vérifie que imgData n'est pas undefined
-                    doc.addImage(imgData, "PNG", xPos, yPos, imageWidth, imageHeight);
-                    xPos += imageWidth + spaceBetweenImages;
-
-                    if ((index + 1) % imagesPerRow === 0) {
-                        xPos = titleWidth;
-                        yPos += imageHeight;
-
-                        if (yPos + imageHeight > pageHeight) {
-                            doc.addPage();
-                            yPos = 0;
-
-                            // Fond général en noir clair pour la nouvelle page
-                            doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
-                            doc.rect(0, 0, pageWidth, pageHeight, "F");
-                        }
-                    }
-                }
-            });
-        } catch (error) {
-            console.error("Error loading images:", error);
-        }
-
-        yPos += imageHeight;
-
-        // Séparateur horizontal
-        doc.setFillColor(0, 0, 0);
-        doc.rect(0, yPos, pageWidth, separatorHeight, 'F');
-        yPos += separatorHeight;
-
-        // Gérer le cas où il n'y a pas assez d'espace pour ajouter plus d'images
-        if (yPos + imageHeight > pageHeight) {
-            doc.addPage();
-            yPos = 0;
-
-            // Fond général en noir clair pour la nouvelle page
-            doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
-            doc.rect(0, 0, pageWidth, pageHeight, "F");
-        }
+        doc.rect(0, 0, pageWidth, pageHeight, "F");
+      }
     }
 
     doc.save("tierlist.pdf");
@@ -294,13 +294,13 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
     const batchSize = 10;
     const results = [];
     for (let i = 0; i < urls.length; i += batchSize) {
-        const batchUrls = urls.slice(i, i + batchSize);
-        try {
-            const batchResult = await fetchImages(batchUrls);
-            results.push(...batchResult);
-        } catch (error) {
-            console.error("Erreur lors du chargement d'un lot d'images:", error);
-        }
+      const batchUrls = urls.slice(i, i + batchSize);
+      try {
+        const batchResult = await fetchImages(batchUrls);
+        results.push(...batchResult);
+      } catch (error) {
+        console.error("Erreur lors du chargement d'un lot d'images:", error);
+      }
     }
     return results;
   };
@@ -311,20 +311,20 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
   * @returns 
   */
   const fetchImages = (urls: string[]): Promise<string[]> => {
-    return fetch("/api/images", { 
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrls: urls })
+    return fetch("/api/images", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageUrls: urls })
     })
-    .then(response => {
+      .then(response => {
         if (!response.ok) {
-            throw new Error("Erreur lors du chargement des images");
+          throw new Error("Erreur lors du chargement des images");
         }
         return response.json();
-    })
-    .then(data => {
+      })
+      .then(data => {
         return data.map((img: { image: string }) => img ? img.image : "defaultImageBase64");
-    });
+      });
   };
 
   /**
@@ -333,19 +333,19 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
    */
   const fetchWaitlistData = async () => {
     if (!user) return [];
-  
+
     try {
       const response = await fetch(`/api/user/${encodeURIComponent(user.id)}/series/image?waitList=${encodeURIComponent(true)}`);
       let data = await response.json();
       data = data.map((img: string) => IMG_SRC + img);
-    
+
       return data;
     } catch (error) {
       console.error("Erreur lors de la récupération des données de la waitlist:", error);
       return [];
     }
   };
-  
+
 
   useEffect(() => {
     setSeriesImages(tiers.map((tier) => ({ title: tier.title, images: tier.images })));
@@ -365,7 +365,7 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
 
             {withWaitList !== undefined && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input type="checkbox" id="showWaitlist" checked={showWaitlist} onChange={() => setShowWaitlist(!showWaitlist)} className="input-switch" style={{ marginRight: '0.5rem' }}/>
+                <input type="checkbox" id="showWaitlist" checked={showWaitlist} onChange={() => setShowWaitlist(!showWaitlist)} className="input-switch" style={{ marginRight: '0.5rem' }} />
                 <label htmlFor="showWaitlist" className="switch" />
                 <span>Avec Waitlist</span>
               </div>

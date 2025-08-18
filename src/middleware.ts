@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { SESSION_ID_COOKIE } from "@/constants/session.const";
 import { ERROR_ROUTE, HOME_ROUTE, LOGIN_ROUTE, REGISTER_ROUTE } from "./constants/app.route.const";
 import { User } from "./bdd/model/user";
-import { deleteVerifToken } from "./bdd/requests/user.request";
 
 /**
  * Middleware appelé automatiquement au chargement de n'importe quel page pour vérifier si l'utilisateur à 
@@ -29,7 +28,7 @@ export default async function userAsASessionIDMiddleware(req: NextRequest) {
     const pathname = url.pathname;
 
     // Si c'est une route de nextJS
-    if (req.url.includes('_next') || req.url.includes('api') || req.url.includes('manifest.json') || req.url.includes('favicon.json') || req.url.includes('assets')) {
+    if (req.url.includes('_next') || req.url.includes('api') || req.url.includes('manifest.json') || req.url.includes('favicon.json') || req.url.includes('favicon.ico') || req.url.includes('assets')) {
         return NextResponse.next();
     }
 

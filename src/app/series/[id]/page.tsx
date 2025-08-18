@@ -137,7 +137,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
      */
     const updateVote = async () => {
         if (!user || !serie) return;
-        const note = rating ?? serie.note;
+        const note = rating ?? serie.note ?? 0;
         const comment = (document.getElementById("serie-comment") as HTMLTextAreaElement).value;
         if (note === null || note < 0 || note > 10) return setAlert({ message: "La note doit être comprise entre 0 et 10", valid: false });
         if (comment.length > 1000) return setAlert({ message: "Le commentaire ne doit pas dépasser 1000 caractères", valid: false });
@@ -341,11 +341,11 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                                     type="datetime-local"
                                     value={followDate ? new Date(followDate).toISOString().slice(0, 16) : serie.follow_date ? new Date(serie.follow_date).toISOString().slice(0, 16) : ''}
                                     onChange={handleDateChange} onBlur={() => { setIsChangeDate(false) }} onKeyDown={handleKeyDown}
-                                    style={{fontSize: "1.6rem", fontWeight: "bold", width: "auto", textAlign: "center", border: "1px solid #ddd", borderRadius: "8px", padding: "6px", outline: "none" }}
+                                    style={{ fontSize: "1.6rem", fontWeight: "bold", width: "auto", textAlign: "center", border: "1px solid #ddd", borderRadius: "8px", padding: "6px", outline: "none" }}
                                 />
                             ) : (
                                 <span style={{ fontWeight: "bold" }} onClick={() => setIsChangeDate(true)}>
-                                    {serie.follow_date ? `Suivi depuis le ${new Date(serie.follow_date).toLocaleString()}` : "Suivre cette série"}
+                                    {serie.follow_date ? `Suivi depuis le ${new Date(serie.follow_date).toLocaleDateString()}` : "Suivre cette série"}
                                 </span>
                             )}
                         </div>

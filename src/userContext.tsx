@@ -5,7 +5,6 @@ import { User } from "./bdd/model/user";
 import { ApiResponse } from "./types/api/api.response.type";
 import { SESSION_ID_COOKIE } from "./constants/session.const";
 import { getCookie } from "./lib/cookie";
-import { getUserByToken } from "./bdd/requests/user.request";
 import { getUserInfo } from "./bdd/miidleware/user.middleware";
 import AlertBox from "./components/alert.box";
 import { usePathname } from "next/navigation";
@@ -77,7 +76,7 @@ export function UserContextProvider({ children }: { children: ReactNode }) {
             if (userInfo) {
                 setUser(userInfo);
                 setUserAdmin(userInfo.admin);
-            }else{
+            } else {
                 setUser(undefined);
             }
         });
@@ -96,29 +95,29 @@ export function UserContextProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         let docTitle = document.title;
         const handleBlur = () => {
-          document.title = "reviens bebou";
+            document.title = "reviens bebou";
         };
         const handleFocus = () => {
-          document.title = docTitle;
+            document.title = docTitle;
         };
         window.addEventListener("blur", handleBlur);
         window.addEventListener("focus", handleFocus);
         return () => {
-          window.removeEventListener("blur", handleBlur);
-          window.removeEventListener("focus", handleFocus);
+            window.removeEventListener("blur", handleBlur);
+            window.removeEventListener("focus", handleFocus);
         };
-      }, []);
-      
-      // Utilisation de usePathname pour déterminer le chemin actuel
-      const pathname = usePathname();
-      const shouldShowFooter = pathname ? !pathname.startsWith('/admin') : true;
-      const hide = pathname ? pathname.startsWith('/404') : false;
+    }, []);
+
+    // Utilisation de usePathname pour déterminer le chemin actuel
+    const pathname = usePathname();
+    const shouldShowFooter = pathname ? !pathname.startsWith('/admin') : true;
+    const hide = pathname ? pathname.startsWith('/404') : false;
     return (
         <>
             <UserContext.Provider value={{ userCookie, setUserCookie, user, setUser, userAdmin, setUserAdmin, setAlert, setSelectedMenu, updateUserInfo }}>
                 {alert && <AlertBox message={alert?.message} color={alertBoxColor} onDelay={() => setAlert(undefined)} />}
-                    
-                {!hide && <Header selected_menu={selectedMenu}/>}
+
+                {!hide && <Header selected_menu={selectedMenu} />}
                 {children}
 
             </UserContext.Provider>

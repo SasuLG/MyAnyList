@@ -14,7 +14,7 @@ import { SEARCH_ROUTE } from "@/constants/app.route.const";
 import { useRouter } from "next/navigation";
 import { LOGIN_ROUTE } from '@/constants/app.route.const';
 
-export default function MyList(){
+export default function MyList() {
   const [windowWidth, setWindowWidth] = useState<number | undefined>(undefined);
 
   /**
@@ -50,7 +50,7 @@ export default function MyList(){
   /**
    * Hook pour stocker la taille de l'affichage
    */
-  const [displaySize, setDisplaySize] = useState<'large'|'normal' | 'small' | 'very-small' | 'extra-small'>('normal');
+  const [displaySize, setDisplaySize] = useState<'large' | 'normal' | 'small' | 'very-small' | 'extra-small'>('normal');
 
   /**
    * Hook pour stocker l'état de la récupération des données
@@ -63,7 +63,7 @@ export default function MyList(){
   const [filtersReady, setFiltersReady] = useState<boolean>(false);
 
   //FILTRES
-  
+
   /**
    * Hook pour stocker l'état de l'ordre des séries
    */
@@ -87,7 +87,7 @@ export default function MyList(){
   /**
    * Hook pour stocker le tri sélectionné
    */
-  const [selectedSortBy, setSelectedSortBy] = useState<string>('Added');
+  const [selectedSortBy, setSelectedSortBy] = useState<string>('Waited');
 
   /**
    * Hook pour stocker la recherche
@@ -97,12 +97,12 @@ export default function MyList(){
   /**
    * Hook pour stocker les statuts
    */
-  const [statuses, setStatuses] = useState<string[]>(["En cours", "Terminé", "Annulé"]); 
+  const [statuses, setStatuses] = useState<string[]>(["En cours", "Terminé", "Annulé"]);
 
   const statusMapping: Record<string, string> = {
-    "Returning Series" : "En cours",
-     "Ended" : "Terminé",
-    "Canceled" : "Annulé"
+    "Returning Series": "En cours",
+    "Ended": "Terminé",
+    "Canceled": "Annulé"
   };
 
   /**
@@ -177,21 +177,26 @@ export default function MyList(){
   const [Rotating, setRotating] = useState<boolean | undefined>(undefined);
 
   /**
+   * Hook qui permet de savoir si des filtres d'odre sont actifs
+   */
+  const [isOrdering, setIsOrdering] = useState<boolean>(false);
+
+  /**
    * Récupérer les séries
    */
   const fetchData = async () => {
-    if(user === undefined){
-        return;
+    if (user === undefined) {
+      return;
     }
     const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all?limit=${encodeURIComponent(200000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(true)}`);
     const data = await response.json();
     setFetchDataFinished(true);
 
-    if(response.ok){
-        setSeries(data);
-        setFilteredSeries(data);
-    }else{
-        setAlert({ message: 'Erreur lors de la récupération des séries', valid: false });
+    if (response.ok) {
+      setSeries(data);
+      setFilteredSeries(data);
+    } else {
+      setAlert({ message: 'Erreur lors de la récupération des séries', valid: false });
     }
     const responseFollowed = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all/id`);
     const dataFollowed = await responseFollowed.json();
@@ -199,7 +204,7 @@ export default function MyList(){
     if (data.length > 0) {
       const minYear = Math.min(...data.map((serie: MinimalSerie) => new Date(serie.first_air_date).getFullYear()));
       const maxEpisodes = Math.max(...data.map((serie: MinimalSerie) => serie.number_of_episodes));
-      
+
       setYearRange((prevRange) => ({
         ...prevRange,
         minimalRange: minYear,
@@ -219,10 +224,10 @@ export default function MyList(){
         },
         body: JSON.stringify({ texts: data.map((serie: MinimalSerie) => serie.original_name) })
       });
-    }    
+    }
     setFiltersReady(true);
   };
-  
+
   /**
    * Fonction pour récupérer tous les genres
    */
@@ -231,7 +236,7 @@ export default function MyList(){
     const data = await response.json();
     setGenres(data);
   };
-  
+
   /**
    * Fonction pour récupérer tous les pays d'origine
    */
@@ -240,7 +245,7 @@ export default function MyList(){
     const data = await response.json();
     setOriginCountries(data);
   };
-  
+
   /**
    * Fonction pour récupérer toutes les compagnies de production
    */
@@ -249,7 +254,7 @@ export default function MyList(){
     const data = await response.json();
     setProductionCompanies(data);
   };
-  
+
   /**
    * Fonction pour récupérer tous les pays de production
    */
@@ -272,7 +277,7 @@ export default function MyList(){
    * Basculer entre les styles de liste
    */
   const toggleLayout = () => {
-      setStyleType((prevStyleType) => (prevStyleType === 'grid' ? 'list' : 'grid'));
+    setStyleType((prevStyleType) => (prevStyleType === 'grid' ? 'list' : 'grid'));
   };
 
   /**
@@ -280,9 +285,9 @@ export default function MyList(){
    */
   const increaseSize = () => {
     if (displaySize === 'large') return;
-    const sizes = ['large','normal', 'small', 'very-small', 'extra-small'];
+    const sizes = ['large', 'normal', 'small', 'very-small', 'extra-small'];
     const currentIndex = sizes.indexOf(displaySize);
-    setDisplaySize(sizes[currentIndex - 1] as 'large'| 'normal' | 'small' | 'very-small' | 'extra-small');
+    setDisplaySize(sizes[currentIndex - 1] as 'large' | 'normal' | 'small' | 'very-small' | 'extra-small');
   };
 
   /**
@@ -290,9 +295,9 @@ export default function MyList(){
    */
   const decreaseSize = () => {
     if (displaySize === 'extra-small') return;
-    const sizes = ['large','normal', 'small', 'very-small', 'extra-small'];
+    const sizes = ['large', 'normal', 'small', 'very-small', 'extra-small'];
     const currentIndex = sizes.indexOf(displaySize);
-    setDisplaySize(sizes[currentIndex + 1] as 'large'|'normal' | 'small' | 'very-small' | 'extra-small');
+    setDisplaySize(sizes[currentIndex + 1] as 'large' | 'normal' | 'small' | 'very-small' | 'extra-small');
   };
 
   /**
@@ -301,8 +306,8 @@ export default function MyList(){
    * @returns 
    */
   const onClickHeart = async (serie: MinimalSerie) => {
-    if(user === undefined){
-        return;
+    if (user === undefined) {
+      return;
     }
     let route = `/api/${encodeURIComponent(user.web_token)}/series/follow`;
 
@@ -312,39 +317,39 @@ export default function MyList(){
       if (!confirmUnfollow) return;
     }
     const response = await fetch(route, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ serieId: serie.id })
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ serieId: serie.id })
     });
-    
+
     const data = await response.json();
     setSeriesIdFollowed(data ? (seriesIdFollowed.includes(Number(serie.id)) ? seriesIdFollowed.filter((id) => id !== Number(serie.id)) : [...seriesIdFollowed, Number(serie.id)]) : seriesIdFollowed);
-    if(response.ok){
-        if(data){
-          if(!route.includes('unfollow')){
-            const route = `/api/${encodeURIComponent(user.web_token)}/series/${series.some(s => s.id === serie.id) ? 'un' : ''}waited`;
-            const response = await fetch(route, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ serieId: serie.id }),
-            });
-            setSeries(series.filter(s => s.id !== serie.id));
-          }
-          
-          await fetch('/api/user/activity', {
+    if (response.ok) {
+      if (data) {
+        if (!route.includes('unfollow')) {
+          const route = `/api/${encodeURIComponent(user.web_token)}/series/${series.some(s => s.id === serie.id) ? 'un' : ''}waited`;
+          const response = await fetch(route, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ login: user.login }),
+            body: JSON.stringify({ serieId: serie.id }),
           });
+          setSeries(series.filter(s => s.id !== serie.id));
         }
-    }else{
-        setAlert({ message: 'Erreur lors de la récupération des séries suivies', valid: false });
+
+        await fetch('/api/user/activity', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ login: user.login }),
+        });
+      }
+    } else {
+      setAlert({ message: 'Erreur lors de la récupération des séries suivies', valid: false });
     }
   }
 
@@ -368,7 +373,7 @@ export default function MyList(){
     });
     const data = await response.json();
     setSeries(data ? (series.some(s => s.id === serie.id) ? series.filter((s) => s.id !== serie.id) : [...series, serie]) : series);
-    
+
     await fetch('/api/user/activity', {
       method: 'POST',
       headers: {
@@ -392,7 +397,7 @@ export default function MyList(){
   const handleYearRangeChange = (range: Range) => {
     setYearRange(range);
   };
-  
+
   /**
    * Fonction pour gérer le changement de la plage de votes
    * @param {Range} range - Plage de votes
@@ -400,7 +405,7 @@ export default function MyList(){
   const handleVoteRangeChange = (range: Range) => {
     setVoteRange(range);
   };
-  
+
   /**
    * Fonction pour gérer le changement de la plage d'épisodes
    * @param {Range} range - Plage d'épisodes
@@ -417,12 +422,12 @@ export default function MyList(){
     setOrderAsc(Boolean(order));
   };
 
-   /**
-   * Fonction pour retirer un filtre
-   * @param {string} type - Type de filtre
-   * @param {string} value - Valeur du filtre
-   */
-   const removeFilter = (type: string, value: string) => {
+  /**
+  * Fonction pour retirer un filtre
+  * @param {string} type - Type de filtre
+  * @param {string} value - Valeur du filtre
+  */
+  const removeFilter = (type: string, value: string) => {
     switch (type) {
       case 'genre':
         setSelectedGenres(selectedGenres.filter((genre) => genre !== value));
@@ -442,55 +447,61 @@ export default function MyList(){
       case 'productionCountry':
         setSelectedProductionCountries(selectedProductionCountries.filter((country) => country !== value));
         break;
-        case 'tag':
-          setSelectedTags(selectedTags.filter((tag) => tag !== value));
+      case 'tag':
+        setSelectedTags(selectedTags.filter((tag) => tag !== value));
         break;
       default:
         break;
     }
     applyFiltersAndSort();
   };
-  
+
   const clearYearRange = () => {
     setYearRange({ min: 1900, max: new Date().getFullYear(), minimalRange: 1900, maximalRange: new Date().getFullYear() });
     applyFiltersAndSort();
   };
-  
+
   const clearVoteRange = () => {
     setVoteRange({ min: 0, max: 10, minimalRange: 0, maximalRange: 10 });
     applyFiltersAndSort();
   };
-  
+
   const clearEpisodeRange = () => {
     setEpisodeRange({ min: 1, max: 2000, minimalRange: 1, maximalRange: 2000 });
     applyFiltersAndSort();
   };
 
-   /**
-   * Fonction pour appliquer les filtres et le tri
-   */
-   const applyFiltersAndSort = () => {
+  /**
+  * Fonction pour appliquer les filtres et le tri
+  */
+  const applyFiltersAndSort = () => {
     if (!filtersReady) return;
-  
+
     let filtered = series.filter(serie => {
       const matchesFormat = selectedFormats.length === 0 || selectedFormats.includes(serie.media_type) &&
         (selectedFormats.includes('tv') && serie.media_type === 'tv') ||
         (selectedFormats.includes('Movie') && serie.media_type === 'movie') ||
         (selectedFormats.includes('Anime') && serie.media_type === 'anime') ||
         (selectedFormats.includes('Film d\'animation') && serie.media_type === 'film d\'animation');
-  
+
       const matchesGenre = selectedGenres.length === 0 || selectedGenres.every(genre => serie.genres.some(g => g.name === genre));
-      const searchWords = searchQuery.toLowerCase().replace(/\s+/g, ''); 
+      const searchWords = searchQuery.toLowerCase().replace(/\s+/g, '');
 
       const matchesSearchQuery = [serie.name, serie.original_name, serie.romaji_name]
-        .filter(name => name) 
+        .filter(name => name)
         .some(name => {
-          const normalizedSerieName = name.toLowerCase().replace(/\s+/g, ''); 
-          return normalizedSerieName.includes(searchWords); 
+          const normalizedSerieName = name.toLowerCase().replace(/\s+/g, '');
+          return normalizedSerieName.includes(searchWords);
         });
-      
+
       const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(statusMapping[serie.status] || serie.status);
-      const matchesOriginCountry = selectedOriginCountries.length === 0 || selectedOriginCountries.every(country => serie.origin_country.includes(country));
+      //const matchesOriginCountry = selectedOriginCountries.length === 0 || selectedOriginCountries.every(country => serie.origin_country.includes(country));
+
+      const matchesOriginCountry =
+        selectedOriginCountries.length === 0 ||
+        selectedOriginCountries.every(country =>
+          serie.origin_country.some(origin => (origin as any).iso_3166_1 === country)
+        );
       const matchesProductionCompany = selectedProductionCompanies.every(company => serie.production_companies && serie.production_companies.some(prod => prod.name === company));
       const matchesProductionCountry = selectedProductionCountries.every(country => serie.production_countries.some(c => c.name === country));
       const matchesTags = selectedTags.every(tag => serie.tags.some(t => t.name === tag));
@@ -498,10 +509,10 @@ export default function MyList(){
       const matchesYearRange = serieYear >= yearRange.min && serieYear <= yearRange.max;
       const matchesVoteRange = (serie.note || 0) >= voteRange.min && (serie.note || 0) <= voteRange.max;
       const matchesEpisodeRange = serie.number_of_episodes >= episodeRange.min && serie.number_of_episodes <= episodeRange.max;
-      
+
       return matchesFormat && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange && matchesTags;
     });
-  
+
     // Apply sorting
     switch (selectedSortBy) {
       case 'Popularity':
@@ -519,7 +530,7 @@ export default function MyList(){
       case 'Number episodes':
         filtered.sort((a, b) => b.number_of_episodes - a.number_of_episodes);
         break;
-      case 'Added':
+      case 'Waited':
         filtered.sort((a, b) => {
           const dateA = a.follow_date ? new Date(a.follow_date).getTime() : 0;
           const dateB = b.follow_date ? new Date(b.follow_date).getTime() : 0;
@@ -535,11 +546,11 @@ export default function MyList(){
       default:
         break;
     }
-  
+
     if (!orderAsc) filtered.reverse();
     setFilteredSeries(filtered);
   };
-  
+
 
   /**
    * Fonction pour réinitialiser tous les filtres
@@ -547,7 +558,7 @@ export default function MyList(){
   const clearAllFilters = () => {
     setSelectedGenres([]);
     setSelectedFormats([]);
-    setSelectedSortBy('Added');
+    setSelectedSortBy('Waited');
     setSearchQuery('');
     setSelectedStatuses([]);
     setSelectedOriginCountries([]);
@@ -584,52 +595,60 @@ export default function MyList(){
       applyFiltersAndSort();
     }
   }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, series, orderAsc, selectedTags]);
-  
+
   useEffect(() => {
-    if(windowWidth) windowWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
+    if (windowWidth) windowWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
   }, [windowWidth]);
+
+  useEffect(() => {
+    if (selectedSortBy === "Waited") {
+      setIsOrdering(false);
+      return;
+    }
+    setIsOrdering(true);
+  }, [selectedSortBy]);
 
   useEffect(() => setSelectedMenu("waitList"), [setSelectedMenu]);
 
-  const hasActiveFilters = 
-  selectedGenres.length > 0 ||
-  selectedFormats.length > 0 ||
-  selectedStatuses.length > 0 ||
-  selectedOriginCountries.length > 0 ||
-  selectedProductionCompanies.length > 0 ||
-  selectedProductionCountries.length > 0 ||
-  selectedTags.length > 0 ||
-  (yearRange.min !== yearRange.minimalRange || yearRange.max !== yearRange.maximalRange) ||
-  (voteRange.min !== voteRange.minimalRange || voteRange.max !== voteRange.maximalRange) ||
-  (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange);
+  const hasActiveFilters =
+    selectedGenres.length > 0 ||
+    selectedFormats.length > 0 ||
+    selectedStatuses.length > 0 ||
+    selectedOriginCountries.length > 0 ||
+    selectedProductionCompanies.length > 0 ||
+    selectedProductionCountries.length > 0 ||
+    selectedTags.length > 0 ||
+    (yearRange.min !== yearRange.minimalRange || yearRange.max !== yearRange.maximalRange) ||
+    (voteRange.min !== voteRange.minimalRange || voteRange.max !== voteRange.maximalRange) ||
+    (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange);
 
   return (
-    <div style={{ height: "100%", padding: windowWidth && windowWidth >500?"2rem 5rem":"2rem 2rem", backgroundColor: "var(--background-color)" }}>
+    <div style={{ height: "100%", padding: windowWidth && windowWidth > 500 ? "2rem 5rem" : "2rem 2rem", backgroundColor: "var(--background-color)" }}>
 
       <button
-        onClick={(e) => { toggleButtonsVisibility(); setRotating(!Rotating); }} 
+        onClick={(e) => { toggleButtonsVisibility(); setRotating(!Rotating); }}
         style={{ position: 'absolute', top: '4rem', right: '1rem', border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.6rem 1.2rem", cursor: "pointer", boxShadow: "0px 1px 3px rgba(0,0,0,0.1)", zIndex: 1000, fontSize: '0.9rem', fontWeight: 'normal', color: "var(--text-color)", transition: "background-color 0.3s, color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--button-hover-background-color)'; e.currentTarget.style.color = 'var(--button-hover-text-color)'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'var(--button-background-color)'; e.currentTarget.style.color = 'var(--text-color)'; }} >
-          <Settings width={20} height={20} rotating={Rotating}/>
+        <Settings width={20} height={20} rotating={Rotating} />
       </button>
 
       {buttonsVisible && (
         <div style={{ position: 'absolute', top: '6.5rem', right: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 1000 }}>
           <button
             style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            onClick={toggleLayout} onMouseOver={(e) => e.currentTarget.style.opacity = "1"}   onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
-            <ToggleLayout width={25} height={25} checked={styleType==="grid"}/>
+            onClick={toggleLayout} onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
+            <ToggleLayout width={25} height={25} checked={styleType === "grid"} />
           </button>
 
           <button
             style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            onClick={increaseSize}  onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
+            onClick={increaseSize} onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
             <IncreaseSize width={25} height={25} />
           </button>
 
           <button
             style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            onClick={decreaseSize} onMouseOver={(e) => e.currentTarget.style.opacity = "1"}onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"} >
+            onClick={decreaseSize} onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"} >
             <DecreaseSize width={25} height={25} />
           </button>
         </div>
@@ -642,7 +661,7 @@ export default function MyList(){
         formats={['tv', 'Movie', 'Anime', "Film d'animation"]}
         selectedFormats={selectedFormats}
         onSelectFormats={setSelectedFormats}
-        sortByOptions={['Added', 'Popularity', 'Start date', 'End date', 'Name', 'Note', 'Number episodes', 'Total time']}
+        sortByOptions={['Waited', 'Popularity', 'Start date', 'End date', 'Name', 'Note', 'Number episodes', 'Total time']}
         selectedSortBy={selectedSortBy}
         onSelectSortBy={setSelectedSortBy}
         searchQuery={searchQuery}
@@ -724,18 +743,18 @@ export default function MyList(){
         </span>
       </div>
 
-      {fetchDataFinished === false || filtersReady === false? (
+      {fetchDataFinished === false || filtersReady === false ? (
         <div style={{ textAlign: "center", padding: "2rem" }}>
           <Loader />
         </div>
       ) : (
         series.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "2rem" }}>
-                <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>No series found</span><br></br>
-                <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>To add a serie on the wait list click on the hourglass in the page <Link href={SEARCH_ROUTE}  style={{color:"var(--secondary-background-color)"}}>search series</Link></span>
-            </div>
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>No series found</span><br></br>
+            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>To add a serie on the wait list click on the hourglass in the page <Link href={SEARCH_ROUTE} style={{ color: "var(--secondary-background-color)" }}>search series</Link></span>
+          </div>
         ) : (
-            <SeriesList series={filteredSeries} styleType={styleType} followedIds={seriesIdFollowed} waitedIds={series.map(serie=>Number(serie.id))} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} size={displaySize}/>
+          <SeriesList series={filteredSeries} styleType={styleType} followedIds={seriesIdFollowed} waitedIds={series.map(serie => Number(serie.id))} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} size={displaySize} isOrdering={isOrdering} />
         )
       )}
     </div>

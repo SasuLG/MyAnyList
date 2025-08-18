@@ -19,7 +19,7 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
-    const { user, updateUserInfo, setAlert, setUserCookie } = useUserContext();
+    const { user, setAlert, setUserCookie } = useUserContext();
 
     const toggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
@@ -86,12 +86,12 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                     {user ? (
                         <>
                             <div className="profile-menu" onClick={toggleDropdown} ref={dropdownRef}>
-                                <ProfilCircle width={30} height={30} isHeader={true} className={selected_menu === "userProfil" ? "selected" : ""}/>
+                                <ProfilCircle width={30} height={30} isHeader={true} className={selected_menu === "userProfil" ? "selected" : ""} />
                                 {isDropdownOpen && (
                                     <div className="dropdown-menu">
                                         <div>
                                             <ProfilCircle width={30} height={30} isHeader={false} />
-                                            <Link href={PROFILE_BASE_ROUTE + "/"+user.login} onClick={() => setDropdownOpen(false)}>Profil</Link>
+                                            <Link href={PROFILE_BASE_ROUTE + "/" + user.login} onClick={() => setDropdownOpen(false)}>Profil</Link>
                                         </div>
                                         <div>
                                             <Logout width={30} height={30} />

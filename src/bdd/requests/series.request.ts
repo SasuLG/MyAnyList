@@ -1184,3 +1184,18 @@ export async function getPopularSeries(limit: number, page: number): Promise<Min
         throw error;
     }
 }
+
+export async function getIdTmdbIdAndMedia(){
+    try {
+        const result = await Query(`SELECT id, tmdb_id, media FROM "Serie"`);
+        return result.rows;
+    } catch (error) {
+        console.error('Erreur lors de la récupération des IDs TMDB et des médias:', error);
+        throw error;
+    }
+}
+
+export async function getSerieById(id:string) {
+    const result = await Query(`SELECT * FROM "Serie" WHERE "tmdb_id" = $1`, [id]);
+    return result.rows[0];
+}
