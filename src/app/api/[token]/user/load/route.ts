@@ -16,8 +16,8 @@ import { ServerError } from "@/lib/api/response/server.response";
  */
 export async function GET(req: Request, context: any): Promise<Response> {
     try {
-        const { params } = context;
-        const webToken = decodeURIComponent(params.token);
+        const { token } = await context.params;
+        const webToken = decodeURIComponent(token);
 
         const user = await getUserByToken(webToken);
         if (user) {

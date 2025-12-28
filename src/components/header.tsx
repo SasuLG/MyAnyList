@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { AdminKey } from "./svg/key.svg";
 import { ProfilCircle } from "./svg/profil.svg";
 import { Logout } from "./svg/logout.svg";
+import { SwitchManga, SwitchSerie } from "./svg/switchMode.svg";
 
 export type MenuList = "search" | "login" | "register" | "myList" | "userProfil" | "home" | "waitList" | "";
 
@@ -19,7 +20,7 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
-    const { user, setAlert, setUserCookie } = useUserContext();
+    const { user, setAlert, setUserCookie, mangaMode, setMangaMode } = useUserContext();
 
     const toggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
@@ -65,6 +66,10 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
         };
     }, []);
 
+    useEffect(() => {
+        if (mangaMode) document.documentElement.classList.toggle('manga-mode', mangaMode);
+    }, []);
+
     return (
         <div className="header-container">
             <div className="header-content">
@@ -89,13 +94,23 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                                 <ProfilCircle width={30} height={30} isHeader={true} className={selected_menu === "userProfil" ? "selected" : ""} />
                                 {isDropdownOpen && (
                                     <div className="dropdown-menu">
-                                        <div>
-                                            <ProfilCircle width={30} height={30} isHeader={false} />
-                                            <Link href={PROFILE_BASE_ROUTE + "/" + user.login} onClick={() => setDropdownOpen(false)}>Profil</Link>
+                                        <div className="dropdown-item">
+                                            <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                                {mangaMode ? <SwitchSerie width={30} height={30} /> : <SwitchManga width={30} height={30} />}
+                                                <p onClick={() => { setMangaMode(prev => { const next = !prev; document.cookie = `mangaMode=${next ? "true" : "false"}; path=/; max-age=31536000`; document.documentElement.classList.toggle("manga-mode", next); return next; }); }}>{mangaMode ? "Série" : "Manga"} List</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <Logout width={30} height={30} />
-                                            <p onClick={() => { logout(); setDropdownOpen(false); }} style={{ cursor: "pointer" }}>Déconnexion</p>
+                                        <div className="dropdown-item">
+                                            <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                                <ProfilCircle width={30} height={30} isHeader={false} />
+                                                <Link href={PROFILE_BASE_ROUTE + "/" + user.login} onClick={() => setDropdownOpen(false)}>Profil</Link>
+                                            </div>
+                                        </div>
+                                        <div className="dropdown-item">
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                <Logout width={30} height={30} />
+                                                <p onClick={() => { logout(); setDropdownOpen(false); }} style={{ cursor: "pointer" }}>Déconnexion</p>
+                                            </div>
                                         </div>
                                         {user.admin && (
                                             <>
@@ -122,13 +137,17 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                         </>
                     ) : (
                         <>
+                            <div style={{ display: 'flex', alignItems: 'center', marginRight: '1rem', cursor: 'pointer' }}>
+                                {mangaMode ? <SwitchSerie width={30} height={30} /> : <SwitchManga width={30} height={30} />}
+                                <p style={{ color: "var(--header-footer-text)" }} onClick={() => { setMangaMode(prev => { const next = !prev; document.cookie = `mangaMode=${next ? "true" : "false"}; path=/; max-age=31536000`; document.documentElement.classList.toggle("manga-mode", next); return next; }); }}>{mangaMode ? "Série" : "Manga"} List</p>
+                            </div>
                             <Link href={LOGIN_ROUTE} className={selected_menu === "login" ? "selected" : ""}>Login</Link>
                             <Link href={REGISTER_ROUTE} className={selected_menu === "register" ? "selected" : ""}>Sign up</Link>
                         </>
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 });
 Header.displayName = 'Header';

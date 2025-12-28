@@ -1,9 +1,9 @@
 import { getTmdbIdsSeries, importSerie } from "@/bdd/requests/admin-series.request";
 import { ServerError } from "@/lib/api/response/server.response";
-export const maxDuration = 60; // This function can run for a maximum of 5 seconds
+export const maxDuration = 60; // This function can run for a maximum of 10 seconds
 
 /**
- * Route : /api/amdin/series/import
+ * Route : /api/admin/series/import
  * METHOD : POST
  * 
  * Route de l'api pour insérer une nouvelle série dans la base de données.
@@ -30,11 +30,11 @@ export async function POST(req: Request, context: any): Promise<Response> {
 
 
 /**
- * Route : /api/amdin/series/import
+ * Route : /api/admin/series/import
  * METHOD : GET
- * 
- * Route de l'api pour récupérer le vote d'une personne d'un sprint.
- * 
+ *
+ * Route de l'api pour récupérer l'id des séries importées.
+ *
  * @returns {Response} La réponse de la requête de récupération.
  * @params {any} [token, name] - Le paramètre dynamique de la route de l'api.
  * @returns {Response} La réponse de la requête.

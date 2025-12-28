@@ -183,6 +183,21 @@ export default function MyList() {
    */
   const [isOrdering, setIsOrdering] = useState<boolean>(false);
 
+
+  const [selectedNotFormats, setSelectedNotFormats] = useState<string[]>([]);
+
+  const [selectedNotGenres, setSelectedNotGenres] = useState<string[]>([]);
+
+  const [selectedNotStatuses, setSelectedNotStatuses] = useState<string[]>([]);
+
+  const [selectedNotOriginCountries, setSelectedNotOriginCountries] = useState<string[]>([]);
+
+  const [selectedNotProductionCompanies, setSelectedNotProductionCompanies] = useState<string[]>([]);
+
+  const [selectedNotProductionCountries, setSelectedNotProductionCountries] = useState<string[]>([]);
+
+  const [selectedNotTags, setSelectedNotTags] = useState<string[]>([]);
+
   /**
    * Récupérer les séries
    */
@@ -428,24 +443,31 @@ export default function MyList() {
     switch (type) {
       case 'genre':
         setSelectedGenres(selectedGenres.filter((genre) => genre !== value));
+        setSelectedNotGenres(selectedNotGenres.filter((genre) => genre !== value));
         break;
       case 'format':
         setSelectedFormats(selectedFormats.filter((format) => format !== value));
+        setSelectedNotFormats(selectedNotFormats.filter((format) => format !== value));
         break;
       case 'status':
         setSelectedStatuses(selectedStatuses.filter((status) => status !== value));
+        setSelectedNotStatuses(selectedNotStatuses.filter((status) => status !== value));
         break;
       case 'originCountry':
         setSelectedOriginCountries(selectedOriginCountries.filter((country) => country !== value));
+        setSelectedNotOriginCountries(selectedNotOriginCountries.filter((country) => country !== value));
         break;
       case 'productionCompany':
         setSelectedProductionCompanies(selectedProductionCompanies.filter((company) => company !== value));
+        setSelectedNotProductionCompanies(selectedNotProductionCompanies.filter((company) => company !== value));
         break;
       case 'productionCountry':
         setSelectedProductionCountries(selectedProductionCountries.filter((country) => country !== value));
+        setSelectedNotProductionCountries(selectedNotProductionCountries.filter((country) => country !== value));
         break;
       case 'tag':
         setSelectedTags(selectedTags.filter((tag) => tag !== value));
+        setSelectedNotTags(selectedNotTags.filter((tag) => tag !== value));
         break;
       default:
         break;
@@ -508,7 +530,21 @@ export default function MyList() {
       const matchesVoteRange = (serie.note || 0) >= voteRange.min && (serie.note || 0) <= voteRange.max;
       const matchesEpisodeRange = serie.number_of_episodes >= episodeRange.min && serie.number_of_episodes <= episodeRange.max;
 
-      return matchesFormat && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange && matchesTags;
+      const matchesNotFormat = selectedNotFormats.every(format => !selectedFormats.includes(serie.media_type) &&
+        (selectedNotFormats.includes('tv') && serie.media_type === 'tv') ||
+        (selectedNotFormats.includes('Movie') && serie.media_type === 'movie') ||
+        (selectedNotFormats.includes('Anime') && serie.media_type === 'anime') ||
+        (selectedNotFormats.includes('Film d\'animation') && serie.media_type === 'film d\'animation'));
+
+      const matchesNotGenre = selectedNotGenres.every(genre => !serie.genres.some(g => g.name === genre));
+      const matchesNotStatus = selectedNotStatuses.every(status => !((statusMapping[serie.status] || serie.status) === status));
+      const matchesNotOriginCountry = selectedNotOriginCountries.every(country => !serie.origin_country.some(origin => (origin as any).iso_3166_1 === country));
+      const matchesNotTags = selectedNotTags.every(tag => !serie.tags.some(t => t.name === tag));
+      const matchesNotProductionCompany = selectedNotProductionCompanies.every(company => !(serie.production_companies && serie.production_companies.some(prod => prod.name === company)));
+      const matchesNotProductionCountry = selectedNotProductionCountries.every(country => !serie.production_countries.some(c => c.name === country));
+
+
+      return matchesNotGenre && matchesNotFormat && matchesNotStatus && matchesNotOriginCountry && matchesNotTags && matchesNotProductionCompany && matchesNotProductionCountry && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange && matchesTags && matchesFormat;
     });
 
     // Apply sorting
@@ -566,6 +602,14 @@ export default function MyList() {
     setEpisodeRange({ min: 1, max: 2000, minimalRange: 1, maximalRange: 2000 });
     setSelectedTags([]);
     setOrderAsc(true);
+
+    setSelectedNotFormats([]);
+    setSelectedNotGenres([]);
+    setSelectedNotStatuses([]);
+    setSelectedNotOriginCountries([]);
+    setSelectedNotProductionCompanies([]);
+    setSelectedNotProductionCountries([]);
+    setSelectedNotTags([]);
   };
 
   const handleWindowResize = () => {
@@ -617,40 +661,48 @@ export default function MyList() {
     selectedTags.length > 0 ||
     (yearRange.min !== yearRange.minimalRange || yearRange.max !== yearRange.maximalRange) ||
     (voteRange.min !== voteRange.minimalRange || voteRange.max !== voteRange.maximalRange) ||
-    (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange);
+    (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange) ||
+
+    selectedNotFormats.length > 0 ||
+    selectedNotGenres.length > 0 ||
+    selectedNotStatuses.length > 0 ||
+    selectedNotOriginCountries.length > 0 ||
+    selectedNotProductionCompanies.length > 0 ||
+    selectedNotProductionCountries.length > 0 ||
+    selectedNotTags.length > 0;
 
   return (
     <div style={{ height: "100%", padding: windowWidth && windowWidth > 500 ? "2rem 5rem" : "2rem 2rem", backgroundColor: "var(--background-color)" }}>
 
       <button
         onClick={(e) => { toggleButtonsVisibility(); setRotating(!Rotating); }}
-        style={{ position: 'absolute', top: '4rem', right: '1rem', border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.6rem 1.2rem", cursor: "pointer", boxShadow: "0px 1px 3px rgba(0,0,0,0.1)", zIndex: 1000, fontSize: '0.9rem', fontWeight: 'normal', color: "var(--text-color)", transition: "background-color 0.3s, color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--button-hover-background-color)'; e.currentTarget.style.color = 'var(--button-hover-text-color)'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'var(--button-background-color)'; e.currentTarget.style.color = 'var(--text-color)'; }} >
+        style={{ position: 'absolute', top: '4rem', right: '1rem', border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--absolute-color)", padding: "0.6rem 1.2rem", cursor: "pointer", boxShadow: "var(--shadow-light)", zIndex: 1000, fontSize: '0.9rem', fontWeight: 'normal', color: "var(--text-color)", transition: "background-color 0.3s, color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--button-hover-background-color)'; e.currentTarget.style.color = 'var(--button-hover-text-color)'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'var(--absolute-color)'; e.currentTarget.style.color = 'var(--text-color)'; }} >
         <Settings width={20} height={20} rotating={Rotating} />
       </button>
 
-      {buttonsVisible && (
-        <div style={{ position: 'absolute', top: '6.5rem', right: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 1000 }}>
+      {1 && (
+        <div className={`buttons-container ${buttonsVisible ? "show" : "hide"}`} style={{ position: 'absolute', top: '7rem', right: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 1000 }}>
           <button
-            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--above)", padding: "0.5rem", cursor: "pointer", boxShadow: "var(--shadow-light)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={toggleLayout} onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
             <ToggleLayout width={25} height={25} checked={styleType === "grid"} />
           </button>
 
           <button
-            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--above)", padding: "0.5rem", cursor: "pointer", boxShadow: "var(--shadow-light)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={increaseSize} onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
             <IncreaseSize width={25} height={25} />
           </button>
 
           <button
-            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--above)", padding: "0.5rem", cursor: "pointer", boxShadow: "var(--shadow-light)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={decreaseSize} onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"} >
             <DecreaseSize width={25} height={25} />
           </button>
 
           <button
-            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--above)", cursor: "pointer", boxShadow: "var(--shadow-light)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"} >
             {filteredSeries.length > 0 && (
               <TierListGenerator tiers={[
@@ -769,6 +821,21 @@ export default function MyList() {
         tags={tags.map(tag => tag.name)}
         selectedTags={selectedTags}
         onSelectTags={setSelectedTags}
+
+        selectedNotTags={selectedNotTags}
+        onSelectNotTags={setSelectedNotTags}
+        selectedNotFormats={selectedNotFormats}
+        onSelectNotFormats={setSelectedNotFormats}
+        selectedNotGenres={selectedNotGenres}
+        onSelectNotGenres={setSelectedNotGenres}
+        selectedNotStatuses={selectedNotStatuses}
+        onSelectNotStatuses={setSelectedNotStatuses}
+        selectedNotOriginCountries={selectedNotOriginCountries}
+        onSelectNotOriginCountries={setSelectedNotOriginCountries}
+        selectedNotProductionCompanies={selectedNotProductionCompanies}
+        onSelectNotProductionCompanies={setSelectedNotProductionCompanies}
+        selectedNotProductionCountries={selectedNotProductionCountries}
+        onSelectNotProductionCountries={setSelectedNotProductionCountries}
       />
 
       <div className="filter-container">
@@ -779,12 +846,24 @@ export default function MyList() {
         {selectedGenres.length > 0 && selectedGenres.map((genre) => (
           <span key={genre} className="filter-label" onClick={() => removeFilter('genre', genre)}> {genre} </span>
         ))}
+        {selectedNotGenres.length > 0 && selectedNotGenres.map((genre) => (
+          <span key={genre} className="filter-label not-filter" onClick={() => removeFilter('genre', genre)}> Not {genre} </span>
+        ))}
+
         {selectedFormats.length > 0 && selectedFormats.map((format) => (
           <span key={format} className="filter-label" onClick={() => removeFilter('format', format)} > {format} </span>
         ))}
+        {selectedNotFormats.length > 0 && selectedNotFormats.map((format) => (
+          <span key={format} className="filter-label not-filter" onClick={() => removeFilter('format', format)} > Not {format} </span>
+        ))}
+
         {selectedStatuses.length > 0 && selectedStatuses.map((status) => (
           <span key={status} className="filter-label" onClick={() => removeFilter('status', status)} >{status}</span>
         ))}
+        {selectedNotStatuses.length > 0 && selectedNotStatuses.map((status) => (
+          <span key={status} className="filter-label not-filter" onClick={() => removeFilter('status', status)} > Not {status} </span>
+        ))}
+
         {selectedOriginCountries.length > 0 && selectedOriginCountries.map((country) => (
           <span
             key={country}
@@ -794,15 +873,37 @@ export default function MyList() {
             {country}
           </span>
         ))}
+        {selectedNotOriginCountries.length > 0 && selectedNotOriginCountries.map((country) => (
+          <span
+            key={country}
+            className="filter-label not-filter"
+            onClick={() => removeFilter('originCountry', country)}
+          >
+            Not {country}
+          </span>
+        ))}
+
         {selectedProductionCompanies.length > 0 && selectedProductionCompanies.map((company) => (
           <span key={company} className="filter-label" onClick={() => removeFilter('productionCompany', company)}> {company}</span>
         ))}
+        {selectedNotProductionCompanies.length > 0 && selectedNotProductionCompanies.map((company) => (
+          <span key={company} className="filter-label not-filter" onClick={() => removeFilter('productionCompany', company)}> Not {company}</span>
+        ))}
+
         {selectedProductionCountries.length > 0 && selectedProductionCountries.map((country) => (
           <span key={country} className="filter-label" onClick={() => removeFilter('productionCountry', country)}>{country}</span>
         ))}
+        {selectedNotProductionCountries.length > 0 && selectedNotProductionCountries.map((country) => (
+          <span key={country} className="filter-label not-filter" onClick={() => removeFilter('productionCountry', country)}> Not {country} </span>
+        ))}
+
         {selectedTags.length > 0 && selectedTags.map((tag) => (
           <span key={tag} className="filter-label" onClick={() => removeFilter('tag', tag)}>{tag}</span>
         ))}
+        {selectedNotTags.length > 0 && selectedNotTags.map((tag) => (
+          <span key={tag} className="filter-label not-filter" onClick={() => removeFilter('tag', tag)}> Not {tag} </span>
+        ))}
+
         {(yearRange.min !== yearRange.minimalRange || yearRange.max !== yearRange.maximalRange) && (
           <span className="filter-label" onClick={() => clearYearRange()}> Year: {yearRange.min} - {yearRange.max} </span>
         )}
@@ -818,7 +919,7 @@ export default function MyList() {
       </div>
 
       <div style={{ textAlign: 'center', margin: '1rem 0' }}>
-        <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>
+        <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
           {filteredSeries.length} {filteredSeries.length === 1 ? 'result' : 'results'} found
         </span>
       </div>
@@ -830,8 +931,8 @@ export default function MyList() {
       ) : (
         series.length === 0 ? (
           <div style={{ textAlign: "center", padding: "2rem" }}>
-            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>No series followed</span>
-            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>To follow a serie click on the heart in the page <Link href={SEARCH_ROUTE} style={{ color: "var(--secondary-background-color)" }}>search series</Link></span>
+            <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>No series followed</span>
+            <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>To follow a serie click on the heart in the page <Link href={SEARCH_ROUTE} style={{ color: "var(--secondary-background-color)" }}>search series</Link></span>
           </div>
         ) : (
           <SeriesList series={filteredSeries} styleType={styleType} followedIds={series.map(serie => Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} size={displaySize} isOrdering={isOrdering} />)

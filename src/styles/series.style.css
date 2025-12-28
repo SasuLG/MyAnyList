@@ -92,3 +92,15 @@
     background-color: var(--main-text-color);
     border-radius: 50%;
 }
+
+.buttons-container {
+  opacity: 1;
+  transform: translateY(0);
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+.buttons-container.hide {
+  opacity: 0;
+  transform: translateY(-100px);
+  pointer-events: none;
+}

@@ -627,27 +627,27 @@ export default function MyList() {
 
       <button
         onClick={(e) => { toggleButtonsVisibility(); setRotating(!Rotating); }}
-        style={{ position: 'absolute', top: '4rem', right: '1rem', border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.6rem 1.2rem", cursor: "pointer", boxShadow: "0px 1px 3px rgba(0,0,0,0.1)", zIndex: 1000, fontSize: '0.9rem', fontWeight: 'normal', color: "var(--text-color)", transition: "background-color 0.3s, color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--button-hover-background-color)'; e.currentTarget.style.color = 'var(--button-hover-text-color)'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'var(--button-background-color)'; e.currentTarget.style.color = 'var(--text-color)'; }} >
+        style={{ backgroundColor: "var(--above)", position: 'absolute', top: '4rem', right: '1rem', border: "1px solid var(--border-color)", borderRadius: "5px", padding: "0.6rem 1.2rem", cursor: "pointer", boxShadow: "var(--shadow-light)", zIndex: 1000, fontSize: '0.9rem', fontWeight: 'normal', color: "var(--text-color)", transition: "background-color 0.3s, color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--button-hover-background-color)' }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-color)'; }} >
         <Settings width={20} height={20} rotating={Rotating} />
       </button>
 
-      {buttonsVisible && (
-        <div style={{ position: 'absolute', top: '6.5rem', right: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 1000 }}>
+      {1 && (
+        <div className={`buttons-container ${buttonsVisible ? "show" : "hide"}`} style={{ position: 'absolute', top: '7rem', right: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 1000 }}>
           <button
-            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ backgroundColor: "var(--above)", border: "1px solid var(--border-color)", borderRadius: "5px", padding: "0.5rem", cursor: "pointer", boxShadow: "var(--shadow-light)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={toggleLayout} onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
             <ToggleLayout width={25} height={25} checked={styleType === "grid"} />
           </button>
 
           <button
-            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ backgroundColor: "var(--above)", border: "1px solid var(--border-color)", borderRadius: "5px", padding: "0.5rem", cursor: "pointer", boxShadow: "var(--shadow-light)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={increaseSize} onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
             <IncreaseSize width={25} height={25} />
           </button>
 
           <button
-            style={{ border: "1px solid var(--border-color)", borderRadius: "5px", backgroundColor: "var(--button-background-color)", padding: "0.5rem", cursor: "pointer", boxShadow: "0px 1px 2px rgba(0,0,0,0.1)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ backgroundColor: "var(--above)", border: "1px solid var(--border-color)", borderRadius: "5px", padding: "0.5rem", cursor: "pointer", boxShadow: "var(--shadow-light)", opacity: 0.8, transition: "opacity 0.3s, background-color 0.3s", display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={decreaseSize} onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"} >
             <DecreaseSize width={25} height={25} />
           </button>
@@ -738,7 +738,7 @@ export default function MyList() {
       </div>
 
       <div style={{ textAlign: 'center', margin: '1rem 0' }}>
-        <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>
+        <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
           {filteredSeries.length} {filteredSeries.length === 1 ? 'result' : 'results'} found
         </span>
       </div>
@@ -750,8 +750,8 @@ export default function MyList() {
       ) : (
         series.length === 0 ? (
           <div style={{ textAlign: "center", padding: "2rem" }}>
-            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>No series found</span><br></br>
-            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-color)' }}>To add a serie on the wait list click on the hourglass in the page <Link href={SEARCH_ROUTE} style={{ color: "var(--secondary-background-color)" }}>search series</Link></span>
+            <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>No series found</span><br></br>
+            <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>To add a serie on the wait list click on the hourglass in the page <Link href={SEARCH_ROUTE} style={{ color: "var(--secondary-background-color)" }}>search series</Link></span>
           </div>
         ) : (
           <SeriesList series={filteredSeries} styleType={styleType} followedIds={seriesIdFollowed} waitedIds={series.map(serie => Number(serie.id))} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} size={displaySize} isOrdering={isOrdering} />

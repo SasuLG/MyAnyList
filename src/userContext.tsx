@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useEffect, useState } from "react";
+import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { User } from "./bdd/model/user";
 import { ApiResponse } from "./types/api/api.response.type";
 import { SESSION_ID_COOKIE } from "./constants/session.const";
@@ -26,6 +26,10 @@ interface UserContextValue {
     setAlert: Dispatch<SetStateAction<ApiResponse | undefined>>; // Permet de modifier l'alerte affichée.
     setSelectedMenu: Dispatch<SetStateAction<MenuList>>; // Permet de modifier le menu sélectionné.
     updateUserInfo: () => Promise<void>; // Fonction qui permet de mettre à jour les informations de l'utilisateur connecté.
+    isUserLoaded: boolean;
+    setIsUserLoaded: Dispatch<SetStateAction<boolean>>;
+    mangaMode: boolean;
+    setMangaMode: Dispatch<SetStateAction<boolean>>;
 }
 
 // Création du context de l'application pour les informations d'un utilisateur.
@@ -67,19 +71,33 @@ export function UserContextProvider({ children }: { children: ReactNode }) {
      */
     const [selectedMenu, setSelectedMenu] = useState<MenuList>("");
 
+    const [isUserLoaded, setIsUserLoaded] = useState(false);
+
+    const [mangaMode, setMangaMode] = useState<boolean>(false);
+
     /**
      * Fonction qui permet de mettre à jour les informations de l'utilisateur connecté.
      * 
      */
     const updateUserInfo = useCallback(async () => {
-        getUserInfo(userCookie).then(userInfo => {
-            if (userInfo) {
-                setUser(userInfo);
-                setUserAdmin(userInfo.admin);
-            } else {
-                setUser(undefined);
-            }
-        });
+        setIsUserLoaded(false);
+
+        try {
+
+            getUserInfo(userCookie).then(userInfo => {
+                if (userInfo) {
+                    setUser(userInfo);
+                    setUserAdmin(userInfo.admin);
+                } else {
+                    setUser(undefined);
+                }
+            });
+        } catch (error) {
+            console.error("Erreur lors de la mise à jour des informations utilisateur :", error);
+        } finally {
+
+            setIsUserLoaded(true)
+        }
     }, [userCookie]);
 
     /**
@@ -108,13 +126,31 @@ export function UserContextProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
+
+    useEffect(() => {
+        const mangaModeCookie = document.cookie.includes("mangaMode=true");
+        setMangaMode(mangaModeCookie);
+        document.documentElement.classList.toggle("manga-mode", mangaModeCookie);
+    }, []);
+
+    const isFirstMangaEffect = useRef(true);
+    useEffect(() => {
+        if (isFirstMangaEffect.current) {
+            isFirstMangaEffect.current = false;
+            return;
+        }
+
+        document.cookie = `mangaMode=${mangaMode ? "true" : "false"}; path=/; max-age=31536000`;
+        document.documentElement.classList.toggle("manga-mode", mangaMode);
+    }, [mangaMode]);
+
     // Utilisation de usePathname pour déterminer le chemin actuel
     const pathname = usePathname();
     const shouldShowFooter = pathname ? !pathname.startsWith('/admin') : true;
     const hide = pathname ? pathname.startsWith('/404') : false;
     return (
         <>
-            <UserContext.Provider value={{ userCookie, setUserCookie, user, setUser, userAdmin, setUserAdmin, setAlert, setSelectedMenu, updateUserInfo }}>
+            <UserContext.Provider value={{ userCookie, setUserCookie, user, setUser, userAdmin, setUserAdmin, setAlert, setSelectedMenu, updateUserInfo, isUserLoaded, setIsUserLoaded, mangaMode, setMangaMode }}>
                 {alert && <AlertBox message={alert?.message} color={alertBoxColor} onDelay={() => setAlert(undefined)} />}
 
                 {!hide && <Header selected_menu={selectedMenu} />}

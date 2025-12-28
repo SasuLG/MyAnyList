@@ -4,14 +4,18 @@
   margin-bottom: 1rem;
 }
   
+.dropdown p {
+  color: var(--titre-color);
+}
+
 .dropdown-label {
   display: flex;
   align-items: center;
   padding: 0.5rem;
-  border: 1px solid var(--border-color);
   border-radius: 4px;
-  background-color: var(--secondary-text-color);
+  background-color: var(--absolute-color);
   cursor: pointer;
+  color: var(--titre-color);
 }
 
 .dropdown-label .icon {
@@ -26,15 +30,15 @@
   top: 100%;
   left: 0;
   width: 100%;
-  border: 1px solid var(--border-color);
   border-radius: 4px;
-  background-color: var(--secondary-text-color);
+  background-color: var(--absolute-color);
   z-index: 10;
   max-height: 200px;
   overflow-y: auto;
   margin-top: 0.5rem;
   padding: 0.5rem; 
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  color: var(--titre-color);
 }
 
 .popup .dropdown-label{
@@ -54,14 +58,15 @@
 }
 
 .dropdown-option.selected {
-  background-color: var(--selected-background-color);
+  background-color: var(--color-filter-label);
+  /* border-radius: 0%.5rem; */
+  border-radius: 50% 10% 50% 10% / 10% 50% 10% 50%;
 }
 
-.check-icon {
-  color: var(--check-icon-color);
-  margin-left: 8px;
+.dropdown-option.not-selected {
+  background-color: var(--not-selected-background-color);
+  border-radius: 50% 10% 50% 10% / 10% 50% 10% 50%;
 }
-
 
 .tooltip {
   display: none;
@@ -73,11 +78,11 @@ div:hover .tooltip {
 
 .popup {
   position: absolute;
-  top: 100%; /* Positionné en dessous de l'élément qui déclenche la popup */
+  top: 100%; 
   left: 0;
-  transform: translateY(8px); /* Ajustez la valeur si nécessaire */
-  background-color: #fff;
-  color: #333;
+  transform: translateY(8px);
+  background-color: var(--absolute-color);
+  color: var(--titre-color);
   padding: 1rem;
   border-radius: 4px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -91,8 +96,7 @@ div:hover .tooltip {
   flex-wrap: wrap;
   gap: 3rem;
   box-sizing: border-box;
-  /* Default styles for small screens */
-  right: 0; /* Align popup to the right on small screens */
+  right: 0;
 }
 .popup.column {
   width: 70vw; 
@@ -117,7 +121,7 @@ div:hover .tooltip {
   width: 1.8rem;
   height: 1.8rem;
   border-radius: 50%;
-  background-color: var(--background-color);
+  background-color: var(--absolute-color);
   transition: all 0.2s linear;
 }
 
@@ -160,20 +164,24 @@ div:hover .tooltip {
   cursor: pointer;
 }
 
+.not-filter{
+  background: repeating-linear-gradient(45deg, var(--not-selected-background-color), var(--color-filter-label) 20%, #ebf8e1 15%);
+}
+
 .filter-label::before {
   content: '×';
-  font-size: 2rem; /* Taille encore plus grande de la croix */
+  font-size: 2rem;
   color: transparent;
   position: absolute;
-  right: 50%; /* Centre horizontalement */
-  top: 50%; /* Centre verticalement */
-  transform: translate(50%, -50%); /* Ajuste la croix pour un centrage parfait */
+  right: 50%;
+  top: 50%;
+  transform: translate(50%, -50%);
   transition: color 0.3s;
   font-weight: bold;
 }
 
 .filter-label:hover::before {
-  color: #ff5c5c; /* Couleur de la croix au survol */
+  color: #ff5c5c;
 }
 
 .filter-remove {
@@ -256,4 +264,5 @@ div:hover .tooltip {
 }
 .slider-filter{
   width: 15%;
+  color: var(--titre-color);
 }

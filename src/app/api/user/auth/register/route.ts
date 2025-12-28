@@ -39,7 +39,7 @@ export async function POST(req: Request): Promise<Response> {
         );
         console.log("token");
         // Envoyer l'email avec le lien de confirmation
-        const verificationUrl = `${process.env.MODE === "production" ? process.env.NEXT_PUBLIC_BASE_URL_PROD: process.env.NEXT_PUBLIC_BASE_URL_DEV}/verify-email?token=${emailVerificationToken}`;
+        const verificationUrl = `${process.env.MODE === "production" || process.env.NODE_ENV === 'production'? process.env.NEXT_PUBLIC_BASE_URL_PROD: process.env.NEXT_PUBLIC_BASE_URL_DEV}/verify-email?token=${emailVerificationToken}`;
         console.log("url");
         await sendEmail(email, 'Vérifiez votre adresse email', `${verificationUrl}`);
         console.log("send");

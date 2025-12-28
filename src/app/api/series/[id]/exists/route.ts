@@ -11,11 +11,11 @@ import { ServerError } from "@/lib/api/response/server.response";
  */
 export async function GET(req: Request, context: any): Promise<Response> {
     try {
-        const { params } = context;
-        const id = Number(decodeURIComponent(params.id));
+        const { id } = await context.params;
+        const decodedId = Number(decodeURIComponent(id));
 
-        if(id){
-            const data = await isSerieExists(id);
+        if(decodedId){
+            const data = await isSerieExists(decodedId);
             return new Response(JSON.stringify(data), {
                 headers: {
                     'Content-Type': 'application/json'

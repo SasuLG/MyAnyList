@@ -12,9 +12,9 @@ import { ServerError } from "@/lib/api/response/server.response";
  */
 export async function GET(req: Request, context: any): Promise<Response>{
     try {
-        const { params } = context;
-        const id = Number(decodeURIComponent(params.id));
-        const userRequest = await getUserById(id);
+        const { id } = await context.params;
+        const decodedId = Number(decodeURIComponent(id));
+        const userRequest = await getUserById(decodedId);
         
         if (userRequest) {
             const url = new URL(req.url);

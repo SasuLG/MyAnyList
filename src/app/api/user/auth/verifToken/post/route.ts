@@ -17,7 +17,7 @@ export async function POST(req: Request): Promise<Response> {
         const { verifToken } = requestBody;
         const user = await getUserByVerifToken(verifToken);
         if(user){
-            const verificationUrl = `${process.env.MODE === "production" ? process.env.NEXT_PUBLIC_BASE_URL_PROD: process.env.NEXT_PUBLIC_BASE_URL_DEV}/verify-email?token=${user.verifToken}`;
+            const verificationUrl = `${process.env.MODE === "production" || process.env.NODE_ENV === 'production'? process.env.NEXT_PUBLIC_BASE_URL_PROD: process.env.NEXT_PUBLIC_BASE_URL_DEV}/verify-email?token=${user.verifToken}`;
             await sendEmail(user.email, 'Vérifiez votre adresse email', `${verificationUrl}`);
             return new Response(JSON.stringify({ valid: true, message: 'Un email de vérification vous a été envoyé.' }), { status: 200 });
         }

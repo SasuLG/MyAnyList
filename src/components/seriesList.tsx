@@ -14,7 +14,7 @@ const useMediaQuery = (query: string) => {
   useEffect(() => {
     const mediaQueryList = window.matchMedia(query);
     const handleChange = () => setMatches(mediaQueryList.matches);
-    
+
     handleChange(); // Set initial value
     mediaQueryList.addEventListener('change', handleChange);
     return () => mediaQueryList.removeEventListener('change', handleChange);
@@ -33,60 +33,60 @@ type SeriesListProps = {
   limit?: number;
   size?: 'normal' | 'small' | 'very-small' | 'extra-small' | 'large';
   isMylist?: boolean;
-  isList?: boolean; 
+  isList?: boolean;
   isOrdering?: boolean;
 };
 
 const sizeStyles = {
   normal: {
-    imgWidth: 100, 
-    padding: 16, 
-    fontSize: 20, 
-    heartSize: 20, 
-    badgeSize: 40, 
-    badgeFontSize: 16, 
-    maxwidth: 250, 
-    gap: 16, 
+    imgWidth: 100,
+    padding: 16,
+    fontSize: 20,
+    heartSize: 20,
+    badgeSize: 40,
+    badgeFontSize: 16,
+    maxwidth: 250,
+    gap: 16,
   },
   small: {
-    imgWidth: 150, 
-    padding: 12, 
-    fontSize: 18, 
-    heartSize: 20, 
-    badgeSize: 40, 
-    badgeFontSize: 16, 
-    maxwidth: 200, 
-    gap: 16, 
+    imgWidth: 150,
+    padding: 12,
+    fontSize: 18,
+    heartSize: 20,
+    badgeSize: 40,
+    badgeFontSize: 16,
+    maxwidth: 200,
+    gap: 16,
   },
   'very-small': {
-    imgWidth: 120, 
-    padding: 8, 
-    fontSize: 16, 
-    heartSize: 18, 
-    badgeSize: 35, 
-    badgeFontSize: 14, 
-    maxwidth: 150, 
-    gap: 12, 
+    imgWidth: 120,
+    padding: 8,
+    fontSize: 16,
+    heartSize: 18,
+    badgeSize: 35,
+    badgeFontSize: 14,
+    maxwidth: 150,
+    gap: 12,
   },
   'extra-small': {
-    imgWidth: 100, 
-    padding: 4, 
-    fontSize: 14, 
-    heartSize: 16, 
-    badgeSize: 30, 
-    badgeFontSize: 12, 
-    maxwidth: 100, 
-    gap: 8, 
+    imgWidth: 100,
+    padding: 4,
+    fontSize: 14,
+    heartSize: 16,
+    badgeSize: 30,
+    badgeFontSize: 12,
+    maxwidth: 100,
+    gap: 8,
   },
   large: {
-    imgWidth: 150, 
-    padding: 24, 
-    fontSize: 26, 
-    heartSize: 24, 
-    badgeSize: 50, 
-    badgeFontSize: 20, 
-    maxwidth: 300, 
-    gap: 16, 
+    imgWidth: 150,
+    padding: 24,
+    fontSize: 26,
+    heartSize: 24,
+    badgeSize: 50,
+    badgeFontSize: 20,
+    maxwidth: 300,
+    gap: 16,
   },
 };
 
@@ -106,7 +106,7 @@ const adjustSizes = (baseStyles: typeof sizeStyles[keyof typeof sizeStyles], isS
   };
 };
 
-const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, onClickHourGlass, limit, size = 'normal', isMylist = true, isList = true , isOrdering = false}: SeriesListProps) => {
+const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, onClickHourGlass, limit, size = 'normal', isMylist = true, isList = true, isOrdering = false }: SeriesListProps) => {
 
   /**
    * Hook qui permet de savoir si la souris est sur un élément
@@ -150,18 +150,18 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
     if (!user) return;
     if (note === null || note < 0 || note > 10) return setAlert({ message: "La note doit être comprise entre 0 et 10", valid: false });
     const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/${encodeURIComponent(serie.id)}/vote`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ note, comment : serie.comment, newVote: serie.note === null }),
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ note, comment: serie.comment, newVote: serie.note === null }),
     });
     if (response.ok) {
-        setAlert({ message: "Vote ajouté", valid: true });
-        return true;
+      setAlert({ message: "Vote ajouté", valid: true });
+      return true;
     } else {
-        setAlert({ message: "Erreur lors de l'ajout du vote", valid: false });
-        return false;
+      setAlert({ message: "Erreur lors de l'ajout du vote", valid: false });
+      return false;
     }
   };
 
@@ -207,16 +207,16 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
   const imgWidthStyle = styleType === 'list' && size === 'large' ? imgWidth : styleType === 'list' ? `calc(${imgWidth}px - 60px)` : `${imgWidth}px`;
 
   const phoneStyles = isSmallScreen && styleType === 'list' ? {
-    imgWidth: imgWidth * 1.2, 
-    padding: padding * 0.5,  
-    height: 'auto', 
-    maxWidth: '100%', 
-    overflow: 'hidden', 
-    marginBottom: '1rem', 
+    imgWidth: imgWidth * 1.2,
+    padding: padding * 0.5,
+    height: 'auto',
+    maxWidth: '100%',
+    overflow: 'hidden',
+    marginBottom: '1rem',
   } : {};
 
   const colors = ['#F1C40F', '#E67E22', '#1F8EFA', '#2ECC71', '#9B59B6', '#FF5733', '#16A085', '#F39C12', '#D35400', '#8E44AD', '#3498DB', '#C0392B', '#27AE60', '#2980B9', '#D5A6BD', '#7F8C8D', '#F4D03F', '#9B59B6', '#F5B7B1', '#E74C3C', '#16A085', '#C7D8D1', '#E67E22', '#FF6F61', '#F1C40F', '#F44336', '#E91E63', '#F39C12', '#7FDBFF', '#BDC3C7', '#F44336', '#8D6E63', '#9C27B0', '#3F51B5', '#81C784'];
-  
+
   return (
     <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexWrap: 'wrap', gap: `${gap}px`, flexDirection: styleType === 'list' ? 'column' : undefined }}>
       {limitedSeries.map((serie, index) => {
@@ -274,16 +274,16 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
               </div>
             </Link>
             {openPopupIndex === index && (
-              <div 
-                style={{position: "absolute", top: styleType === 'grid' ? '-28px' : "-43px", right: styleType === 'grid' ? '-10px' : "79rem", display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '50px', zIndex: 1, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.8)', padding: '0', gap: '2px', width: 'auto', height: `${badgeSize}px`}}>
-                <div 
-                  onClick={(e) => { e.stopPropagation(); onClickHourGlass(serie); setOpenPopupIndex(null);}} 
-                  style={{width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer', backgroundColor: waitedIds.includes(Number(serie.id)) ? '#FFDDDD' : '#EEEEEE', transition: 'background-color 0.3s', padding: '0', margin: '0'}}>
+              <div
+                style={{ position: "absolute", top: styleType === 'grid' ? '-28px' : "-43px", right: styleType === 'grid' ? '-10px' : "79rem", display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '50px', zIndex: 1, boxShadow: 'var(--shadow)', backgroundColor: 'var(--absolute-color)', padding: '0', gap: '2px', width: 'auto', height: `${badgeSize}px` }}>
+                <div
+                  onClick={(e) => { e.stopPropagation(); onClickHourGlass(serie); setOpenPopupIndex(null); }}
+                  style={{ width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer', backgroundColor: waitedIds.includes(Number(serie.id)) ? '#FFDDDD' : '#EEEEEE', transition: 'background-color 0.3s', padding: '0', margin: '0' }}>
                   <HourGlass width={heartSize} height={heartSize} check={waitedIds.includes(Number(serie.id))} />
                 </div>
-                <div 
-                  onClick={(e) => { e.stopPropagation(); onClickHeart(serie); setOpenPopupIndex(null);}} 
-                  style={{width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer', backgroundColor: followedIds.includes(Number(serie.id)) ? '#FFDDDD' : '#EEEEEE', transition: 'background-color 0.3s', padding: '0', margin: '0'}}>
+                <div
+                  onClick={(e) => { e.stopPropagation(); onClickHeart(serie); setOpenPopupIndex(null); }}
+                  style={{ width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer', backgroundColor: followedIds.includes(Number(serie.id)) ? '#FFDDDD' : '#EEEEEE', transition: 'background-color 0.3s', padding: '0', margin: '0' }}>
                   {followedIds.includes(Number(serie.id)) ? (<Heart width={heartSize} height={heartSize} />) : (<BrokenHeart width={heartSize} height={heartSize} />)}
                 </div>
               </div>
@@ -291,11 +291,11 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
 
             {isOrdering && (
               <div style={{}}>
-                <button 
-                  style={{border:"none", width: `${badgeSize/1.1}px`, height: `${badgeSize/1.1}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: styleType === 'grid' ? '5px' : "-15px", right: styleType === 'grid' ? '210px' : "0", left: styleType === 'grid' ? "" : "450px", borderRadius: '50%', zIndex: 1, fontSize: `${badgeFontSize}px`, backgroundColor: `${colors[index%colors.length]}`}}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)";e.currentTarget.style.boxShadow = `0 0 15px ${colors[index % colors.length]}, 0 0 30px ${colors[index % colors.length]}`;}}
-                  onMouseLeave={(e) => {e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = `0 0 0 0`;}}
-                  >
+                <button
+                  style={{ border: "none", width: `${badgeSize / 1.1}px`, height: `${badgeSize / 1.1}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: styleType === 'grid' ? '5px' : "-15px", right: styleType === 'grid' ? '210px' : "0", left: styleType === 'grid' ? "" : "450px", borderRadius: '50%', zIndex: 1, fontSize: `${badgeFontSize}px`, backgroundColor: `${colors[index % colors.length]}` }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; e.currentTarget.style.boxShadow = `0 0 15px ${colors[index % colors.length]}, 0 0 30px ${colors[index % colors.length]}`; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = `0 0 0 0`; }}
+                >
                   #{index + 1}
                 </button>
               </div>
@@ -305,28 +305,30 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
               onClick={(e) => { e.stopPropagation(); setOpenPopupIndex(openPopupIndex === index ? null : index); }}
               style={{ width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: styleType === 'grid' ? '10px' : "0", right: styleType === 'grid' ? '10px' : "0", left: styleType === 'list' ? '0' : "", borderRadius: '50%', zIndex: 1, transition: 'transform 0.3s', fontSize: `${badgeFontSize}px`, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}
             >
-              {followedIds.includes(Number(serie.id)) ? <Heart width={heartSize} height={heartSize} /> : waitedIds.includes(Number(serie.id)) ? <HourGlass width={heartSize} height={heartSize} check={true}/> : <BrokenHeart width={heartSize} height={heartSize} />}
+              {followedIds.includes(Number(serie.id)) ? <Heart width={heartSize} height={heartSize} /> : waitedIds.includes(Number(serie.id)) ? <HourGlass width={heartSize} height={heartSize} check={true} /> : <BrokenHeart width={heartSize} height={heartSize} />}
             </div>
             {styleType === 'list' && isMylist && (
-              <input type="number" min="0" max="10" step="0.01"  onClick={(e) => { e.stopPropagation(); }}
+              <input type="number" min="0" max="10" step="0.01" onClick={(e) => { e.stopPropagation(); }}
                 onChange={handleRatingChange}
                 onBlur={() => handleBlur(serie)}
                 onKeyDown={(e) => handleKeyDown(e, serie)}
                 defaultValue={serie.note ?? undefined}
                 className="no-spinners"
-                style={{ width: `${badgeSize}px`,  height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: '0', right: '0', borderRadius: '50%',zIndex: 1, transition: 'transform 0.3s', fontSize: `${badgeFontSize}px`, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',  border: 'none',   outline: 'none', textAlign: 'center',padding: '0', backgroundColor: 'transparent',  color: `${serie.note && serie.note < 4.5 ? "var(--color-red)" : serie.note && serie.note < 7 ? "orange" : serie.note && serie.note === 10 ? "cornflowerblue" : "var(--color-green)"}`,  appearance: 'none' }}/>
+                style={{ width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: '0', right: '0', borderRadius: '50%', zIndex: 1, transition: 'transform 0.3s', fontSize: `${badgeFontSize}px`, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)', border: 'none', outline: 'none', textAlign: 'center', padding: '0', backgroundColor: 'transparent', color: `${serie.note && serie.note < 4.5 ? "var(--color-red)" : serie.note && serie.note < 7 ? "orange" : serie.note && serie.note === 10 ? "cornflowerblue" : "var(--color-green)"}`, appearance: 'none' }} />
             )}
           </li>
         );
 
-        return styleType === 'grid' ? (
-          <HoverToolBox serie={serie} key={serie.id} isMyList={isMylist}>
+        return (
+          <HoverToolBox
+            key={serie.id}
+            serie={serie}
+            isMyList={isMylist}
+            enabled={styleType === "grid"}
+          >
             {content}
           </HoverToolBox>
-        ) : (
-          <React.Fragment key={serie.id}>
-            {content}
-          </React.Fragment>
+
         );
       })}
     </ul>

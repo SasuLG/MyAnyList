@@ -6,13 +6,14 @@ import { IMG_SRC } from "@/constants/tmdb.consts";
 import { MinimalSerie } from "@/tmdb/types/series.type";
 import { BASE_DETAILS_SERIE_ROUTE } from "@/constants/app.route.const";
 import Image from "next/image";
+import { MinimalManga } from "@/anilist/type/mangas.type";
 
 export default function Home() {
 
   /**
    * Récupérer les informations de l'utilisateur
    */
-  const { user, setSelectedMenu } = useUserContext();
+  const { user, setSelectedMenu, isUserLoaded, mangaMode } = useUserContext();
 
   /**
    * Hook qui permet de stocker les séries recommandées
@@ -39,6 +40,27 @@ export default function Home() {
    */
   const [lastInteractionTime, setLastInteractionTime] = useState(Date.now());
 
+  const [recommendedMangas, setRecommendedMangas] = useState<MinimalManga[]>([]);
+
+  const [isReady, setIsReady] = useState(false);
+
+  const fetchPopularMangas = async () => {
+    if (!user) {
+      const response = await fetch(`/api/mangas/popular?limit=10&page=1`);
+      const data = await response.json();
+      setRecommendedMangas(data);
+    }
+  };
+
+  const fetchRecommendedMangas = async () => {
+    if (!user) return;
+    const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/mangas/recommanded?limit=10&page=1`);
+    const data = await response.json();
+    if (data.length) {
+      setRecommendedMangas(data);
+    }
+  };
+
   /**
    * Fonction qui permet de récupérer les séries populaires
    */
@@ -57,7 +79,7 @@ export default function Home() {
     if (!user) return;
     const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/recommanded?limit=10&page=1`);
     const data = await response.json();
-    if (data.length){
+    if (data.length) {
       setRecommendedSeries(data);
     }
   };
@@ -120,24 +142,40 @@ export default function Home() {
   useEffect(() => {
     const autoScroll = setInterval(() => {
       if (Date.now() - lastInteractionTime >= 3000) {
-        handleRotation(-360 / recommendedSeries.length);
+        handleRotation(-360 / (mangaMode ? recommendedMangas.length : recommendedSeries.length));
       }
     }, 3000);
     return () => clearInterval(autoScroll);
-  }, [lastInteractionTime, recommendedSeries.length]);
+  }, [lastInteractionTime, recommendedMangas.length, recommendedSeries.length]);
 
-  
-  useEffect(() => { if (!user) fetchPopularSeries(); }, [user]);
-  useEffect(() => { if (user) fetchRecommendedSeries(); }, [user]);
+  useEffect(() => {
+    if (!isUserLoaded || !isReady) return;
+
+    if (user) {
+      // utilisateur connecté
+      if (mangaMode) fetchRecommendedMangas();
+      else fetchRecommendedSeries();
+    } else {
+      // utilisateur non connecté
+      if (mangaMode) fetchPopularMangas();
+      else fetchPopularSeries();
+    }
+  }, [user, mangaMode, isReady, isUserLoaded]);
+
   useEffect(() => { setSelectedMenu("home") }, [setSelectedMenu]);
+
+  useEffect(() => {
+    if (mangaMode) document.documentElement.classList.toggle('manga-mode', mangaMode);
+    setIsReady(true);
+  }, []);
 
   return (
     <div style={{ height: "100%", padding: "2rem 4rem", backgroundColor: "var(--background-color)", color: "var(--main-text-color)", fontFamily: "Arial, sans-serif", }} onMouseDown={handleMouseDown}>
       <main>
         <section style={{ marginBottom: "2rem", padding: "1.5rem", backgroundColor: "var(--secondary-background-color)", borderRadius: "8px", color: "var(--secondary-text-color)", boxShadow: "0 4px 8px rgba(0,0,0,0.1)", }}>
           <h2 style={{ fontSize: "1.75rem", color: "var(--titre-color)", marginBottom: "1rem", }}>Bienvenue sur notre plateforme</h2>
-          <p style={{ fontSize: "1rem", lineHeight: "1.6", marginBottom: "1.5rem", }}>Explorez un monde de divertissement sans fin avec notre large sélection de séries. Que vous soyez un passionné de drames, un amateur de comédies, ou un fan de science-fiction, vous trouverez sûrement quelque chose qui vous plaira.</p>
-          <p style={{ fontSize: "0.875rem", lineHeight: "1.5", }}>Nous mettons à jour régulièrement notre catalogue pour vous offrir les meilleurs contenus. Restez avec nous pour des expériences de visionnage exceptionnelles.</p>
+          <p style={{ fontSize: "1rem", lineHeight: "1.6", marginBottom: "1.5rem", color: "var(--background-color)" }}>Explorez un monde de divertissement sans fin avec notre large sélection de séries. Que vous soyez un passionné de drames, un amateur de comédies, ou un fan de science-fiction, vous trouverez sûrement quelque chose qui vous plaira.</p>
+          <p style={{ fontSize: "0.875rem", lineHeight: "1.5", color: "var(--background-color)" }}>Nous mettons à jour régulièrement notre catalogue pour vous offrir les meilleurs contenus. Restez avec nous pour des expériences de visionnage exceptionnelles.</p>
         </section>
 
         <section>
@@ -147,10 +185,10 @@ export default function Home() {
 
         <section style={{ marginBottom: "2rem", }}>
           <div className="banner">
-            <button onClick={() => handleRotation(360 / recommendedSeries.length)} className="nav-btn" >←</button>
-            <button onClick={() => handleRotation(-360 / recommendedSeries.length)} className="nav-btn" >→</button>
-            <div className="slider" style={{ "--quantity": recommendedSeries.length, transform: `perspective(1000px) rotateX(-8deg) rotateY(${rotation}deg)`, } as React.CSSProperties}>
-              {recommendedSeries.length>0 && recommendedSeries.map((serie, index) => (
+            <button onClick={() => handleRotation(360 / (mangaMode ? recommendedMangas.length : recommendedSeries.length))} className="nav-btn" >←</button>
+            <button onClick={() => handleRotation(-360 / (mangaMode ? recommendedMangas.length : recommendedSeries.length))} className="nav-btn" >→</button>
+            <div className="slider" style={{ "--quantity": (mangaMode ? recommendedMangas.length : recommendedSeries.length), transform: `perspective(1000px) rotateX(-8deg) rotateY(${rotation}deg)`, } as React.CSSProperties}>
+              {recommendedSeries.length > 0 && !mangaMode && recommendedSeries.map((serie, index) => (
                 <div className="item" key={index} style={{ "--position": index } as React.CSSProperties}>
                   <div style={{ backgroundColor: "var(--secondary-background-color)", borderRadius: "8px", overflow: "hidden", transition: "transform 0.3s", cursor: "pointer", }}>
                     <Link href={`${BASE_DETAILS_SERIE_ROUTE}/${serie.id}`} onMouseDown={(e) => e.stopPropagation()}>
@@ -162,6 +200,20 @@ export default function Home() {
                   </div>
                 </div>
               ))}
+
+              {recommendedMangas.length > 0 && mangaMode && recommendedMangas.map((manga, index) => (
+                <div className="item" key={index} style={{ "--position": index } as React.CSSProperties}>
+                  <div style={{ backgroundColor: "var(--secondary-background-color)", borderRadius: "8px", overflow: "hidden", transition: "transform 0.3s", cursor: "pointer", }}>
+                    <Link href={`${BASE_DETAILS_SERIE_ROUTE}/${manga.id}`} onMouseDown={(e) => e.stopPropagation()}>
+                      <Image src={`${manga.cover_image}`} alt={manga.title_english || ""} width={500} height={750} style={{ borderRadius: "4px" }} />
+                    </Link>
+                    <div style={{ padding: "1rem", color: "var(--secondary-text-color)", height: "90px", display: "flex", alignItems: "center", justifyContent: "center", }}>
+                      <h3 style={{ margin: "0 0 0.5rem", fontSize: "1.25rem", }}>{manga.title_english || ""}</h3>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
             </div>
           </div>
         </section>

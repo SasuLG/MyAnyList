@@ -10,10 +10,11 @@ import bcrypt from 'bcryptjs';
 import SeriesList from "@/components/seriesList";
 import MultiSelectDropdown from "@/components/multiSelectDropdown";
 import { Order } from "@/components/svg/filter.svg";
-import ThemeSwitcher from "@/components/themeSwitcher";
 import { LOGIN_ROUTE } from "@/constants/app.route.const";
+import { use } from 'react';
 
-export default function Profil({ params }: { params: { name: string } }) {
+export default function Profil({ params }: { params: Promise<{ name: string }> }) {
+    const { name } = use(params);
 
     /**
      * Router pour la redirection.
@@ -148,7 +149,7 @@ export default function Profil({ params }: { params: { name: string } }) {
      */
     const fetchUser = useCallback(async () => {
         try {
-            const response = await fetch(`/api/user/?username=${encodeURIComponent(params.name)}`);
+            const response = await fetch(`/api/user/?username=${encodeURIComponent(name)}`);
             const data = await response.json();
             if (response.ok) {
                 setUserProfil(data);
@@ -158,7 +159,7 @@ export default function Profil({ params }: { params: { name: string } }) {
         } catch (error) {
             setAlert({ message: 'Failed to fetch user', valid: false });
         }
-    }, [params.name, setAlert]);
+    }, [name, setAlert]);
 
     /**
      * Fonction pour éditer le nom de l'utilisateur
@@ -480,13 +481,13 @@ export default function Profil({ params }: { params: { name: string } }) {
 
     useEffect(() => {
         if (user) {
-            if (params.name !== user?.login && user.admin) {
+            if (name !== user?.login && user.admin) {
                 fetchUser();
             } else {
                 setUserProfil(user);
             }
         }
-    }, [user, params.name, fetchUser]);
+    }, [user, name, fetchUser]);
 
     useEffect(() => {
         fetchSeriesFollowed();
@@ -526,13 +527,13 @@ export default function Profil({ params }: { params: { name: string } }) {
     return (
         <div style={{ margin: '20px' }}>
             <h1 style={{ fontSize: '2rem', color: 'var(--titre-color)', marginBottom: "3rem" }}>Profil : {userProfil?.login}</h1>
-            {/* <ThemeSwitcher /> */}
+
             <div style={{ display: "flex", flexDirection: "row", gap: "1rem", width: "100%" }}>
                 <div style={{ flex: "1" }}>
                     <h3 style={{ color: "var(--titre-color)" }}>Modifier le nom</h3>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <input type="text" id="editName" placeholder="Nouveau nom" defaultValue={userProfil?.login} style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", height: "2.5rem", boxSizing: "border-box", color: "var(--titre-color)" }} />
-                        <button className="button-validate" onClick={() => setShowConfirmEditName(true)} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#007bff", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", transform: "translate(0px, -12px)" }}>Modifier</button>
+                        <input type="text" id="editName" placeholder="Nouveau nom" defaultValue={userProfil?.login} style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", height: "2.5rem", boxSizing: "border-box", color: "var(--titre-color)", backgroundColor: "var(--background-color)" }} />
+                        <button className="button-validate" onClick={() => setShowConfirmEditName(true)} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "var(--button-color)", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", transform: "translate(0px, -12px)" }}>Modifier</button>
                     </div>
                     {showConfirmEditName && (
                         <div className="overlay" style={{ position: "fixed", left: "0", top: "0", backgroundColor: "rgba(0, 0, 0, 0.5)", width: "100%", height: "100%", zIndex: "10" }}>
@@ -552,8 +553,8 @@ export default function Profil({ params }: { params: { name: string } }) {
                 <div style={{ flex: "1" }}>
                     <h3 style={{ color: "var(--titre-color)" }}>Modifier le mot de passe</h3>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <input type="password" id="editPassword" placeholder="Nouveau mot de passe" style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", height: "2.5rem", boxSizing: "border-box", color: "var(--titre-color)" }} />
-                        <button className="button-validate" onClick={() => setShowConfirmEditPassword(true)} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "#007bff", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", transform: "translate(0px, -12px)" }}>Modifier</button>
+                        <input type="password" id="editPassword" placeholder="Nouveau mot de passe" style={{ flex: "1", padding: "0.5rem", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "4px", height: "2.5rem", boxSizing: "border-box", color: "var(--titre-color)", backgroundColor: "var(--background-color)" }} />
+                        <button className="button-validate" onClick={() => setShowConfirmEditPassword(true)} style={{ padding: "0 1rem", fontSize: "1rem", border: "none", borderRadius: "4px", backgroundColor: "var(--button-color)", color: "#fff", cursor: "pointer", height: "2.5rem", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", transform: "translate(0px, -12px)" }}>Modifier</button>
                     </div>
                     {showConfirmEditPassword && (
                         <div className="overlay" style={{ position: "fixed", left: "0", top: "0", backgroundColor: "rgba(0, 0, 0, 0.5)", width: "100%", height: "100%", zIndex: "10" }}>
@@ -577,15 +578,17 @@ export default function Profil({ params }: { params: { name: string } }) {
             <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '1200px', margin: '20px auto' }}>
 
                 {/* Section Total */}
-                <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: '#e0f7fa' }}>
-                    <h2 style={{ marginBottom: '1rem', color: '#333', fontWeight: 'bold' }}>Total</h2>
+                <div style={{ border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: 'var(--tooltip-background-total)' }}>
+                    <h2 style={{ marginBottom: '1rem', color: 'var(--titre-color)', fontWeight: 'bold' }}>Total</h2>
+
                     <div onMouseEnter={() => setHoveredElement('totalMediaEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
                         <p><strong>Nombre total de séries suivis :</strong> </p>
-                        <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333' }}>{TotalMedia}</p>
+                        <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{TotalMedia}</p>
+
                         {hoveredElement === 'totalMediaEpisodes' && (
-                            <div style={{ position: 'absolute', backgroundColor: '#b2ebf2', border: '2px solid #00bcd4', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                            <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-hover-total)', border: '2px solid var(--tooltip-border-total)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                 {Object.keys(combinedEpisodeData).map(genre => (
-                                    <p key={genre} style={{ display: 'flex', gap: '1rem', color: '#333' }}>
+                                    <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
                                         <span><strong>{genre} :</strong> {combinedGenreData[genre] || 0} , {combinedEpisodeData[genre] || 0} épisodes</span>
                                         <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(combinedEpisodeData[genre] || 0, totalEpisodesTv + totalEpisodesMovie + totalEpisodesAnime)}</span>
                                     </p>
@@ -597,23 +600,24 @@ export default function Profil({ params }: { params: { name: string } }) {
 
                     <div onMouseEnter={() => setHoveredElement('totalTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
                         <p><strong>Temps total de visionnage :</strong> </p>
-                        <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333' }}>{formatTime(TotalTime)}</p>
+                        <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTime)}</p>
+
                         {hoveredElement === 'totalTime' && (
-                            <div style={{ position: 'absolute', backgroundColor: '#b2ebf2', border: '2px solid #00bcd4', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                            <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-hover-total)', border: '2px solid var(--tooltip-border-total)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                 {Object.keys(tvGenreData.timeCount).map(genre => (
-                                    <p key={genre} style={{ display: 'flex', gap: '1rem', color: '#333' }}>
+                                    <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
                                         <span><strong>{genre} :</strong> {formatTime(tvGenreData.timeCount[genre] || 0)}</span>
                                         <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(tvGenreData.timeCount[genre] || 0, TotalTime)}</span>
                                     </p>
                                 ))}
                                 {Object.keys(movieGenreData.timeCount).map(genre => (
-                                    <p key={genre} style={{ display: 'flex', gap: '1rem', color: '#333' }}>
+                                    <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
                                         <span><strong>{genre} :</strong> {formatTime(movieGenreData.timeCount[genre] || 0)}</span>
                                         <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(movieGenreData.timeCount[genre] || 0, TotalTime)}</span>
                                     </p>
                                 ))}
                                 {Object.keys(animeGenreData.timeCount).map(genre => (
-                                    <p key={genre} style={{ display: 'flex', gap: '1rem', color: '#333' }}>
+                                    <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
                                         <span><strong>{genre} :</strong> {formatTime(animeGenreData.timeCount[genre] || 0)}</span>
                                         <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(animeGenreData.timeCount[genre] || 0, TotalTime)}</span>
                                     </p>
@@ -627,11 +631,11 @@ export default function Profil({ params }: { params: { name: string } }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
 
                     {/* Section Séries TV */}
-                    <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: '#f7f7f7', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
+                    <div style={{ border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: 'var(--card-background-color)', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
                         <div style={{ position: 'relative', marginBottom: '20px' }}>
-                            <h2 style={{ marginBottom: '1rem', color: '#333' }} onMouseEnter={() => setHoveredElement('totalTV')} onMouseLeave={() => setHoveredElement(null)}>Séries TV</h2>
+                            <h2 style={{ marginBottom: '1rem', color: 'var(--titre-color)' }} onMouseEnter={() => setHoveredElement('totalTV')} onMouseLeave={() => setHoveredElement(null)}>Séries TV</h2>
                             {hoveredElement === "totalTV" && (
-                                <div style={{ position: 'absolute', backgroundColor: '#e1f5fe', border: '2px solid #0288d1', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                     <p><strong>% séries TV :</strong> {totalEpisodesPercentage(nbTv, TotalMedia)}</p>
                                     <p><strong>% épisodes séries TV :</strong> {totalEpisodesPercentage(totalEpisodesTv, totalEpisodes)}</p>
                                     <p><strong>% temps total séries TV :</strong> {totalTimePercentage(TotalTimeTv, TotalTime)}</p>
@@ -641,11 +645,12 @@ export default function Profil({ params }: { params: { name: string } }) {
 
                         <div onMouseEnter={() => setHoveredElement('totalTvEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
                             <p><strong>Nombre total de séries TV suivies :</strong> </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333' }}>{nbTv}</p>
+                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{nbTv}</p>
+
                             {hoveredElement === 'totalTvEpisodes' && (
-                                <div style={{ position: 'absolute', backgroundColor: '#e1f5fe', border: '2px solid #0288d1', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                     {Object.keys(tvGenreData.episodeCount).map(genre => (
-                                        <p key={genre} style={{ display: 'flex', gap: '0.5rem', color: '#333' }}>
+                                        <p key={genre} style={{ display: 'flex', gap: '0.5rem', color: 'var(--titre-color)' }}>
                                             <span><strong>{genre} :</strong> {tvGenreData.genreCount[genre]} , {tvGenreData.episodeCount[genre] || 0} épisodes</span>
                                             <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(tvGenreData.episodeCount[genre] || 0, totalEpisodesTv)}</span>
                                         </p>
@@ -657,11 +662,12 @@ export default function Profil({ params }: { params: { name: string } }) {
 
                         <div onMouseEnter={() => setHoveredElement('totalTvTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
                             <p><strong>Temps total pour les séries TV :</strong> </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333' }}>{formatTime(TotalTimeTv)}</p>
+                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTimeTv)}</p>
+
                             {hoveredElement === 'totalTvTime' && (
-                                <div style={{ position: 'absolute', backgroundColor: '#e1f5fe', border: '2px solid #0288d1', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                     {Object.keys(tvGenreData.timeCount).map(genre => (
-                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: '#333' }}>
+                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
                                             <span><strong>{genre} :</strong> {formatTime(tvGenreData.timeCount[genre] || 0)}</span>
                                             <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(tvGenreData.timeCount[genre] || 0, TotalTimeTv)}</span>
                                         </p>
@@ -672,11 +678,11 @@ export default function Profil({ params }: { params: { name: string } }) {
                     </div>
 
                     {/* Section Animés */}
-                    <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: '#f7f7f7', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
+                    <div style={{ border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: 'var(--card-background-color)', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
                         <div style={{ position: 'relative', marginBottom: '20px' }}>
-                            <h2 style={{ marginBottom: '1rem', color: '#333' }} onMouseEnter={() => setHoveredElement('totalAnime')} onMouseLeave={() => setHoveredElement(null)}>Animés</h2>
+                            <h2 style={{ marginBottom: '1rem', color: 'var(--titre-color)' }} onMouseEnter={() => setHoveredElement('totalAnime')} onMouseLeave={() => setHoveredElement(null)}>Animés</h2>
                             {hoveredElement === "totalAnime" && (
-                                <div style={{ position: 'absolute', backgroundColor: '#e1f5fe', border: '2px solid #0288d1', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                     <p><strong>% anime :</strong> {totalEpisodesPercentage(nbAnime, TotalMedia)}</p>
                                     <p><strong>% épisodes anime :</strong> {totalEpisodesPercentage(totalEpisodesAnime, totalEpisodes)}</p>
                                     <p><strong>% temps total anime :</strong> {totalTimePercentage(TotalTimeAnime, TotalTime)}</p>
@@ -686,11 +692,12 @@ export default function Profil({ params }: { params: { name: string } }) {
 
                         <div onMouseEnter={() => setHoveredElement('totalAnimeEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
                             <p><strong>Nombre total d&apos;animés suivis :</strong> </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333' }}>{nbAnime}</p>
+                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{nbAnime}</p>
+
                             {hoveredElement === 'totalAnimeEpisodes' && (
-                                <div style={{ position: 'absolute', backgroundColor: '#e1f5fe', border: '2px solid #0288d1', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                     {Object.keys(animeGenreData.episodeCount).map(genre => (
-                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: '#333' }}>
+                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
                                             <span><strong>{genre} :</strong> {animeGenreData.genreCount[genre]} , {animeGenreData.episodeCount[genre] || 0} épisodes</span>
                                             <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(animeGenreData.episodeCount[genre] || 0, totalEpisodesAnime)}</span>
                                         </p>
@@ -702,11 +709,12 @@ export default function Profil({ params }: { params: { name: string } }) {
 
                         <div onMouseEnter={() => setHoveredElement('totalAnimeTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
                             <p><strong>Temps total pour les animés :</strong> </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333' }}>{formatTime(TotalTimeAnime)}</p>
+                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTimeAnime)}</p>
+
                             {hoveredElement === 'totalAnimeTime' && (
-                                <div style={{ position: 'absolute', backgroundColor: '#e1f5fe', border: '2px solid #0288d1', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                     {Object.keys(animeGenreData.timeCount).map(genre => (
-                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: '#333' }}>
+                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
                                             <span><strong>{genre} :</strong> {formatTime(animeGenreData.timeCount[genre] || 0)}</span>
                                             <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(animeGenreData.timeCount[genre] || 0, TotalTimeAnime)}</span>
                                         </p>
@@ -717,11 +725,11 @@ export default function Profil({ params }: { params: { name: string } }) {
                     </div>
 
                     {/* Section Films */}
-                    <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: '#f7f7f7', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
+                    <div style={{ border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: 'var(--card-background-color)', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
                         <div style={{ position: 'relative', marginBottom: '20px' }}>
-                            <h2 style={{ marginBottom: '1rem', color: '#333' }} onMouseEnter={() => setHoveredElement('totalFilm')} onMouseLeave={() => setHoveredElement(null)}>Films</h2>
+                            <h2 style={{ marginBottom: '1rem', color: 'var(--titre-color)' }} onMouseEnter={() => setHoveredElement('totalFilm')} onMouseLeave={() => setHoveredElement(null)}>Films</h2>
                             {hoveredElement === "totalFilm" && (
-                                <div style={{ position: 'absolute', backgroundColor: '#e1f5fe', border: '2px solid #0288d1', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                     <p><strong>% films :</strong> {totalEpisodesPercentage(nbMovie, TotalMedia)}</p>
                                     <p><strong>% épisodes films :</strong> {totalEpisodesPercentage(totalEpisodesMovie, totalEpisodes)}</p>
                                     <p><strong>% temps total films :</strong> {totalTimePercentage(TotalTimeMovie, TotalTime)}</p>
@@ -731,11 +739,12 @@ export default function Profil({ params }: { params: { name: string } }) {
 
                         <div onMouseEnter={() => setHoveredElement('totalMovieEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
                             <p><strong>Nombre total de films suivis :</strong> </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333' }}>{nbMovie}</p>
+                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{nbMovie}</p>
+
                             {hoveredElement === 'totalMovieEpisodes' && (
-                                <div style={{ position: 'absolute', backgroundColor: '#e1f5fe', border: '2px solid #0288d1', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                     {Object.keys(movieGenreData.episodeCount).map(genre => (
-                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: '#333' }}>
+                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
                                             <span><strong>{genre} :</strong> {movieGenreData.genreCount[genre]} , {movieGenreData.episodeCount[genre] || 0} épisodes</span>
                                             <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(movieGenreData.episodeCount[genre] || 0, totalEpisodesMovie)}</span>
                                         </p>
@@ -747,11 +756,12 @@ export default function Profil({ params }: { params: { name: string } }) {
 
                         <div onMouseEnter={() => setHoveredElement('totalMovieTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
                             <p><strong>Temps total pour les films :</strong> </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333' }}>{formatTime(TotalTimeMovie)}</p>
+                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTimeMovie)}</p>
+
                             {hoveredElement === 'totalMovieTime' && (
-                                <div style={{ position: 'absolute', backgroundColor: '#e1f5fe', border: '2px solid #0288d1', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: '0 6px 12px rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                     {Object.keys(movieGenreData.timeCount).map(genre => (
-                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: '#333' }}>
+                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
                                             <span><strong>{genre} :</strong> {formatTime(movieGenreData.timeCount[genre] || 0)}</span>
                                             <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(movieGenreData.timeCount[genre] || 0, TotalTimeMovie)}</span>
                                         </p>
@@ -760,8 +770,10 @@ export default function Profil({ params }: { params: { name: string } }) {
                             )}
                         </div>
                     </div>
+
                 </div>
             </div>
+
 
             <div>
                 <h1 style={{ color: "var(--titre-color)" }}>TOP</h1>
