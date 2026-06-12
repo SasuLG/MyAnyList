@@ -53,6 +53,19 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
         }
     };
 
+    const startAnimation = () => {
+        const el = document.body;
+        el.classList.add("flip-out");
+
+        setTimeout(() => {
+            el.classList.remove("flip-out");
+            el.classList.add("flip-in");
+            setTimeout(() => {
+                el.classList.remove("flip-in");
+            }, 800);
+        }, 800);
+    };
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -75,7 +88,7 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
             <div className="header-content">
                 <div className="header-items">
                     <Link href={HOME_ROUTE}>
-                        <Image unoptimized src="/assets/images/_73117bf0-c91e-4bb6-85f0-64563fc48a5c-removebg-preview.png" alt="logo" width={60} height={60} />
+                        <Image unoptimized className="header-logo" src="/assets/images/logo.png" alt="logo" width={60} height={60} />
                     </Link>
                 </div>
                 <div className="header-items">
@@ -97,7 +110,9 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                                         <div className="dropdown-item">
                                             <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                                                 {mangaMode ? <SwitchSerie width={30} height={30} /> : <SwitchManga width={30} height={30} />}
-                                                <p onClick={() => { setMangaMode(prev => { const next = !prev; document.cookie = `mangaMode=${next ? "true" : "false"}; path=/; max-age=31536000`; document.documentElement.classList.toggle("manga-mode", next); return next; }); }}>{mangaMode ? "Série" : "Manga"} List</p>
+                                                <p onClick={() => {
+                                                    startAnimation(); setMangaMode(prev => { const next = !prev; document.cookie = `mangaMode=${next ? "true" : "false"}; path=/; max-age=31536000`; document.documentElement.classList.toggle("manga-mode", next); return next; });
+                                                }}>{mangaMode ? "Série" : "Manga"} List</p>
                                             </div>
                                         </div>
                                         <div className="dropdown-item">
@@ -139,7 +154,9 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                         <>
                             <div style={{ display: 'flex', alignItems: 'center', marginRight: '1rem', cursor: 'pointer' }}>
                                 {mangaMode ? <SwitchSerie width={30} height={30} /> : <SwitchManga width={30} height={30} />}
-                                <p style={{ color: "var(--header-footer-text)" }} onClick={() => { setMangaMode(prev => { const next = !prev; document.cookie = `mangaMode=${next ? "true" : "false"}; path=/; max-age=31536000`; document.documentElement.classList.toggle("manga-mode", next); return next; }); }}>{mangaMode ? "Série" : "Manga"} List</p>
+                                <p style={{ color: "var(--header-footer-text)" }} onClick={() => {
+                                    startAnimation(); setMangaMode(prev => { const next = !prev; document.cookie = `mangaMode=${next ? "true" : "false"}; path=/; max-age=31536000`; document.documentElement.classList.toggle("manga-mode", next); return next; });
+                                }}>{mangaMode ? "Série" : "Manga"} List</p>
                             </div>
                             <Link href={LOGIN_ROUTE} className={selected_menu === "login" ? "selected" : ""}>Login</Link>
                             <Link href={REGISTER_ROUTE} className={selected_menu === "register" ? "selected" : ""}>Sign up</Link>

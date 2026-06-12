@@ -42,7 +42,7 @@ span, p, h1, h2, h3, h4, h5, h6, li, label, input, textarea, select, option, str
 /* Styles par défaut (clair) */
 :root {
   --background-color: #f0f2f5;
-  --secondary-background-color: #3A6EB0;
+  --secondary-background-color: #2E5C98;/*274F84*/
   --button-color: #007bff;
   --titre-color: black;
   --main-text-color: grey;
@@ -73,7 +73,7 @@ span, p, h1, h2, h3, h4, h5, h6, li, label, input, textarea, select, option, str
 /* Styles pour le mode sombre */
 .dark-mode {
   --background-color: #1d282d;
-  --secondary-background-color: #3A6EB0;
+  --secondary-background-color: #2E5C98;/*274F84*/
   --button-color: #007bff;
   --titre-color: #cad2de;
   --main-text-color: #cad2de;

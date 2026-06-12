@@ -193,6 +193,22 @@ export default function SearchPage() {
    */
   const [Rotating, setRotating] = useState<boolean | undefined>(undefined);
 
+
+  const [selectedNotFormats, setSelectedNotFormats] = useState<string[]>([]);
+
+  const [selectedNotGenres, setSelectedNotGenres] = useState<string[]>([]);
+
+  const [selectedNotStatuses, setSelectedNotStatuses] = useState<string[]>([]);
+
+  const [selectedNotOriginCountries, setSelectedNotOriginCountries] = useState<string[]>([]);
+
+  const [selectedNotProductionCompanies, setSelectedNotProductionCompanies] = useState<string[]>([]);
+
+  const [selectedNotProductionCountries, setSelectedNotProductionCountries] = useState<string[]>([]);
+
+  const [selectedNotTags, setSelectedNotTags] = useState<string[]>([]);
+
+
   const [mangas, setMangas] = useState<MinimalManga[]>([]);
 
   const [filteredMangas, setFilteredMangas] = useState<MinimalManga[]>([]);
@@ -445,24 +461,31 @@ export default function SearchPage() {
     switch (type) {
       case 'genre':
         setSelectedGenres(selectedGenres.filter((genre) => genre !== value));
+        setSelectedNotGenres(selectedNotGenres.filter((genre) => genre !== value));
         break;
       case 'format':
         setSelectedFormats(selectedFormats.filter((format) => format !== value));
+        setSelectedNotFormats(selectedNotFormats.filter((format) => format !== value));
         break;
       case 'status':
         setSelectedStatuses(selectedStatuses.filter((status) => status !== value));
+        setSelectedNotStatuses(selectedNotStatuses.filter((status) => status !== value));
         break;
       case 'originCountry':
         setSelectedOriginCountries(selectedOriginCountries.filter((country) => country !== value));
+        setSelectedNotOriginCountries(selectedNotOriginCountries.filter((country) => country !== value));
         break;
       case 'productionCompany':
         setSelectedProductionCompanies(selectedProductionCompanies.filter((company) => company !== value));
+        setSelectedNotProductionCompanies(selectedNotProductionCompanies.filter((company) => company !== value));
         break;
       case 'productionCountry':
         setSelectedProductionCountries(selectedProductionCountries.filter((country) => country !== value));
+        setSelectedNotProductionCountries(selectedNotProductionCountries.filter((country) => country !== value));
         break;
       case 'tag':
         setSelectedTags(selectedTags.filter((tag) => tag !== value));
+        setSelectedNotTags(selectedNotTags.filter((tag) => tag !== value));
         break;
       default:
         break;
@@ -526,7 +549,20 @@ export default function SearchPage() {
       const matchesVoteRange = (serie.vote_average || 0) >= voteRange.min && (serie.vote_average || 0) <= voteRange.max;
       const matchesEpisodeRange = serie.number_of_episodes >= episodeRange.min && serie.number_of_episodes <= episodeRange.max;
 
-      return matchesFormat && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange && matchesTags;
+      const matchesNotFormat = selectedNotFormats.every(format => !selectedFormats.includes(serie.media_type) &&
+        (selectedNotFormats.includes('tv') && serie.media_type === 'tv') ||
+        (selectedNotFormats.includes('Movie') && serie.media_type === 'movie') ||
+        (selectedNotFormats.includes('Anime') && serie.media_type === 'anime') ||
+        (selectedNotFormats.includes('Film d\'animation') && serie.media_type === 'film d\'animation'));
+
+      const matchesNotGenre = selectedNotGenres.every(genre => !serie.genres.some(g => g.name === genre));
+      const matchesNotStatus = selectedNotStatuses.every(status => !((statusMapping[serie.status] || serie.status) === status));
+      const matchesNotOriginCountry = selectedNotOriginCountries.every(country => !serie.origin_country.some(origin => (origin as any).iso_3166_1 === country));
+      const matchesNotTags = selectedNotTags.every(tag => !serie.tags.some(t => t.name === tag));
+      const matchesNotProductionCompany = selectedNotProductionCompanies.every(company => !(serie.production_companies && serie.production_companies.some(prod => prod.name === company)));
+      const matchesNotProductionCountry = selectedNotProductionCountries.every(country => !serie.production_countries.some(c => c.name === country));
+
+      return matchesNotFormat && matchesNotGenre && matchesNotStatus && matchesNotOriginCountry && matchesNotTags && matchesNotProductionCompany && matchesNotProductionCountry && matchesFormat && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange && matchesTags;
     });
 
     // Apply sorting
@@ -582,6 +618,14 @@ export default function SearchPage() {
     setwithFollowed(false);
     setSelectedTags([]);
     setOrderAsc(true);
+
+    setSelectedNotFormats([]);
+    setSelectedNotGenres([]);
+    setSelectedNotStatuses([]);
+    setSelectedNotOriginCountries([]);
+    setSelectedNotProductionCompanies([]);
+    setSelectedNotProductionCountries([]);
+    setSelectedNotTags([]);
   };
 
   const handleWindowResize = () => {
@@ -608,7 +652,7 @@ export default function SearchPage() {
     if (filtersReady) {
       applyFiltersAndSort();
     }
-  }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, withFollowed, seriesIdFollowed, orderAsc, selectedTags]);
+  }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, withFollowed, seriesIdFollowed, orderAsc, selectedTags, selectedNotFormats, selectedNotGenres, selectedNotStatuses, selectedNotOriginCountries, selectedNotProductionCompanies, selectedNotProductionCountries, selectedNotTags]);
 
   useEffect(() => {
     if (windowWidth) windowWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
@@ -638,7 +682,15 @@ export default function SearchPage() {
     selectedTags.length > 0 ||
     (yearRange.min !== yearRange.minimalRange || yearRange.max !== yearRange.maximalRange) ||
     (voteRange.min !== voteRange.minimalRange || voteRange.max !== voteRange.maximalRange) ||
-    (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange);
+    (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange) ||
+
+    selectedNotFormats.length > 0 ||
+    selectedNotGenres.length > 0 ||
+    selectedNotStatuses.length > 0 ||
+    selectedNotOriginCountries.length > 0 ||
+    selectedNotProductionCompanies.length > 0 ||
+    selectedNotProductionCountries.length > 0 ||
+    selectedNotTags.length > 0;
 
   return (
     <div style={{ height: "100%", padding: windowWidth && windowWidth > 500 ? "2rem 5rem" : "2rem 2rem", backgroundColor: "var(--background-color)" }}>
@@ -709,6 +761,21 @@ export default function SearchPage() {
         tags={tags.map(tag => tag.name)}
         selectedTags={selectedTags}
         onSelectTags={setSelectedTags}
+
+        selectedNotTags={selectedNotTags}
+        onSelectNotTags={setSelectedNotTags}
+        selectedNotFormats={selectedNotFormats}
+        onSelectNotFormats={setSelectedNotFormats}
+        selectedNotGenres={selectedNotGenres}
+        onSelectNotGenres={setSelectedNotGenres}
+        selectedNotStatuses={selectedNotStatuses}
+        onSelectNotStatuses={setSelectedNotStatuses}
+        selectedNotOriginCountries={selectedNotOriginCountries}
+        onSelectNotOriginCountries={setSelectedNotOriginCountries}
+        selectedNotProductionCompanies={selectedNotProductionCompanies}
+        onSelectNotProductionCompanies={setSelectedNotProductionCompanies}
+        selectedNotProductionCountries={selectedNotProductionCountries}
+        onSelectNotProductionCountries={setSelectedNotProductionCountries}
       />
 
       <div className="filter-container">
@@ -719,12 +786,24 @@ export default function SearchPage() {
         {selectedGenres.length > 0 && selectedGenres.map((genre) => (
           <span key={genre} className="filter-label" onClick={() => removeFilter('genre', genre)}> {genre} </span>
         ))}
+        {selectedNotGenres.length > 0 && selectedNotGenres.map((genre) => (
+          <span key={genre} className="filter-label not-filter" onClick={() => removeFilter('genre', genre)}> Not {genre} </span>
+        ))}
+
         {selectedFormats.length > 0 && selectedFormats.map((format) => (
           <span key={format} className="filter-label" onClick={() => removeFilter('format', format)} > {format} </span>
         ))}
+        {selectedNotFormats.length > 0 && selectedNotFormats.map((format) => (
+          <span key={format} className="filter-label not-filter" onClick={() => removeFilter('format', format)} > Not {format} </span>
+        ))}
+
         {selectedStatuses.length > 0 && selectedStatuses.map((status) => (
           <span key={status} className="filter-label" onClick={() => removeFilter('status', status)} >{status}</span>
         ))}
+        {selectedNotStatuses.length > 0 && selectedNotStatuses.map((status) => (
+          <span key={status} className="filter-label not-filter" onClick={() => removeFilter('status', status)} > Not {status} </span>
+        ))}
+
         {selectedOriginCountries.length > 0 && selectedOriginCountries.map((country) => (
           <span
             key={country}
@@ -734,15 +813,37 @@ export default function SearchPage() {
             {country}
           </span>
         ))}
+        {selectedNotOriginCountries.length > 0 && selectedNotOriginCountries.map((country) => (
+          <span
+            key={country}
+            className="filter-label not-filter"
+            onClick={() => removeFilter('originCountry', country)}
+          >
+            Not {country}
+          </span>
+        ))}
+
         {selectedProductionCompanies.length > 0 && selectedProductionCompanies.map((company) => (
           <span key={company} className="filter-label" onClick={() => removeFilter('productionCompany', company)}> {company}</span>
         ))}
+        {selectedNotProductionCompanies.length > 0 && selectedNotProductionCompanies.map((company) => (
+          <span key={company} className="filter-label not-filter" onClick={() => removeFilter('productionCompany', company)}> Not {company}</span>
+        ))}
+
         {selectedProductionCountries.length > 0 && selectedProductionCountries.map((country) => (
           <span key={country} className="filter-label" onClick={() => removeFilter('productionCountry', country)}>{country}</span>
         ))}
+        {selectedNotProductionCountries.length > 0 && selectedNotProductionCountries.map((country) => (
+          <span key={country} className="filter-label not-filter" onClick={() => removeFilter('productionCountry', country)}> Not {country} </span>
+        ))}
+
         {selectedTags.length > 0 && selectedTags.map((tag) => (
           <span key={tag} className="filter-label" onClick={() => removeFilter('tag', tag)}>{tag}</span>
         ))}
+        {selectedNotTags.length > 0 && selectedNotTags.map((tag) => (
+          <span key={tag} className="filter-label not-filter" onClick={() => removeFilter('tag', tag)}> Not {tag} </span>
+        ))}
+
         {(yearRange.min !== yearRange.minimalRange || yearRange.max !== yearRange.maximalRange) && (
           <span className="filter-label" onClick={() => clearYearRange()}> Year: {yearRange.min} - {yearRange.max} </span>
         )}

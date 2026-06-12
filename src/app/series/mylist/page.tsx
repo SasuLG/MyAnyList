@@ -635,7 +635,7 @@ export default function MyList() {
     if (filtersReady) {
       applyFiltersAndSort();
     }
-  }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, series, orderAsc, selectedTags]);
+  }, [filtersReady, series, selectedGenres, selectedFormats, searchQuery, selectedSortBy, selectedStatuses, selectedOriginCountries, selectedProductionCompanies, selectedProductionCountries, yearRange, voteRange, episodeRange, series, orderAsc, selectedTags, selectedNotFormats, selectedNotGenres, selectedNotStatuses, selectedNotOriginCountries, selectedNotProductionCompanies, selectedNotProductionCountries, selectedNotTags]);
 
   useEffect(() => {
     if (windowWidth) windowWidth > 500 ? setButtonsVisible(buttonsVisible) : setButtonsVisible(false);
@@ -721,7 +721,7 @@ export default function MyList() {
                   minNote: 8.5,
                   maxNote: 9.49,
                   images: [
-                    ...filteredSeries.filter(serie => serie.note && serie.note >= 8.5 && serie.note < 9.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC + serie.poster_path)
+                    ...filteredSeries.filter(serie => serie.note && serie.note >= 8.5 && serie.note <= 9.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC + serie.poster_path)
                   ],
                 },
                 {
@@ -730,7 +730,7 @@ export default function MyList() {
                   minNote: 7.5,
                   maxNote: 8.49,
                   images: [
-                    ...filteredSeries.filter(serie => serie.note && serie.note >= 7.5 && serie.note < 8.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC + serie.poster_path)
+                    ...filteredSeries.filter(serie => serie.note && serie.note >= 7.5 && serie.note <= 8.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC + serie.poster_path)
                   ],
                 },
                 {
@@ -739,7 +739,7 @@ export default function MyList() {
                   minNote: 6.5,
                   maxNote: 7.49,
                   images: [
-                    ...filteredSeries.filter(serie => serie.note && serie.note >= 6.5 && serie.note < 7.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC + serie.poster_path)
+                    ...filteredSeries.filter(serie => serie.note && serie.note >= 6.5 && serie.note <= 7.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC + serie.poster_path)
                   ],
                 },
                 {
@@ -748,7 +748,7 @@ export default function MyList() {
                   minNote: 5,
                   maxNote: 6.49,
                   images: [
-                    ...filteredSeries.filter(serie => serie.note && serie.note >= 5 && serie.note < 6.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC + serie.poster_path)
+                    ...filteredSeries.filter(serie => serie.note && serie.note >= 5 && serie.note <= 6.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC + serie.poster_path)
                   ],
                 },
                 {
@@ -757,7 +757,7 @@ export default function MyList() {
                   minNote: 3.5,
                   maxNote: 4.99,
                   images: [
-                    ...filteredSeries.filter(serie => serie.note && serie.note >= 3.5 && serie.note < 4.99).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC + serie.poster_path)
+                    ...filteredSeries.filter(serie => serie.note && serie.note >= 3.5 && serie.note <= 4.99).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC + serie.poster_path)
                   ],
                 },
                 {
@@ -766,7 +766,7 @@ export default function MyList() {
                   minNote: 2,
                   maxNote: 3.49,
                   images: [
-                    ...filteredSeries.filter(serie => serie.note && serie.note >= 2 && serie.note < 3.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC + serie.poster_path)
+                    ...filteredSeries.filter(serie => serie.note && serie.note >= 2 && serie.note <= 3.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => IMG_SRC + serie.poster_path)
                   ],
                 },
                 {
