@@ -1,4 +1,4 @@
-import { Serie, TmdbId } from '@/tmdb/types/series.type';
+import { Serie, TmdbId } from '@/types/series.type';
 import Query from '../postgre.middleware';
 
 /**

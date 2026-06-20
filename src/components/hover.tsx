@@ -1,4 +1,4 @@
-import { MinimalSerie } from "@/tmdb/types/series.type";
+import { MinimalSerie } from "@/types/series.type";
 import {
     ReactNode,
     useState,

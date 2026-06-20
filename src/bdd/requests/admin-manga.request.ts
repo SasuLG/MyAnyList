@@ -1,5 +1,5 @@
 import Query from '../postgre.middleware';
-import { Manga } from '@/anilist/type/mangas.type';
+import { Manga } from '@/types/mangas.type';
 
 /**
  * Fonction qui permet d'ajouter un manga à la base de données.

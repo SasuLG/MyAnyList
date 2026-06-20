@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import MultiSelectDropdown from '@/components/multiSelectDropdown';
 import RangeFilter from './rangeFilter';
-import { Range } from '@/tmdb/types/series.type';
+import { Range } from '@/types/series.type';
 import { Order, MoreFilter } from './svg/filter.svg';
 
 type FiltersProps = {

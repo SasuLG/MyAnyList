@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Loader from "@/components/loader";
 import { BrokenHeart, Heart } from "@/components/svg/heart.svg";
 import { IMG_SRC } from "@/constants/tmdb.consts";
-import { Serie } from "@/tmdb/types/series.type";
+import { Serie } from "@/types/series.type";
 import { useUserContext } from "@/userContext";
 import { Star, StarColored, StarHalfColored } from "@/components/svg/stars.svg";
 import { use } from 'react';

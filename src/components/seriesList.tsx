@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import HoverToolBox from '@/components/hover';
 import { IMG_SRC } from '@/constants/tmdb.consts';
-import { MinimalSerie } from '@/tmdb/types/series.type';
+import { MinimalSerie } from '@/types/series.type';
 import { BrokenHeart, Heart } from './svg/heart.svg';
 import { BASE_DETAILS_SERIE_ROUTE } from '@/constants/app.route.const';
 import { useUserContext } from '@/userContext';

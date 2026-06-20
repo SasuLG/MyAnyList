@@ -1,11 +1,11 @@
 "use client";
 import Loader from "@/components/loader";
 import { IMG_SRC } from "@/constants/tmdb.consts";
-import { ApiSerie, Serie, TmdbId } from "@/tmdb/types/series.type";
+import { ApiSerie, Serie, TmdbId } from "@/types/series.type";
 import { useUserContext } from "@/userContext";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { AnilistId, ApiManga, Manga } from "@/anilist/type/mangas.type";
+import { AnilistId, ApiManga, Manga } from "@/types/mangas.type";
 
 export default function Import() {
 

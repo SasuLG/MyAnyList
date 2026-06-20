@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Range } from '@/tmdb/types/series.type';
+import { Range } from '@/types/series.type';
 
 type RangeFilterProps = {
   range: Range;

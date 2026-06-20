@@ -1,7 +1,7 @@
 import { importSerie } from "@/bdd/requests/admin-series.request";
 import { getSerieById } from "@/bdd/requests/series.request";
 import { getDetailsMovieById, getDetailsSeasonsBySeasonNumber, getDetailsSeriesById, getMoviesTagsByMovieId, getSeriesTagsBySerieId } from "@/tmdb/requests/tseries.request";
-import { Serie } from "@/tmdb/types/series.type";
+import { Serie } from "@/types/series.type";
 import { toRomaji } from "wanakana";
 import path from 'path';
 

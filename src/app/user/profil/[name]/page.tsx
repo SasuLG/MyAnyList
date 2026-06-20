@@ -2,7 +2,7 @@
 
 import { User } from "@/bdd/model/user";
 import { HashWord } from "@/lib/hash";
-import { MinimalSerie } from "@/tmdb/types/series.type";
+import { MinimalSerie } from "@/types/series.type";
 import { useUserContext } from "@/userContext";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";

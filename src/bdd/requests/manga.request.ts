@@ -1,4 +1,4 @@
-import { MinimalManga } from '@/anilist/type/mangas.type';
+import { MinimalManga } from '@/types/mangas.type';
 import Query from '../postgre.middleware';
 
 export async function getRecommendedMangas(userId: string, limit: number, page: number): Promise<{ id: number; total_score: number }[]> {

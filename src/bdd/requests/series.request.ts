@@ -1,4 +1,4 @@
-import { Genre, MinimalSerie, ProductionCompany, ProductionCountry, Serie, Tag, TmdbId } from '@/tmdb/types/series.type';
+import { Genre, MinimalSerie, ProductionCompany, ProductionCountry, Serie, Tag, TmdbId } from '@/types/series.type';
 import Query from '../postgre.middleware';
 
 /**

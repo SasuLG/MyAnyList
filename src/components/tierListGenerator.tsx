@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import { TierList } from './svg/tierList.svg';
 import { useUserContext } from "@/userContext";
 import { IMG_SRC } from "@/constants/tmdb.consts";
+import { createPortal } from "react-dom";
 
 export type Tier = {
   title: string;
@@ -356,7 +357,7 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
       <div onClick={openPopup}>
         <TierList width={40} height={40} />
       </div>
-      {openPopupTierList && (
+      {openPopupTierList && createPortal(
         <div className="popup-overlay">
           <div className="popup-content" style={{ position: 'relative' }}>
             <div className="close-icon" onClick={closePopup} style={{ position: 'absolute', top: '10px', right: '10px', cursor: 'pointer' }}>
@@ -393,7 +394,8 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
             <button className="tier-button-validate" onClick={handleAddTier}>Add New Tier</button>
             <button className="tier-button-validate" onClick={generatePDF}>Generate Tier List</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
