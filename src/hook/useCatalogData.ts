@@ -30,7 +30,7 @@ export const useCatalogData = ({page, user}: UseCatalogDataProps) => {//TODO
             setLoading(true);
 
             try {
-
+                console.log(user)
                 const [
                     seriesRes,
                     genresRes,
