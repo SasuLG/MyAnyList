@@ -2,9 +2,9 @@
 
 import CatalogPage from "@/components/catalog/CatalogPage";
 import { SEARCH_ROUTE } from "@/constants/app.route.const";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
-export default function MyList() {
+export default function WaitList() {
   return (
     <CatalogPage
       page="waitList"
