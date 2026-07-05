@@ -73,7 +73,7 @@ export const mangaToCatalogItem = (manga: MinimalManga): CatalogItem => ({
     last_air_date: manga.end_date ?? '',
     number_of_episodes: manga.chapters ?? 0,
     genres: manga.genres ?? [],
-    vote_average: normalizeScore(manga.meanScore ?? manga.averageScore),
+    vote_average: normalizeScore(manga.meanScore ?? manga.meanScore),
     popularity: manga.popularity ?? 0,
     origin_country: manga.origin_country ? [normalizeOriginCountry(manga.origin_country)] : [],
     episode_run_time: 0,

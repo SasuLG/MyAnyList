@@ -166,6 +166,7 @@ type MinimalManga = {
     status: string | null;
     chapters: number | null;
     meanScore: number | null;
+    popularity: number | null;
     source: string | null;
     synonyms: { id: string; name: string }[];
     origin_country: OriginCountry;
