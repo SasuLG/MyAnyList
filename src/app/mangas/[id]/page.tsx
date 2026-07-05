@@ -36,7 +36,7 @@ export default function MangaDetails({ params }: { params: Promise<{ id: string 
             const userResponse = await fetch(`/api/mangas/${encodeURIComponent(id)}/user/${encodeURIComponent(user.id)}`);
             if (userResponse.ok) {
                 const userData = await userResponse.json();
-                data.note = userData.note !== null && userData.note !== undefined ? { note: userData.note } : undefined;
+                data.note = userData.note ?? undefined;
                 data.follow_date = userData.follow_date;
                 data.comment = userData.comment;
                 setRating(userData.note ?? 0);
