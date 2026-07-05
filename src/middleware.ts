@@ -210,7 +210,7 @@
 // }
 
 
-//POUR PREPROD
+//TODO POUR PREPROD
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_ID_COOKIE } from "@/constants/session.const";
 import {ERROR_ROUTE,HOME_ROUTE,LOGIN_ROUTE,REGISTER_ROUTE} from "./constants/app.route.const";
@@ -231,6 +231,7 @@ export default async function middleware(req: NextRequest) {
   const isAboutRoute = pathname === "/about";
   const isSearchRoute = pathname === "/series/search";
   const isDetailsRoute = pathname.startsWith("/series/") && !pathname.startsWith("/series/mylist");
+  const isDetailsRouteManga = pathname.startsWith("/mangas/") && !pathname.startsWith("/mangas/mylist");
   const isResetRoute = pathname === "/user/reset-password";
   const isAdminRoute = pathname.startsWith("/admin");
 
@@ -245,6 +246,7 @@ export default async function middleware(req: NextRequest) {
       isAboutRoute ||
       isSearchRoute ||
       isDetailsRoute ||
+      isDetailsRouteManga ||
       isResetRoute
     ) {
       return NextResponse.next();

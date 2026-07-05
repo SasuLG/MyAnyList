@@ -2,7 +2,7 @@
 
 import { User } from "@/bdd/model/user";
 import { HashWord } from "@/lib/hash";
-import { MinimalSerie } from "@/types/series.type";
+import { Genre, MinimalSerie } from "@/types/series.type";
 import { useUserContext } from "@/userContext";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,9 @@ import MultiSelectDropdown from "@/components/multiSelectDropdown";
 import { Order } from "@/components/svg/filter.svg";
 import { LOGIN_ROUTE } from "@/constants/app.route.const";
 import { use } from 'react';
+import { mangaToCatalogItem, normalizeCatalogItems } from "@/lib/catalog-item";
+import { CatalogItem } from "@/types/catalog-item.type";
+import { MinimalManga } from "@/types/mangas.type";
 
 export default function Profil({ params }: { params: Promise<{ name: string }> }) {
     const { name } = use(params);
@@ -24,7 +27,7 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
     /**
      * Hook pour récupérer les informations de l'utilisateur.
      */
-    const { user, setAlert, setSelectedMenu } = useUserContext();
+    const { user, setAlert, setSelectedMenu, mangaMode } = useUserContext();
 
     /**
      * Hook pour gérer les états de la page.
@@ -34,12 +37,7 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
     /**
      * Hook pour gérer les séries suivies par l'utilisateur.
      */
-    const [seriesFollowed, setSeriesFollowed] = useState<MinimalSerie[]>([]);
-
-    /**
-     * Hook pour stocker l'id des séries en waitlist
-     */
-    const [seriesIdWaited, setSeriesIdWaited] = useState<number[]>([]);
+    const [seriesFollowed, setSeriesFollowed] = useState<CatalogItem[]>([]);
 
     /**
      * Hook pour gérer les éléments survolés.
@@ -59,7 +57,7 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
     /**
      * Hook pour stocker les séries récentes.
      */
-    const [recentSeries, setRecentSeries] = useState<MinimalSerie[]>([]);
+    const [recentSeries, setRecentSeries] = useState<CatalogItem[]>([]);
 
     /**
      * Hook pour stocker l'ordre des séries récentes.
@@ -74,7 +72,7 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
     /**
      * Hook pour stocker les séries les mieux notées.
      */
-    const [ratedSeries, setRatedSeries] = useState<MinimalSerie[]>([]);
+    const [ratedSeries, setRatedSeries] = useState<CatalogItem[]>([]);
 
     /**
      * Hook pour stocker l'ordre des séries les mieux notées.
@@ -89,7 +87,7 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
     /**
      * Hook pour stocker les séries les plus longues.
      */
-    const [longSeries, setLongSeries] = useState<MinimalSerie[]>([]);
+    const [longSeries, setLongSeries] = useState<CatalogItem[]>([]);
 
     /**
      * Hook pour stocker l'ordre des séries les plus longues.
@@ -107,42 +105,26 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
     const fetchSeriesFollowed = useCallback(async () => {
         if (userProfil === null) return;
         try {
-            let route = `/api/${encodeURIComponent(userProfil.web_token)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`;
-            if (userProfil.login !== user?.login) route = `/api/user/${encodeURIComponent(userProfil.id)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`;
+            const contentMode = mangaMode ? 'mangas' : 'series';
+            let route = `/api/${encodeURIComponent(userProfil.web_token)}/${contentMode}/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`;
+            if (userProfil.login !== user?.login) route = `/api/user/${encodeURIComponent(userProfil.id)}/${contentMode}/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(false)}`;
             const response = await fetch(route);
             const data = await response.json();
             if (response.ok) {
-                setSeriesFollowed(data);
-                setRecentSeries(data);
-                setRatedSeries(data);
-                setLongSeries(data);
+                const normalizedData = mangaMode
+                    ? (data as MinimalManga[]).map(mangaToCatalogItem)
+                    : normalizeCatalogItems(data, 'series');
+                setSeriesFollowed(normalizedData);
+                setRecentSeries(normalizedData);
+                setRatedSeries(normalizedData);
+                setLongSeries(normalizedData);
             } else {
                 setAlert({ message: data.message, valid: false });
             }
         } catch (error) {
             setAlert({ message: 'Failed to fetch series followed', valid: false });
         }
-    }, [userProfil, setAlert]);
-
-    /**
-     * Fonction pour récupérer les séries en waitlist de l'utilisateur.
-     */
-    const fetchWaitList = useCallback(async () => {
-        if (userProfil === null) return;
-        try {
-            let route = `/api/${encodeURIComponent(userProfil.web_token)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(true)}`;
-            if (userProfil.login !== user?.login) route = `/api/user/${encodeURIComponent(userProfil.id)}/series/all?limit=${encodeURIComponent(2000000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(true)}`;
-            const response = await fetch(route);
-            const data = await response.json();
-            if (response.ok) {
-                setSeriesIdWaited(data.map((serie: MinimalSerie) => serie.id));
-            } else {
-                setAlert({ message: data.message, valid: false });
-            }
-        } catch (error) {
-            setAlert({ message: 'Failed to fetch series waited', valid: false });
-        }
-    }, [userProfil, setAlert]);
+    }, [userProfil, mangaMode, user?.login, setAlert]);
 
     /**
      * Fonction pour récupérer les informations de l'utilisateur.
@@ -242,7 +224,7 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
      * @param {MinimalSerie} serie - La série
      * @returns 
      */
-    const onClickHeart = async (serie: MinimalSerie) => {
+    const onClickHeart = async (serie: CatalogItem) => {
         if (user === undefined) {
             router.push(LOGIN_ROUTE);
             return;
@@ -251,9 +233,10 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
             const confirmUnfollow = confirm("Êtes-vous sûr de vouloir arrêter de suivre cette série ?");
             if (!confirmUnfollow) return;
         }
-        let route = `/api/${encodeURIComponent(user.web_token)}/series/follow`;
-        if (seriesFollowed.map(serie => serie.id.toString()).includes(serie.id.toString())) {
-            route = `/api/${encodeURIComponent(user.web_token)}/series/unfollow`;
+        const contentMode = mangaMode ? 'mangas' : 'series';
+        let route = `/api/${encodeURIComponent(user.web_token)}/${contentMode}/follow`;
+        if (seriesFollowed.map(serie => serie.id).includes(serie.id)) {
+            route = `/api/${encodeURIComponent(user.web_token)}/${contentMode}/unfollow`;
         }
         const response = await fetch(route, {
             method: 'POST',
@@ -285,38 +268,9 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
     }
 
     /**
-     * Fonction pour gérer le clic sur le sablier, qui permet de toggle la série en waitlist
-     * @param {MinimalSerie} serie - La série
-    */
-    const onClickHourGlass = async (serie: MinimalSerie) => {
-        if (user === undefined) {
-            router.push(LOGIN_ROUTE);
-            return;
-        }
-        const route = `/api/${encodeURIComponent(user.web_token)}/series/${seriesIdWaited.includes(Number(serie.id)) ? 'un' : ''}waited`;
-        const response = await fetch(route, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ serieId: serie.id }),
-        });
-        const data = await response.json();
-        setSeriesIdWaited(data ? (seriesIdWaited.includes(Number(serie.id)) ? seriesIdWaited.filter((id) => id !== Number(serie.id)) : [...seriesIdWaited, Number(serie.id)]) : seriesIdWaited);
-
-        await fetch('/api/user/activity', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ login: user.login }),
-        });
-    }
-
-    /**
      * Fonction pour récupérer les données des séries suivies par l'utilisateur.
      */
-    const { nbTv, nbMovie, nbAnime, TotalTimeTv, TotalTimeMovie, TotalTimeAnime, TotalMedia, TotalTime, totalEpisodesTv, totalEpisodesMovie, totalEpisodesAnime } = useMemo(() => {
+    const { nbTv, nbMovie, nbAnime, TotalTimeTv, TotalTimeMovie, TotalTimeAnime, totalEpisodesTv, totalEpisodesMovie, totalEpisodesAnime } = useMemo(() => {
         if (!userProfil) return {
             nbTv: 0, nbMovie: 0, nbAnime: 0,
             TotalTimeTv: 0, TotalTimeMovie: 0, TotalTimeAnime: 0,
@@ -353,28 +307,127 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
         };
     }, [userProfil, seriesFollowed]);
 
+    // Pour l'affichage dynamique des labels
+    const totalContentLabel = mangaMode ? 'mangas' : 'séries suivies';
+    const totalUnitLabel = mangaMode ? 'chapitres' : 'épisodes';
+    const totalWatchLabel = mangaMode ? 'Nombre total de chapitres' : 'Temps total de visionnage';
+
+    const mangaFormatGroups = [
+        { key: 'manga', label: 'Manga', formats: ['manga'] },
+        { key: 'manhwa', label: 'Manhwa', formats: ['manhwa'] },
+        { key: 'manhua', label: 'Manhua', formats: ['manhua'] },
+        { key: 'novel', label: 'Novel', formats: ['novel'] },
+        { key: 'one_shot', label: 'One_shot', formats: ['one_shot', 'oneshot', 'one-shot'] },
+    ];
+
+    const seriesFormatGroups = [
+        { key: 'tv', label: 'Séries TV', formats: ['tv'] },
+        { key: 'movie', label: 'Films', formats: ['movie', 'film d\'animation'] },
+        { key: 'anime', label: 'Animés', formats: ['anime'] },
+    ];
+
+    const contentFormatGroups = mangaMode ? mangaFormatGroups : seriesFormatGroups;
+
+    function getGenreData(items: CatalogItem[]) {
+        const genreCount: { [key: string]: number } = {};
+        const episodeCount: { [key: string]: number } = {};
+        const timeCount: { [key: string]: number } = {};
+        items.forEach((item) => {
+            item.genres.forEach((genre) => {
+                genreCount[genre.name] = (genreCount[genre.name] || 0) + 1;
+                episodeCount[genre.name] = (episodeCount[genre.name] || 0) + (item.number_of_episodes || 0);
+                timeCount[genre.name] = (timeCount[genre.name] || 0) + (item.total_time || 0);
+            });
+        });
+        return { genreCount, episodeCount, timeCount };
+    }
+
+    const contentStats = useMemo(() => {
+        const totalFormats = new Set(contentFormatGroups.flatMap(group => group.formats));
+
+        const groups = contentFormatGroups.map(group => {
+            const items = seriesFollowed.filter(item => group.formats.includes(item.media_type));
+            return {
+                ...group,
+                items,
+                count: items.length,
+                totalEpisodes: items.reduce((acc, item) => acc + (item.number_of_episodes || 0), 0),
+                totalTime: items.reduce((acc, item) => acc + (item.total_time || 0), 0),
+                genreData: getGenreData(items),
+            };
+        });
+
+        if (mangaMode) {
+            const otherItems = seriesFollowed.filter(item => !totalFormats.has(item.media_type));
+            if (otherItems.length > 0) {
+                groups.push({
+                    key: 'other',
+                    label: 'Autres',
+                    formats: ['other'],
+                    items: otherItems,
+                    count: otherItems.length,
+                    totalEpisodes: otherItems.reduce((acc, item) => acc + (item.number_of_episodes || 0), 0),
+                    totalTime: otherItems.reduce((acc, item) => acc + (item.total_time || 0), 0),
+                    genreData: getGenreData(otherItems),
+                });
+            }
+        }
+
+        return groups;
+    }, [contentFormatGroups, mangaMode, seriesFollowed]);
+
+
+    const { TotalMedia, TotalEpisodes, TotalTime } = useMemo(() => {
+        const mediaCount = contentStats.reduce((acc, group) => acc + group.count, 0);
+        const episodesCount = contentStats.reduce((acc, group) => acc + group.totalEpisodes, 0);
+        const timeCount = contentStats.reduce((acc, group) => acc + group.totalTime, 0);
+
+        return {
+            TotalMedia: mediaCount,
+            TotalEpisodes: episodesCount,
+            TotalTime: timeCount
+        };
+    }, [contentStats]);
+
     /**
      * Fonction pour appliquer les filtres et trier les séries récentes.
      */
     const applyFiltersAndSortRecent = () => {
-        let filteredSeries: MinimalSerie[] = [];
+        let filteredSeries: CatalogItem[] = [];
 
         const formatSet = new Set(selectedRecentFormats);
 
         if (formatSet.size === 0) {
             filteredSeries = [...seriesFollowed];
         } else {
-            filteredSeries = seriesFollowed.filter(serie => {
-                const isTv = serie.media_type === 'tv';
-                const isMovie = serie.media_type === 'movie';
-                const isAnime = serie.media_type === 'anime';
-                const isFilmAnimation = serie.media_type === 'film d\'animation';
+            if (!mangaMode) {
+                filteredSeries = seriesFollowed.filter(serie => {
+                    const isTv = serie.media_type === 'tv';
+                    const isMovie = serie.media_type === 'movie';
+                    const isAnime = serie.media_type === 'anime';
+                    const isFilmAnimation = serie.media_type === 'film d\'animation';
 
-                return (formatSet.has('tv') && isTv) ||
-                    (formatSet.has('movie') && isMovie) ||
-                    (formatSet.has('anime') && isAnime) ||
-                    (formatSet.has('film d\'animation') && isFilmAnimation);
-            });
+                    return (formatSet.has('tv') && isTv) ||
+                        (formatSet.has('movie') && isMovie) ||
+                        (formatSet.has('anime') && isAnime) ||
+                        (formatSet.has('film d\'animation') && isFilmAnimation);
+                });
+            } else {
+                filteredSeries = seriesFollowed.filter(serie => {
+                    const isManga = serie.media_type === 'manga';
+                    const isManhwa = serie.media_type === 'manhwa';
+                    const isManhua = serie.media_type === 'manhua';
+                    const isNovel = serie.media_type === 'novel';
+                    const isOneShot = serie.media_type === 'one_shot' || serie.media_type === 'oneshot' || serie.media_type === 'one-shot';
+
+                    return (formatSet.has('manga') && isManga) ||
+                        (formatSet.has('manhwa') && isManhwa) ||
+                        (formatSet.has('manhua') && isManhua) ||
+                        (formatSet.has('novel') && isNovel) ||
+                        (formatSet.has('one_shot') && isOneShot);
+                })
+            }
+
         }
         filteredSeries.sort((a, b) => {
             const dateA = a.follow_date ? new Date(a.follow_date).getTime() : 0;
@@ -393,24 +446,40 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
      * Fonction pour appliquer les filtres et trier les séries les mieux notées.
      */
     const applyFiltersAndSortRating = () => {
-        let filteredSeries: MinimalSerie[] = [];
+        let filteredSeries: CatalogItem[] = [];
 
         const formatSet = new Set(selectedRatingFormats);
 
         if (formatSet.size === 0) {
             filteredSeries = [...seriesFollowed];
         } else {
-            filteredSeries = seriesFollowed.filter(serie => {
-                const isTv = serie.media_type === 'tv';
-                const isMovie = serie.media_type === 'movie';
-                const isAnime = serie.media_type === 'anime';
-                const isFilmAnimation = serie.media_type === 'film d\'animation';
+            if (!mangaMode) {
+                filteredSeries = seriesFollowed.filter(serie => {
+                    const isTv = serie.media_type === 'tv';
+                    const isMovie = serie.media_type === 'movie';
+                    const isAnime = serie.media_type === 'anime';
+                    const isFilmAnimation = serie.media_type === 'film d\'animation';
 
-                return (formatSet.has('tv') && isTv) ||
-                    (formatSet.has('movie') && isMovie) ||
-                    (formatSet.has('anime') && isAnime) ||
-                    (formatSet.has('film d\'animation') && isFilmAnimation);
-            });
+                    return (formatSet.has('tv') && isTv) ||
+                        (formatSet.has('movie') && isMovie) ||
+                        (formatSet.has('anime') && isAnime) ||
+                        (formatSet.has('film d\'animation') && isFilmAnimation);
+                });
+            } else {
+                filteredSeries = seriesFollowed.filter(serie => {
+                    const isManga = serie.media_type === 'manga';
+                    const isManhwa = serie.media_type === 'manhwa';
+                    const isManhua = serie.media_type === 'manhua';
+                    const isNovel = serie.media_type === 'novel';
+                    const isOneShot = serie.media_type === 'one_shot' || serie.media_type === 'oneshot' || serie.media_type === 'one-shot';
+
+                    return (formatSet.has('manga') && isManga) ||
+                        (formatSet.has('manhwa') && isManhwa) ||
+                        (formatSet.has('manhua') && isManhua) ||
+                        (formatSet.has('novel') && isNovel) ||
+                        (formatSet.has('one_shot') && isOneShot);
+                })
+            }
         }
 
         filteredSeries.sort((a, b) => (b.note || 0) - (a.note || 0));
@@ -423,27 +492,44 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
      * Fonction pour appliquer les filtres et trier les séries les plus longues.
      */
     const applyFiltersAndSortTime = () => {
-        let filteredSeries: MinimalSerie[] = [];
+        let filteredSeries: CatalogItem[] = [];
 
         const formatSet = new Set(selectedLongFormats);
 
         if (formatSet.size === 0) {
             filteredSeries = [...seriesFollowed];
         } else {
-            filteredSeries = seriesFollowed.filter(serie => {
-                const isTv = serie.media_type === 'tv';
-                const isMovie = serie.media_type === 'movie';
-                const isAnime = serie.media_type === 'anime';
-                const isFilmAnimation = serie.media_type === 'film d\'animation';
+            if (!mangaMode) {
+                filteredSeries = seriesFollowed.filter(serie => {
+                    const isTv = serie.media_type === 'tv';
+                    const isMovie = serie.media_type === 'movie';
+                    const isAnime = serie.media_type === 'anime';
+                    const isFilmAnimation = serie.media_type === 'film d\'animation';
 
-                return (formatSet.has('tv') && isTv) ||
-                    (formatSet.has('movie') && isMovie) ||
-                    (formatSet.has('anime') && isAnime) ||
-                    (formatSet.has('film d\'animation') && isFilmAnimation);
-            });
+                    return (formatSet.has('tv') && isTv) ||
+                        (formatSet.has('movie') && isMovie) ||
+                        (formatSet.has('anime') && isAnime) ||
+                        (formatSet.has('film d\'animation') && isFilmAnimation);
+                });
+            } else {
+                filteredSeries = seriesFollowed.filter(serie => {
+                    const isManga = serie.media_type === 'manga';
+                    const isManhwa = serie.media_type === 'manhwa';
+                    const isManhua = serie.media_type === 'manhua';
+                    const isNovel = serie.media_type === 'novel';
+                    const isOneShot = serie.media_type === 'one_shot' || serie.media_type === 'oneshot' || serie.media_type === 'one-shot';
+
+                    return (formatSet.has('manga') && isManga) ||
+                        (formatSet.has('manhwa') && isManhwa) ||
+                        (formatSet.has('manhua') && isManhua) ||
+                        (formatSet.has('novel') && isNovel) ||
+                        (formatSet.has('one_shot') && isOneShot);
+                })
+            }
         }
 
-        filteredSeries.sort((a, b) => (b.total_time || 0) - (a.total_time || 0));
+        if (!mangaMode) filteredSeries.sort((a, b) => (b.total_time || 0) - (a.total_time || 0));
+        else filteredSeries.sort((a, b) => (b.number_of_episodes || 0) - (a.number_of_episodes || 0));
         if (!orderAscTime) filteredSeries.reverse();
 
         setLongSeries(filteredSeries.slice(0, 5));
@@ -462,23 +548,6 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
         return `${days ? `${days}j ` : ''}${hours ? `${hours}h ` : ''}${minutes ? `${minutes}m` : ''}`.trim();
     }, []);
 
-    /**
-     * Fonction pour récupérer les données des genres.
-     */
-    const getGenreData = useCallback((items: MinimalSerie[]) => {
-        const genreCount: { [key: string]: number } = {};
-        const episodeCount: { [key: string]: number } = {};
-        const timeCount: { [key: string]: number } = {};
-        items.forEach((item) => {
-            item.genres.forEach((genre) => {
-                genreCount[genre.name] = (genreCount[genre.name] || 0) + 1;
-                episodeCount[genre.name] = (episodeCount[genre.name] || 0) + (item.number_of_episodes || 0);
-                timeCount[genre.name] = (timeCount[genre.name] || 0) + (item.total_time || 0);
-            });
-        });
-        return { genreCount, episodeCount, timeCount };
-    }, []);
-
     useEffect(() => {
         if (user) {
             if (name !== user?.login && user.admin) {
@@ -491,8 +560,7 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
 
     useEffect(() => {
         fetchSeriesFollowed();
-        fetchWaitList();
-    }, [fetchSeriesFollowed, fetchWaitList]);
+    }, [fetchSeriesFollowed]);
 
     useEffect(() => {
         setSelectedMenu("userProfil");
@@ -517,13 +585,22 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
     const movieGenreData = useMemo(() => getGenreData(seriesFollowed.filter(serie => serie.media_type === 'movie' || serie.media_type === 'film d\'animation')), [seriesFollowed, getGenreData]);
     const animeGenreData = useMemo(() => getGenreData(seriesFollowed.filter(serie => serie.media_type === 'anime')), [seriesFollowed, getGenreData]);
 
-    const combinedGenreData = useMemo(() => ({ ...tvGenreData.genreCount, ...movieGenreData.genreCount, ...animeGenreData.genreCount }), [tvGenreData.genreCount, movieGenreData.genreCount, animeGenreData.genreCount]);
-    const combinedEpisodeData = useMemo(() => ({ ...tvGenreData.episodeCount, ...movieGenreData.episodeCount, ...animeGenreData.episodeCount }), [tvGenreData.episodeCount, movieGenreData.episodeCount, animeGenreData.episodeCount]);
-
     const totalEpisodes = totalEpisodesTv + totalEpisodesMovie + totalEpisodesAnime;
-    const totalGenres = useMemo(() => ({ ...tvGenreData.genreCount, ...movieGenreData.genreCount, ...animeGenreData.genreCount }), [tvGenreData.genreCount, movieGenreData.genreCount, animeGenreData.genreCount]);
-    const totalGenrePercentage = useCallback((genreName: string) => ((totalGenres[genreName] || 0) / TotalMedia * 100).toFixed(1) + '%', [totalGenres, TotalMedia]);
 
+    const { combinedGenreData, combinedEpisodeData } = useMemo(() => {
+        const genCount: { [key: string]: number } = {};
+        const epCount: { [key: string]: number } = {};
+
+        contentStats.forEach(group => {
+            Object.keys(group.genreData.genreCount).forEach(genre => {
+                genCount[genre] = (genCount[genre] || 0) + group.genreData.genreCount[genre];
+            });
+            Object.keys(group.genreData.episodeCount).forEach(genre => {
+                epCount[genre] = (epCount[genre] || 0) + group.genreData.episodeCount[genre];
+            });
+        });
+        return { combinedGenreData: genCount, combinedEpisodeData: epCount };
+    }, [contentStats]);
     return (
         <div style={{ margin: '20px' }}>
             <h1 style={{ fontSize: '2rem', color: 'var(--titre-color)', marginBottom: "3rem" }}>Profil : {userProfil?.login}</h1>
@@ -582,196 +659,341 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                     <h2 style={{ marginBottom: '1rem', color: 'var(--titre-color)', fontWeight: 'bold' }}>Total</h2>
 
                     <div onMouseEnter={() => setHoveredElement('totalMediaEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
-                        <p><strong>Nombre total de séries suivis :</strong> </p>
+                        <p><strong>Nombre total de {totalContentLabel} :</strong> </p>
                         <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{TotalMedia}</p>
 
                         {hoveredElement === 'totalMediaEpisodes' && (
                             <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-hover-total)', border: '2px solid var(--tooltip-border-total)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
-                                {Object.keys(combinedEpisodeData).map(genre => (
-                                    <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
-                                        <span><strong>{genre} :</strong> {combinedGenreData[genre] || 0} , {combinedEpisodeData[genre] || 0} épisodes</span>
-                                        <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(combinedEpisodeData[genre] || 0, totalEpisodesTv + totalEpisodesMovie + totalEpisodesAnime)}</span>
-                                    </p>
-                                ))}
-                                <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}><strong>Total :</strong> {TotalMedia} , {totalEpisodesTv + totalEpisodesMovie + totalEpisodesAnime} épisodes</p>
+                                {mangaMode ? (
+                                    // TODO
+                                    <>
+                                        {/* TODO 1 : Répartition par nombre de TITRES (Médias) */}
+                                        {Object.keys(combinedGenreData).map(genre => (
+                                            <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                <span><strong>{genre} :</strong> {combinedGenreData[genre] || 0} {totalContentLabel}</span>
+                                                <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(combinedGenreData[genre] || 0, TotalMedia)}</span>
+                                            </p>
+                                        ))}
+                                        <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}><strong>Total :</strong> {TotalMedia} {totalContentLabel}</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        {Object.keys(combinedEpisodeData).map(genre => (
+                                            <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                <span><strong>{genre} :</strong> {combinedGenreData[genre] || 0} , {combinedEpisodeData[genre] || 0} {totalUnitLabel}</span>
+                                                <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(combinedEpisodeData[genre] || 0, totalEpisodesTv + totalEpisodesMovie + totalEpisodesAnime)}</span>
+                                            </p>
+                                        ))}
+                                        <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}><strong>Total :</strong> {TotalMedia} , {totalEpisodesTv + totalEpisodesMovie + totalEpisodesAnime} {totalUnitLabel}</p>
+                                    </>
+                                )}
+
                             </div>
                         )}
                     </div>
 
                     <div onMouseEnter={() => setHoveredElement('totalTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
-                        <p><strong>Temps total de visionnage :</strong> </p>
-                        <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTime)}</p>
+                        <p><strong>{totalWatchLabel} :</strong> </p>
+                        {mangaMode ? (
+                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{TotalEpisodes}</p>
+                        ) : (
+                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTime)}</p>
+                        )}
 
                         {hoveredElement === 'totalTime' && (
                             <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-hover-total)', border: '2px solid var(--tooltip-border-total)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
-                                {Object.keys(tvGenreData.timeCount).map(genre => (
-                                    <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
-                                        <span><strong>{genre} :</strong> {formatTime(tvGenreData.timeCount[genre] || 0)}</span>
-                                        <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(tvGenreData.timeCount[genre] || 0, TotalTime)}</span>
-                                    </p>
-                                ))}
-                                {Object.keys(movieGenreData.timeCount).map(genre => (
-                                    <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
-                                        <span><strong>{genre} :</strong> {formatTime(movieGenreData.timeCount[genre] || 0)}</span>
-                                        <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(movieGenreData.timeCount[genre] || 0, TotalTime)}</span>
-                                    </p>
-                                ))}
-                                {Object.keys(animeGenreData.timeCount).map(genre => (
-                                    <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
-                                        <span><strong>{genre} :</strong> {formatTime(animeGenreData.timeCount[genre] || 0)}</span>
-                                        <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(animeGenreData.timeCount[genre] || 0, TotalTime)}</span>
-                                    </p>
-                                ))}
+                                {mangaMode ? (
+                                    <>
+                                        {/* TODO 2 : Répartition par nombre de CHAPITRES */}
+                                        {Object.keys(combinedEpisodeData).map(genre => (
+                                            <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                <span><strong>{genre} :</strong> {combinedEpisodeData[genre] || 0} {totalUnitLabel}</span>
+                                                <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(combinedEpisodeData[genre] || 0, TotalEpisodes)}</span>
+                                            </p>
+                                        ))}
+                                        <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}><strong>Total :</strong> {TotalEpisodes} {totalUnitLabel}</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        {Object.keys(tvGenreData.timeCount).map(genre => (
+                                            <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                <span><strong>{genre} :</strong> {formatTime(tvGenreData.timeCount[genre] || 0)}</span>
+                                                <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(tvGenreData.timeCount[genre] || 0, TotalTime)}</span>
+                                            </p>
+                                        ))}
+                                        {Object.keys(movieGenreData.timeCount).map(genre => (
+                                            <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                <span><strong>{genre} :</strong> {formatTime(movieGenreData.timeCount[genre] || 0)}</span>
+                                                <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(movieGenreData.timeCount[genre] || 0, TotalTime)}</span>
+                                            </p>
+                                        ))}
+                                        {Object.keys(animeGenreData.timeCount).map(genre => (
+                                            <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                <span><strong>{genre} :</strong> {formatTime(animeGenreData.timeCount[genre] || 0)}</span>
+                                                <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(animeGenreData.timeCount[genre] || 0, TotalTime)}</span>
+                                            </p>
+                                        ))}
+                                    </>
+                                )}
+
                             </div>
                         )}
                     </div>
                 </div>
 
                 {/* Sections principales en rangée */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                {mangaMode ? (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "20px" }}>
+                        {contentStats.map((group, index) => (
+                            <div key={group.key} style={{ gridColumn: index < 2 ? "span 3" : "span 2", border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: 'var(--card-background-color)', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
+                                <div style={{ position: 'relative', marginBottom: '20px' }}>
 
-                    {/* Section Séries TV */}
-                    <div style={{ border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: 'var(--card-background-color)', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
-                        <div style={{ position: 'relative', marginBottom: '20px' }}>
-                            <h2 style={{ marginBottom: '1rem', color: 'var(--titre-color)' }} onMouseEnter={() => setHoveredElement('totalTV')} onMouseLeave={() => setHoveredElement(null)}>Séries TV</h2>
-                            {hoveredElement === "totalTV" && (
-                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
-                                    <p><strong>% séries TV :</strong> {totalEpisodesPercentage(nbTv, TotalMedia)}</p>
-                                    <p><strong>% épisodes séries TV :</strong> {totalEpisodesPercentage(totalEpisodesTv, totalEpisodes)}</p>
-                                    <p><strong>% temps total séries TV :</strong> {totalTimePercentage(TotalTimeTv, TotalTime)}</p>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
+                                        <h2 style={{ marginBottom: '1rem', color: 'var(--titre-color)' }} onMouseEnter={() => setHoveredElement(group.key)} onMouseLeave={() => setHoveredElement(null)}>{group.label}</h2>
+                                        <div style={{ position: "relative", width: 53, height: 53 }}>
+                                            <svg width="53" height="53" viewBox="23.3 23.3 46.6 46.6">
+                                                <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
+                                                <circle cx="46.7" cy="46.7" r="20" style={{ fill: 'transparent', stroke: '#191919', strokeWidth: '4' }} />
+                                                <circle cx="46.7" cy="46.7" r="20" style={{ strokeDasharray: 2 * Math.PI * 20, strokeDashoffset: 2 * Math.PI * 20 * (1 - group.totalEpisodes / TotalEpisodes), fill: 'transparent', stroke: '#da2121', strokeWidth: '4', transform: "rotate(-90deg)", transformOrigin: "46.7px 46.7px" }} />
+                                                <circle cx={46.7 + 20 * Math.cos((group.totalEpisodes / TotalEpisodes) * 2 * Math.PI - Math.PI / 2)} cy={46.7 + 20 * Math.sin((group.totalEpisodes / TotalEpisodes) * 2 * Math.PI - Math.PI / 2)} r="3" fill="#da2121" filter="url(#glow)" />
+                                            </svg>
+                                            <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "center", alignItems: "center", fontSize: "0.6rem", fontWeight: "bold", color: "var(--titre-color)", pointerEvents: "none" }}>
+                                                {totalEpisodesPercentage(group.totalEpisodes, TotalEpisodes)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {hoveredElement === group.key && (
+                                        <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                            <p><strong>% {group.label.toLowerCase()} :</strong> {totalEpisodesPercentage(group.count, TotalMedia)}</p>
+                                            <p><strong>% {totalUnitLabel} :</strong> {totalEpisodesPercentage(group.totalEpisodes, TotalEpisodes)}</p>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+
+                                <div onMouseEnter={() => setHoveredElement(`${group.key}-count`)} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
+                                    <p><strong>Nombre total de {group.label.toLowerCase()} suivis :</strong> </p>
+                                    <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{group.count}</p>
+                                    {hoveredElement === `${group.key}-count` && (
+                                        <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                            {Object.keys(group.genreData.episodeCount).map(genre => (
+                                                <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                    <span><strong>{genre} :</strong> {group.genreData.genreCount[genre]} {group.label}</span>
+                                                    <span style={{ fontWeight: 'bold' }}> {totalEpisodesPercentage(group.genreData.genreCount[genre] || 0, group.count || 0)}</span>
+                                                </p>
+                                            ))}
+                                            <p style={{ fontWeight: 'bold' }}><strong>Total :</strong> {group.totalEpisodes} {totalUnitLabel} ({totalEpisodesPercentage(group.totalEpisodes, TotalEpisodes)})</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div onMouseEnter={() => setHoveredElement(`${group.key}-time`)} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
+                                    <p><strong>Total de {totalUnitLabel} :</strong></p>
+                                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{group.totalEpisodes}</p>
+                                    {hoveredElement === `${group.key}-time` && (
+                                        <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                            {Object.keys(group.genreData.episodeCount).map(genre => (
+                                                <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                    <span><strong>{genre} :</strong> {group.genreData.episodeCount[genre] || 0} {totalUnitLabel}</span>
+                                                    <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(group.genreData.episodeCount[genre] || 0, group.totalEpisodes || 0)}</span>
+                                                </p>
+                                            ))}
+                                            <p style={{ fontWeight: 'bold' }}><strong>Total :</strong> {group.totalEpisodes} {totalUnitLabel} ({totalEpisodesPercentage(group.totalEpisodes, TotalEpisodes)})</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                        {/* Section Séries TV */}
+                        <div style={{ border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: 'var(--card-background-color)', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
+                            <div style={{ position: 'relative', marginBottom: '20px' }}>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
+                                    <h2 style={{ marginBottom: '1rem', color: 'var(--titre-color)' }} onMouseEnter={() => setHoveredElement('totalTV')} onMouseLeave={() => setHoveredElement(null)}>Séries TV</h2>
+                                    <div style={{ position: "relative", width: 53, height: 53 }}>
+                                        <svg width="53" height="53" viewBox="23.3 23.3 46.6 46.6">
+                                            <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
+                                            <circle cx="46.7" cy="46.7" r="20" style={{ fill: 'transparent', stroke: '#191919', strokeWidth: '4' }} />
+                                            <circle cx="46.7" cy="46.7" r="20" style={{ strokeDasharray: 2 * Math.PI * 20, strokeDashoffset: 2 * Math.PI * 20 * (1 - TotalTimeTv / TotalTime), fill: 'transparent', stroke: '#da2121', strokeWidth: '4', transform: "rotate(-90deg)", transformOrigin: "46.7px 46.7px" }} />
+                                            <circle cx={46.7 + 20 * Math.cos((TotalTimeTv / TotalTime) * 2 * Math.PI - Math.PI / 2)} cy={46.7 + 20 * Math.sin((TotalTimeTv / TotalTime) * 2 * Math.PI - Math.PI / 2)} r="3" fill="#da2121" filter="url(#glow)" />
+                                        </svg>
+                                        <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "center", alignItems: "center", fontSize: "0.6rem", fontWeight: "bold", color: "var(--titre-color)", pointerEvents: "none" }}>
+                                            {totalTimePercentage(TotalTimeTv, TotalTime)}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {hoveredElement === "totalTV" && (
+                                    <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                        <p><strong>% séries TV :</strong> {totalEpisodesPercentage(nbTv, TotalMedia)}</p>
+                                        <p><strong>% épisodes séries TV :</strong> {totalEpisodesPercentage(totalEpisodesTv, totalEpisodes)}</p>
+                                        <p><strong>% temps total séries TV :</strong> {totalTimePercentage(TotalTimeTv, TotalTime)}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div onMouseEnter={() => setHoveredElement('totalTvEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
+                                <p><strong>Nombre total de séries TV suivies :</strong> </p>
+                                <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{nbTv}</p>
+
+                                {hoveredElement === 'totalTvEpisodes' && (
+                                    <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                        {Object.keys(tvGenreData.episodeCount).map(genre => (
+                                            <p key={genre} style={{ display: 'flex', gap: '0.5rem', color: 'var(--titre-color)' }}>
+                                                <span><strong>{genre} :</strong> {tvGenreData.genreCount[genre]} , {tvGenreData.episodeCount[genre] || 0} épisodes</span>
+                                                <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(tvGenreData.episodeCount[genre] || 0, totalEpisodesTv)}</span>
+                                            </p>
+                                        ))}
+                                        <p style={{ fontWeight: 'bold' }}><strong>Total :</strong> {totalEpisodesTv} épisodes ({totalEpisodesPercentage(totalEpisodesTv, totalEpisodes)})</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div onMouseEnter={() => setHoveredElement('totalTvTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
+                                <p><strong>Temps total pour les séries TV :</strong> </p>
+                                <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTimeTv)}</p>
+
+                                {hoveredElement === 'totalTvTime' && (
+                                    <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                        {Object.keys(tvGenreData.timeCount).map(genre => (
+                                            <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                <span><strong>{genre} :</strong> {formatTime(tvGenreData.timeCount[genre] || 0)}</span>
+                                                <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(tvGenreData.timeCount[genre] || 0, TotalTimeTv)}</span>
+                                            </p>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        <div onMouseEnter={() => setHoveredElement('totalTvEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
-                            <p><strong>Nombre total de séries TV suivies :</strong> </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{nbTv}</p>
+                        {/* Section Animés */}
+                        <div style={{ border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: 'var(--card-background-color)', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
+                            <div style={{ position: 'relative', marginBottom: '20px' }}>
 
-                            {hoveredElement === 'totalTvEpisodes' && (
-                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
-                                    {Object.keys(tvGenreData.episodeCount).map(genre => (
-                                        <p key={genre} style={{ display: 'flex', gap: '0.5rem', color: 'var(--titre-color)' }}>
-                                            <span><strong>{genre} :</strong> {tvGenreData.genreCount[genre]} , {tvGenreData.episodeCount[genre] || 0} épisodes</span>
-                                            <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(tvGenreData.episodeCount[genre] || 0, totalEpisodesTv)}</span>
-                                        </p>
-                                    ))}
-                                    <p style={{ fontWeight: 'bold' }}><strong>Total :</strong> {totalEpisodesTv} épisodes ({totalEpisodesPercentage(totalEpisodesTv, totalEpisodes)})</p>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
+                                    <h2 style={{ marginBottom: '1rem', color: 'var(--titre-color)' }} onMouseEnter={() => setHoveredElement('totalAnime')} onMouseLeave={() => setHoveredElement(null)}>Animés</h2>
+                                    <div style={{ position: "relative", width: 53, height: 53 }}>
+                                        <svg width="53" height="53" viewBox="23.3 23.3 46.6 46.6">
+                                            <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
+                                            <circle cx="46.7" cy="46.7" r="20" style={{ fill: 'transparent', stroke: '#191919', strokeWidth: '4' }} />
+                                            <circle cx="46.7" cy="46.7" r="20" style={{ strokeDasharray: 2 * Math.PI * 20, strokeDashoffset: 2 * Math.PI * 20 * (1 - TotalTimeAnime / TotalTime), fill: 'transparent', stroke: '#200ec2', strokeWidth: '4', transform: "rotate(-90deg)", transformOrigin: "46.7px 46.7px" }} />
+                                            <circle cx={46.7 + 20 * Math.cos((TotalTimeAnime / TotalTime) * 2 * Math.PI - Math.PI / 2)} cy={46.7 + 20 * Math.sin((TotalTimeAnime / TotalTime) * 2 * Math.PI - Math.PI / 2)} r="3" fill="#200ec2" filter="url(#glow)" />
+                                        </svg>
+                                        <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "center", alignItems: "center", fontSize: "0.6rem", fontWeight: "bold", color: "var(--titre-color)", pointerEvents: "none" }}>
+                                            {totalTimePercentage(TotalTimeAnime, TotalTime)}
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
+
+                                {hoveredElement === "totalAnime" && (
+                                    <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                        <p><strong>% anime :</strong> {totalEpisodesPercentage(nbAnime, TotalMedia)}</p>
+                                        <p><strong>% épisodes anime :</strong> {totalEpisodesPercentage(totalEpisodesAnime, totalEpisodes)}</p>
+                                        <p><strong>% temps total anime :</strong> {totalTimePercentage(TotalTimeAnime, TotalTime)}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div onMouseEnter={() => setHoveredElement('totalAnimeEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
+                                <p><strong>Nombre total d&apos;animés suivis :</strong> </p>
+                                <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{nbAnime}</p>
+
+                                {hoveredElement === 'totalAnimeEpisodes' && (
+                                    <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                        {Object.keys(animeGenreData.episodeCount).map(genre => (
+                                            <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                <span><strong>{genre} :</strong> {animeGenreData.genreCount[genre]} , {animeGenreData.episodeCount[genre] || 0} épisodes</span>
+                                                <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(animeGenreData.episodeCount[genre] || 0, totalEpisodesAnime)}</span>
+                                            </p>
+                                        ))}
+                                        <p style={{ fontWeight: 'bold' }}><strong>Total :</strong> {totalEpisodesAnime} épisodes ({totalEpisodesPercentage(totalEpisodesAnime, totalEpisodes)})</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div onMouseEnter={() => setHoveredElement('totalAnimeTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
+                                <p><strong>Temps total pour les animés :</strong> </p>
+                                <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTimeAnime)}</p>
+
+                                {hoveredElement === 'totalAnimeTime' && (
+                                    <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                        {Object.keys(animeGenreData.timeCount).map(genre => (
+                                            <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                <span><strong>{genre} :</strong> {formatTime(animeGenreData.timeCount[genre] || 0)}</span>
+                                                <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(animeGenreData.timeCount[genre] || 0, TotalTimeAnime)}</span>
+                                            </p>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        <div onMouseEnter={() => setHoveredElement('totalTvTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
-                            <p><strong>Temps total pour les séries TV :</strong> </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTimeTv)}</p>
+                        {/* Section Films */}
+                        <div style={{ border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: 'var(--card-background-color)', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
+                            <div style={{ position: 'relative', marginBottom: '20px' }}>
 
-                            {hoveredElement === 'totalTvTime' && (
-                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
-                                    {Object.keys(tvGenreData.timeCount).map(genre => (
-                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
-                                            <span><strong>{genre} :</strong> {formatTime(tvGenreData.timeCount[genre] || 0)}</span>
-                                            <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(tvGenreData.timeCount[genre] || 0, TotalTimeTv)}</span>
-                                        </p>
-                                    ))}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
+                                    <h2 style={{ marginBottom: '1rem', color: 'var(--titre-color)' }} onMouseEnter={() => setHoveredElement('totalFilm')} onMouseLeave={() => setHoveredElement(null)}>Films</h2>
+                                    <div style={{ position: "relative", width: 53, height: 53 }}>
+                                        <svg width="53" height="53" viewBox="23.3 23.3 46.6 46.6">
+                                            <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
+                                            <circle cx="46.7" cy="46.7" r="20" style={{ fill: 'transparent', stroke: '#191919', strokeWidth: '4' }} />
+                                            <circle cx="46.7" cy="46.7" r="20" style={{ strokeDasharray: 2 * Math.PI * 20, strokeDashoffset: 2 * Math.PI * 20 * (1 - TotalTimeMovie / TotalTime), fill: 'transparent', stroke: '#21da2a', strokeWidth: '4', transform: "rotate(-90deg)", transformOrigin: "46.7px 46.7px" }} />
+                                            <circle cx={46.7 + 20 * Math.cos((TotalTimeMovie / TotalTime) * 2 * Math.PI - Math.PI / 2)} cy={46.7 + 20 * Math.sin((TotalTimeMovie / TotalTime) * 2 * Math.PI - Math.PI / 2)} r="3" fill="#21da2a" filter="url(#glow)" />
+                                        </svg>
+                                        <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "center", alignItems: "center", fontSize: "0.6rem", fontWeight: "bold", color: "var(--titre-color)", pointerEvents: "none" }}>
+                                            {totalTimePercentage(TotalTimeMovie, TotalTime)}
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
+
+                                {hoveredElement === "totalFilm" && (
+                                    <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                        <p><strong>% films :</strong> {totalEpisodesPercentage(nbMovie, TotalMedia)}</p>
+                                        <p><strong>% épisodes films :</strong> {totalEpisodesPercentage(totalEpisodesMovie, totalEpisodes)}</p>
+                                        <p><strong>% temps total films :</strong> {totalTimePercentage(TotalTimeMovie, TotalTime)}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div onMouseEnter={() => setHoveredElement('totalMovieEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
+                                <p><strong>Nombre total de films suivis :</strong> </p>
+                                <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{nbMovie}</p>
+
+                                {hoveredElement === 'totalMovieEpisodes' && (
+                                    <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                        {Object.keys(movieGenreData.episodeCount).map(genre => (
+                                            <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                <span><strong>{genre} :</strong> {movieGenreData.genreCount[genre]} , {movieGenreData.episodeCount[genre] || 0} épisodes</span>
+                                                <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(movieGenreData.episodeCount[genre] || 0, totalEpisodesMovie)}</span>
+                                            </p>
+                                        ))}
+                                        <p style={{ fontWeight: 'bold' }}><strong>Total :</strong> {totalEpisodesMovie} épisodes ({totalEpisodesPercentage(totalEpisodesMovie, totalEpisodes)})</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div onMouseEnter={() => setHoveredElement('totalMovieTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
+                                <p><strong>Temps total pour les films :</strong> </p>
+                                <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTimeMovie)}</p>
+
+                                {hoveredElement === 'totalMovieTime' && (
+                                    <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                        {Object.keys(movieGenreData.timeCount).map(genre => (
+                                            <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
+                                                <span><strong>{genre} :</strong> {formatTime(movieGenreData.timeCount[genre] || 0)}</span>
+                                                <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(movieGenreData.timeCount[genre] || 0, TotalTimeMovie)}</span>
+                                            </p>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-
-                    {/* Section Animés */}
-                    <div style={{ border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: 'var(--card-background-color)', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
-                        <div style={{ position: 'relative', marginBottom: '20px' }}>
-                            <h2 style={{ marginBottom: '1rem', color: 'var(--titre-color)' }} onMouseEnter={() => setHoveredElement('totalAnime')} onMouseLeave={() => setHoveredElement(null)}>Animés</h2>
-                            {hoveredElement === "totalAnime" && (
-                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
-                                    <p><strong>% anime :</strong> {totalEpisodesPercentage(nbAnime, TotalMedia)}</p>
-                                    <p><strong>% épisodes anime :</strong> {totalEpisodesPercentage(totalEpisodesAnime, totalEpisodes)}</p>
-                                    <p><strong>% temps total anime :</strong> {totalTimePercentage(TotalTimeAnime, TotalTime)}</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div onMouseEnter={() => setHoveredElement('totalAnimeEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
-                            <p><strong>Nombre total d&apos;animés suivis :</strong> </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{nbAnime}</p>
-
-                            {hoveredElement === 'totalAnimeEpisodes' && (
-                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
-                                    {Object.keys(animeGenreData.episodeCount).map(genre => (
-                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
-                                            <span><strong>{genre} :</strong> {animeGenreData.genreCount[genre]} , {animeGenreData.episodeCount[genre] || 0} épisodes</span>
-                                            <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(animeGenreData.episodeCount[genre] || 0, totalEpisodesAnime)}</span>
-                                        </p>
-                                    ))}
-                                    <p style={{ fontWeight: 'bold' }}><strong>Total :</strong> {totalEpisodesAnime} épisodes ({totalEpisodesPercentage(totalEpisodesAnime, totalEpisodes)})</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div onMouseEnter={() => setHoveredElement('totalAnimeTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
-                            <p><strong>Temps total pour les animés :</strong> </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTimeAnime)}</p>
-
-                            {hoveredElement === 'totalAnimeTime' && (
-                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
-                                    {Object.keys(animeGenreData.timeCount).map(genre => (
-                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
-                                            <span><strong>{genre} :</strong> {formatTime(animeGenreData.timeCount[genre] || 0)}</span>
-                                            <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(animeGenreData.timeCount[genre] || 0, TotalTimeAnime)}</span>
-                                        </p>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Section Films */}
-                    <div style={{ border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: 'var(--card-background-color)', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
-                        <div style={{ position: 'relative', marginBottom: '20px' }}>
-                            <h2 style={{ marginBottom: '1rem', color: 'var(--titre-color)' }} onMouseEnter={() => setHoveredElement('totalFilm')} onMouseLeave={() => setHoveredElement(null)}>Films</h2>
-                            {hoveredElement === "totalFilm" && (
-                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
-                                    <p><strong>% films :</strong> {totalEpisodesPercentage(nbMovie, TotalMedia)}</p>
-                                    <p><strong>% épisodes films :</strong> {totalEpisodesPercentage(totalEpisodesMovie, totalEpisodes)}</p>
-                                    <p><strong>% temps total films :</strong> {totalTimePercentage(TotalTimeMovie, TotalTime)}</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div onMouseEnter={() => setHoveredElement('totalMovieEpisodes')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
-                            <p><strong>Nombre total de films suivis :</strong> </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{nbMovie}</p>
-
-                            {hoveredElement === 'totalMovieEpisodes' && (
-                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
-                                    {Object.keys(movieGenreData.episodeCount).map(genre => (
-                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
-                                            <span><strong>{genre} :</strong> {movieGenreData.genreCount[genre]} , {movieGenreData.episodeCount[genre] || 0} épisodes</span>
-                                            <span style={{ fontWeight: 'bold' }}>{totalEpisodesPercentage(movieGenreData.episodeCount[genre] || 0, totalEpisodesMovie)}</span>
-                                        </p>
-                                    ))}
-                                    <p style={{ fontWeight: 'bold' }}><strong>Total :</strong> {totalEpisodesMovie} épisodes ({totalEpisodesPercentage(totalEpisodesMovie, totalEpisodes)})</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div onMouseEnter={() => setHoveredElement('totalMovieTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
-                            <p><strong>Temps total pour les films :</strong> </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTimeMovie)}</p>
-
-                            {hoveredElement === 'totalMovieTime' && (
-                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
-                                    {Object.keys(movieGenreData.timeCount).map(genre => (
-                                        <p key={genre} style={{ display: 'flex', gap: '1rem', color: 'var(--titre-color)' }}>
-                                            <span><strong>{genre} :</strong> {formatTime(movieGenreData.timeCount[genre] || 0)}</span>
-                                            <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(movieGenreData.timeCount[genre] || 0, TotalTimeMovie)}</span>
-                                        </p>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                </div>
+                )}
             </div>
 
 
@@ -781,36 +1003,36 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                     <h2 style={{ color: "var(--titre-color)" }}>Récemment vue</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                         <span style={{ color: "var(--titre-color)" }}>Format</span>
-                        <MultiSelectDropdown options={['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedRecentFormats} onSelect={setSelectedRecentFormats} />
+                        <MultiSelectDropdown options={mangaMode ? ['manga', 'manhwa', 'manhua', 'novel', 'one_shot'] : ['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedRecentFormats} onSelect={setSelectedRecentFormats} />
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', position: 'relative', cursor: 'pointer', marginRight: '-1.5rem', width: "max-content" }} onClick={() => setOrderAscRecent(!orderAscRecent)}  >
                         <Order width={30} height={30} orderAsc={orderAscRecent} />
                     </div>
-                    <SeriesList series={recentSeries} styleType={"grid"} followedIds={recentSeries.map(serie => Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} limit={8} size="very-small" isList={false} />
+                    <SeriesList series={recentSeries} styleType={"grid"} followedIds={recentSeries.map(serie => serie.id)} onClickHeart={onClickHeart} limit={8} size="very-small" isList={true} mode={mangaMode ? 'mangas' : 'series'} />
                 </div>
 
                 <div>
                     <h2 style={{ color: "var(--titre-color)" }}>Les mieux notés</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                         <span style={{ color: "var(--titre-color)" }}>Format</span>
-                        <MultiSelectDropdown options={['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedRatingFormats} onSelect={setSelectedRatingFormats} />
+                        <MultiSelectDropdown options={mangaMode ? ['manga', 'manhwa', 'manhua', 'novel', 'one_shot'] : ['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedRatingFormats} onSelect={setSelectedRatingFormats} />
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', position: 'relative', cursor: 'pointer', marginRight: '-1.5rem', width: "max-content" }} onClick={() => setOrderAscRating(!orderAscRating)}  >
                         <Order width={30} height={30} orderAsc={orderAscRating} />
                     </div>
-                    <SeriesList series={ratedSeries} styleType={"grid"} followedIds={ratedSeries.map(serie => Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} limit={8} size="very-small" isList={false} />
+                    <SeriesList series={ratedSeries} styleType={"grid"} followedIds={ratedSeries.map(serie => serie.id)} onClickHeart={onClickHeart} limit={8} size="very-small" isList={true} mode={mangaMode ? 'mangas' : 'series'} />
                 </div>
 
                 <div>
                     <h2 style={{ color: "var(--titre-color)" }}>Les plus longs</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                         <span style={{ color: "var(--titre-color)" }}>Format</span>
-                        <MultiSelectDropdown options={['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedLongFormats} onSelect={setSelectedLongFormats} />
+                        <MultiSelectDropdown options={mangaMode ? ['manga', 'manhwa', 'manhua', 'novel', 'one_shot'] : ['tv', 'movie', 'anime', "film d'animation"]} selectedOptions={selectedLongFormats} onSelect={setSelectedLongFormats} />
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', position: 'relative', cursor: 'pointer', marginRight: '-1.5rem', width: "max-content" }} onClick={() => setOrderAscTime(!orderAscTime)}  >
                         <Order width={30} height={30} orderAsc={orderAscTime} />
                     </div>
-                    <SeriesList series={longSeries} styleType={"grid"} followedIds={longSeries.map(serie => Number(serie.id))} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} limit={8} size="very-small" isList={false} />
+                    <SeriesList series={longSeries} styleType={"grid"} followedIds={longSeries.map(serie => serie.id)} onClickHeart={onClickHeart} limit={8} size="very-small" isList={true} mode={mangaMode ? 'mangas' : 'series'} />
                 </div>
             </div>
         </div>

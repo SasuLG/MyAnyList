@@ -411,7 +411,7 @@ document.addEventListener("click", (e) => {{
 
 def main():
 
-    root = input("Chemin du projet : ").strip()
+    root = input("Chemin du projet : ").strip()#src
 
     if not os.path.isdir(root):
         print("Répertoire invalide")

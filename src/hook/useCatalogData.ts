@@ -1,21 +1,24 @@
 import { useEffect, useState } from "react";
-import {MinimalSerie, ProductionCompany, ProductionCountry, Tag} from "@/types/series.type";
+import { ProductionCompany, ProductionCountry, Tag } from "@/types/series.type";
 import { User } from "@/bdd/model/user";
+import { TagExternal } from '@/types/mangas.type';
+import { CatalogItem } from '@/types/catalog-item.type';
+import { normalizeCatalogItems } from '@/lib/catalog-item';
 
-interface UseCatalogDataProps {page: "search" | "myList" | "waitList"; user: User | undefined}
+interface UseCatalogDataProps {page: "search" | "myList" | "waitList"; user: User | undefined; mode: "mangas" | "series"}
 
-export const useCatalogData = ({page, user}: UseCatalogDataProps) => {//TODO
-
-    const [series, setSeries] = useState<MinimalSerie[]>([]);
+export const useCatalogData = ({page, user, mode}: UseCatalogDataProps) => {//TODO
+    const isSeries = mode === "series";
+    const [series, setSeries] = useState<CatalogItem[]>([]);
 
     const [genres, setGenres] = useState<string[]>([]);
     const [originCountries, setOriginCountries] = useState<string[]>([]);
     const [productionCompanies, setProductionCompanies] = useState<ProductionCompany[]>([]);
     const [productionCountries, setProductionCountries] = useState<ProductionCountry[]>([]);
-    const [tags, setTags] = useState<Tag[]>([]);
+    const [tags, setTags] = useState<Tag[] | TagExternal>([]);
 
-    const [seriesIdFollowed, setSeriesIdFollowed] = useState<number[]>([]);
-    const [seriesIdWaited, setSeriesIdWaited] = useState<number[]>([]);
+    const [seriesIdFollowed, setSeriesIdFollowed] = useState<string[]>([]);
+    const [seriesIdWaited, setSeriesIdWaited] = useState<string[]>([]);
 
     const [loading, setLoading] = useState(true);
 
@@ -28,9 +31,7 @@ export const useCatalogData = ({page, user}: UseCatalogDataProps) => {//TODO
     useEffect(() => {
         const load = async () => {
             setLoading(true);
-
             try {
-                console.log(user)
                 const [
                     seriesRes,
                     genresRes,
@@ -39,12 +40,12 @@ export const useCatalogData = ({page, user}: UseCatalogDataProps) => {//TODO
                     productionCountriesRes,
                     tagsRes
                 ] = await Promise.all([
-                    page==="search"?fetch("/api/series/all?limit=2000000&page=1"):user?fetch(`/api/${encodeURIComponent(user.web_token)}/series/all?limit=${encodeURIComponent(200000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(page==="waitList")}`):fetch("/api/series/all?limit=2000000&page=1"),
-                    fetch("/api/series/genre"),
+                    page==="search"?fetch(`/api/${encodeURIComponent(mode)}/all?limit=2000000&page=1`):user?fetch(`/api/${encodeURIComponent(user.web_token)}/${encodeURIComponent(mode)}/all?limit=${encodeURIComponent(200000)}&page=${encodeURIComponent(1)}&waitList=${encodeURIComponent(page==="waitList")}`):fetch(`/api/${encodeURIComponent(mode)}/all?limit=2000000&page=1`),
+                    fetch(`/api/${encodeURIComponent(mode)}/genre`),
                     fetch("/api/series/origin_country"),
-                    fetch("/api/series/production_companies"),
-                    fetch("/api/series/production_countries"),
-                    fetch("/api/series/tags")
+                    isSeries ? fetch("/api/series/production_companies") : Promise.resolve({ json: async () => [] } as Response),
+                    isSeries ? fetch("/api/series/production_countries") : Promise.resolve({ json: async () => [] } as Response),
+                    fetch(`/api/${encodeURIComponent(mode)}/tags`)
                 ]);
 
                 const [
@@ -63,22 +64,29 @@ export const useCatalogData = ({page, user}: UseCatalogDataProps) => {//TODO
                     tagsRes.json()
                 ]);
 
-                setSeries(seriesData);
+                const normalizedSeries = normalizeCatalogItems(seriesData, mode);
+
+                setSeries(normalizedSeries);
                 setGenres(genresData);
-                setOriginCountries(originCountriesData);
-                setProductionCompanies(productionCompaniesData);
-                setProductionCountries(productionCountriesData);
+                setOriginCountries(isSeries ? originCountriesData : []);
+                setProductionCompanies(isSeries ? productionCompaniesData : []);
+                setProductionCountries(isSeries ? productionCountriesData : []);
                 setTags(tagsData);
 
-                if (seriesData.length > 0) {
-                    setMinYear(Math.min(...seriesData.map((serie: MinimalSerie) => new Date(serie.first_air_date).getFullYear())));
-                    setMaxEpisodes(Math.max(...seriesData.map((serie: MinimalSerie) => serie.number_of_episodes)));
+                if (normalizedSeries.length > 0) {
+                    const years = normalizedSeries
+                        .map((serie) => new Date(serie.first_air_date).getFullYear())
+                        .filter((year) => !Number.isNaN(year));
+
+                    if (years.length > 0) {
+                        setMinYear(Math.min(...years));
+                    }
+                    setMaxEpisodes(Math.max(...normalizedSeries.map((serie) => serie.number_of_episodes)));
                 }
 
                 if (user) {
-
-                    const followedIds = page==="search" || page==="waitList"?await (await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all/id`)).json():seriesData.length > 0?seriesData.map((serie: MinimalSerie) => serie.id):await (await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all/id`)).json();
-                    const waitedRes = page !=="waitList"?await (await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all/wait/id`)).json():seriesData.length>0?seriesData.map((serie: MinimalSerie) => serie.id):await (await fetch(`/api/${encodeURIComponent(user.web_token)}/series/all/wait/id`)).json();
+                    const followedIds = page==="search" || page==="waitList"?await (await fetch(`/api/${encodeURIComponent(user.web_token)}/${encodeURIComponent(mode)}/all/id`)).json():normalizedSeries.length > 0?normalizedSeries.map((serie) => serie.id):await (await fetch(`/api/${encodeURIComponent(user.web_token)}/${encodeURIComponent(mode)}/all/id`)).json();
+                    const waitedRes = page !=="waitList"?await (await fetch(`/api/${encodeURIComponent(user.web_token)}/${encodeURIComponent(mode)}/all/wait/id`)).json():normalizedSeries.length>0?normalizedSeries.map((serie) => serie.id):await (await fetch(`/api/${encodeURIComponent(user.web_token)}/${encodeURIComponent(mode)}/all/wait/id`)).json();
 
                     setSeriesIdFollowed(followedIds);
                     setSeriesIdWaited(waitedRes);
@@ -90,10 +98,8 @@ export const useCatalogData = ({page, user}: UseCatalogDataProps) => {//TODO
                 setFetchDataFinished(true);
             }
         };
-
         load();
-
-    }, [user]);
+    }, [user, mode]);
 
     return {
         loading,

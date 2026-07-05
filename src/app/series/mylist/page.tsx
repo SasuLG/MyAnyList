@@ -8,6 +8,7 @@ export default function MyList() {
   return (
     <CatalogPage
       page="myList"
+      defaultSortBy="Followed"
       emptyMessage={
         <>To follow a serie click on the heart in the page <Link href={SEARCH_ROUTE} style={{ color: "var(--secondary-background-color)" }}>search series</Link></>
       }

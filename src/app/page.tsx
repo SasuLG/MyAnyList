@@ -4,9 +4,10 @@ import { useUserContext } from "@/userContext";
 import Link from "next/link";
 import { IMG_SRC } from "@/constants/tmdb.consts";
 import { MinimalSerie } from "@/types/series.type";
-import { BASE_DETAILS_SERIE_ROUTE } from "@/constants/app.route.const";
+import { BASE_DETAILS_MANGA_ROUTE, BASE_DETAILS_SERIE_ROUTE } from "@/constants/app.route.const";
 import Image from "next/image";
 import { MinimalManga } from "@/types/mangas.type";
+import { getCatalogPosterSrc } from "@/lib/catalog-item";
 
 export default function Home() {
 
@@ -204,8 +205,8 @@ export default function Home() {
               {recommendedMangas.length > 0 && mangaMode && recommendedMangas.map((manga, index) => (
                 <div className="item" key={index} style={{ "--position": index } as React.CSSProperties}>
                   <div style={{ backgroundColor: "var(--secondary-background-color)", borderRadius: "8px", overflow: "hidden", transition: "transform 0.3s", cursor: "pointer", }}>
-                    <Link href={`${BASE_DETAILS_SERIE_ROUTE}/${manga.id}`} onMouseDown={(e) => e.stopPropagation()}>
-                      <Image src={`${manga.cover_image}`} alt={manga.title_english || ""} width={500} height={750} style={{ borderRadius: "4px" }} />
+                    <Link href={`${BASE_DETAILS_MANGA_ROUTE}/${manga.id}`} onMouseDown={(e) => e.stopPropagation()}>
+                      <Image src={getCatalogPosterSrc(manga.cover_image, 'mangas')} alt={manga.title_english || ""} width={500} height={750} style={{ borderRadius: "4px" }} />
                     </Link>
                     <div style={{ padding: "1rem", color: "var(--secondary-text-color)", height: "90px", display: "flex", alignItems: "center", justifyContent: "center", }}>
                       <h3 style={{ margin: "0 0 0.5rem", fontSize: "1.25rem", }}>{manga.title_english || ""}</h3>

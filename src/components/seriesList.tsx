@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import HoverToolBox from '@/components/hover';
-import { IMG_SRC } from '@/constants/tmdb.consts';
-import { MinimalSerie } from '@/types/series.type';
+import { CatalogItem } from '@/types/catalog-item.type';
 import { BrokenHeart, Heart } from './svg/heart.svg';
-import { BASE_DETAILS_SERIE_ROUTE } from '@/constants/app.route.const';
+import { BASE_DETAILS_MANGA_ROUTE, BASE_DETAILS_SERIE_ROUTE } from '@/constants/app.route.const';
 import { useUserContext } from '@/userContext';
 import { HourGlass } from './svg/hourglass.svg';
+import { getCatalogPosterSrc } from '@/lib/catalog-item';
 
 const useMediaQuery = (query: string) => {
   const [matches, setMatches] = useState<boolean>(false);
@@ -24,17 +24,18 @@ const useMediaQuery = (query: string) => {
 };
 
 type SeriesListProps = {
-  series: MinimalSerie[];
+  series: CatalogItem[];
   styleType: 'grid' | 'list';
-  followedIds: number[];
-  waitedIds: number[];
-  onClickHeart: (serie: MinimalSerie) => void;
-  onClickHourGlass: (serie: MinimalSerie) => void;
+  followedIds: string[];
+  waitedIds?: string[];
+  onClickHeart: (serie: CatalogItem) => void;
+  onClickHourGlass?: (serie: CatalogItem) => void;
   limit?: number;
   size?: 'normal' | 'small' | 'very-small' | 'extra-small' | 'large';
   isMylist?: boolean;
   isList?: boolean;
   isOrdering?: boolean;
+  mode?: "mangas" | "series"
 };
 
 const sizeStyles = {
@@ -106,7 +107,7 @@ const adjustSizes = (baseStyles: typeof sizeStyles[keyof typeof sizeStyles], isS
   };
 };
 
-const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, onClickHourGlass, limit, size = 'normal', isMylist = true, isList = true, isOrdering = false }: SeriesListProps) => {
+const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, onClickHourGlass, limit, size = 'normal', isMylist = true, isList = true, isOrdering = false, mode }: SeriesListProps) => {
 
   /**
    * Hook qui permet de savoir si la souris est sur un élément
@@ -146,10 +147,10 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
   /**
    * Fonction pour mettre à jour le vote de l'utilisateur.
    */
-  const updateVote = async (note: number, serie: MinimalSerie) => {
+  const updateVote = async (note: number, serie: CatalogItem) => {
     if (!user) return;
     if (note === null || note < 0 || note > 10) return setAlert({ message: "La note doit être comprise entre 0 et 10", valid: false });
-    const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/series/${encodeURIComponent(serie.id)}/vote`, {
+    const response = await fetch(`/api/${encodeURIComponent(user.web_token)}/${mode}/${encodeURIComponent(serie.id)}/vote`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -168,7 +169,7 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
   /**
    * Fonction pour gérer le blur de l'input.
    */
-  const handleBlur = async (serie: MinimalSerie) => {
+  const handleBlur = async (serie: CatalogItem) => {
     if (inputValue !== null) {
       await updateVote(inputValue, serie);
     }
@@ -177,7 +178,7 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
   /**
    * Fonction pour gérer le keydown de l'input.
    */
-  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>, serie: MinimalSerie) => {
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>, serie: CatalogItem) => {
     if (e.key === 'Enter' && inputValue !== null) {
       e.preventDefault();
       await updateVote(inputValue, serie);
@@ -203,6 +204,8 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
 
   const { imgWidth, padding, fontSize, badgeSize, badgeFontSize, maxwidth, gap } = styles;
   const heartSize = Math.round(baseStyles.heartSize * (isSmallScreen ? 0.6 : 1));
+  const contentCountLabel = mode === 'mangas' ? 'Chapters' : 'Episodes';
+  const statusLabel = mode === 'mangas' ? 'Status' : 'Status';
 
   const imgWidthStyle = styleType === 'list' && size === 'large' ? imgWidth : styleType === 'list' ? `calc(${imgWidth}px - 60px)` : `${imgWidth}px`;
 
@@ -217,6 +220,9 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
 
   const colors = ['#F1C40F', '#E67E22', '#1F8EFA', '#2ECC71', '#9B59B6', '#FF5733', '#16A085', '#F39C12', '#D35400', '#8E44AD', '#3498DB', '#C0392B', '#27AE60', '#2980B9', '#D5A6BD', '#7F8C8D', '#F4D03F', '#9B59B6', '#F5B7B1', '#E74C3C', '#16A085', '#C7D8D1', '#E67E22', '#FF6F61', '#F1C40F', '#F44336', '#E91E63', '#F39C12', '#7FDBFF', '#BDC3C7', '#F44336', '#8D6E63', '#9C27B0', '#3F51B5', '#81C784'];
 
+  useEffect(() => {
+    console.log(series)
+  }, [series])
   return (
     <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexWrap: 'wrap', gap: `${gap}px`, flexDirection: styleType === 'list' ? 'column' : undefined }}>
       {limitedSeries.map((serie, index) => {
@@ -226,11 +232,11 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
-            <Link href={`${BASE_DETAILS_SERIE_ROUTE}/${serie.id}`} style={{ display: 'flex', flexDirection: styleType === 'grid' ? 'column' : 'row', textDecoration: 'none', color: 'inherit', flex: 1, transition: 'transform 0.3s' }}>
+            <Link href={`${mode === 'mangas' ? BASE_DETAILS_MANGA_ROUTE : BASE_DETAILS_SERIE_ROUTE}/${serie.id}`} style={{ display: 'flex', flexDirection: styleType === 'grid' ? 'column' : 'row', textDecoration: 'none', color: 'inherit', flex: 1, transition: 'transform 0.3s' }}>
               <div style={{ marginBottom: styleType === 'grid' ? '1rem' : '0', marginRight: styleType === 'list' ? '1rem' : '0', position: 'relative', width: styleType === 'list' ? imgWidthStyle : undefined }}>
                 {serie.poster_path && (
                   <img
-                    src={`${IMG_SRC}${serie.poster_path}`}
+                    src={getCatalogPosterSrc(serie.poster_path, mode ?? 'series')}
                     alt={serie.name}
                     style={{ width: '100%', borderRadius: '4px', objectFit: 'cover', transition: 'transform 0.3s', boxShadow: styleType === 'grid' ? 'rgba(0, 0, 0, 0.3) 8px 15px 10px' : 'rgba(0, 0, 0, 0.3) 4px 5px 10px', transform: styleType === 'grid' && hoveredIndex === index ? 'scale(1.02)' : 'scale(1)' }}
                   />
@@ -239,7 +245,7 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'stretch' }}>
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.2rem" }}>
-                    <h2 style={{ color: serie.status === 'Released' || serie.status === 'Ended' ? 'red' : 'var(--titre-color)', fontSize: `${fontSize}px`, margin: '0 0 0.5rem 0', fontWeight: '600', transition: 'color 0.3s', textShadow: 'rgba(0, 0, 0, 0.2) 1px 1px 1px', textAlign: styleType === 'grid' ? 'center' : 'left' }}>
+                    <h2 style={{ color: serie.status === 'Terminé' || serie.status === 'Annulé' ? 'red' : 'var(--titre-color)', fontSize: `${fontSize}px`, margin: '0 0 0.5rem 0', fontWeight: '600', transition: 'color 0.3s', textShadow: 'rgba(0, 0, 0, 0.2) 1px 1px 1px', textAlign: styleType === 'grid' ? 'center' : 'left' }}>
                       {serie.name.length > 35 ? serie.name.substring(0, 30).concat('...') : serie.name}
                     </h2>
                     {styleType === 'list' && !isSmallScreen && (
@@ -259,15 +265,15 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
                   {styleType === 'list' && !isSmallScreen && (
                     <div style={{ marginTop: "2rem", marginLeft: '1rem', alignSelf: 'stretch', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '14px', color: 'var(--main-text-color)', textAlign: 'right' }}>
                       <span><strong>Vote Average:</strong> {serie.vote_average}</span>
-                      <span><strong>Episodes:</strong> {serie.number_of_episodes}</span>
-                      <span><strong>Status:</strong> {serie.status}</span>
+                      <span><strong>{contentCountLabel}:</strong> {serie.number_of_episodes}</span>
+                      <span><strong>{statusLabel}:</strong> {serie.status}</span>
                     </div>
                   )}
                 </div>
                 {isSmallScreen && styleType === 'list' && (
                   <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--main-text-color)', textAlign: 'center' }}>
-                    <span><strong>Status:</strong> {serie.status}</span>
-                    <span><strong>Episodes:</strong> {serie.number_of_episodes}</span>
+                    <span><strong>{statusLabel}:</strong> {serie.status}</span>
+                    <span><strong>{contentCountLabel}:</strong> {serie.number_of_episodes}</span>
                     <span><strong>Vote Avg:</strong> {serie.vote_average}</span>
                   </div>
                 )}
@@ -276,15 +282,17 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
             {openPopupIndex === index && (
               <div
                 style={{ position: "absolute", top: styleType === 'grid' ? '-28px' : "-43px", right: styleType === 'grid' ? '-10px' : "79rem", display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '50px', zIndex: 1, boxShadow: 'var(--shadow)', backgroundColor: 'var(--absolute-color)', padding: '0', gap: '2px', width: 'auto', height: `${badgeSize}px` }}>
-                <div
-                  onClick={(e) => { e.stopPropagation(); onClickHourGlass(serie); setOpenPopupIndex(null); }}
-                  style={{ width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer', backgroundColor: waitedIds.includes(Number(serie.id)) ? '#FFDDDD' : '#EEEEEE', transition: 'background-color 0.3s', padding: '0', margin: '0' }}>
-                  <HourGlass width={heartSize} height={heartSize} check={waitedIds.includes(Number(serie.id))} />
-                </div>
+                {waitedIds && onClickHourGlass && (
+                  <div
+                    onClick={(e) => { e.stopPropagation(); onClickHourGlass(serie); setOpenPopupIndex(null); }}
+                    style={{ width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer', backgroundColor: waitedIds.includes(serie.id) ? '#FFDDDD' : '#EEEEEE', transition: 'background-color 0.3s', padding: '0', margin: '0' }}>
+                    <HourGlass width={heartSize} height={heartSize} check={waitedIds.includes(serie.id)} />
+                  </div>
+                )}
                 <div
                   onClick={(e) => { e.stopPropagation(); onClickHeart(serie); setOpenPopupIndex(null); }}
-                  style={{ width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer', backgroundColor: followedIds.includes(Number(serie.id)) ? '#FFDDDD' : '#EEEEEE', transition: 'background-color 0.3s', padding: '0', margin: '0' }}>
-                  {followedIds.includes(Number(serie.id)) ? (<Heart width={heartSize} height={heartSize} />) : (<BrokenHeart width={heartSize} height={heartSize} />)}
+                  style={{ width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer', backgroundColor: followedIds.includes(serie.id) ? '#FFDDDD' : '#EEEEEE', transition: 'background-color 0.3s', padding: '0', margin: '0' }}>
+                  {followedIds.includes(serie.id) ? (<Heart width={heartSize} height={heartSize} />) : (<BrokenHeart width={heartSize} height={heartSize} />)}
                 </div>
               </div>
             )}
@@ -305,7 +313,7 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
               onClick={(e) => { e.stopPropagation(); setOpenPopupIndex(openPopupIndex === index ? null : index); }}
               style={{ width: `${badgeSize}px`, height: `${badgeSize}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: styleType === 'grid' ? '10px' : "0", right: styleType === 'grid' ? '10px' : "0", left: styleType === 'list' ? '0' : "", borderRadius: '50%', zIndex: 1, transition: 'transform 0.3s', fontSize: `${badgeFontSize}px`, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}
             >
-              {followedIds.includes(Number(serie.id)) ? <Heart width={heartSize} height={heartSize} /> : waitedIds.includes(Number(serie.id)) ? <HourGlass width={heartSize} height={heartSize} check={true} /> : <BrokenHeart width={heartSize} height={heartSize} />}
+              {followedIds.includes(serie.id) ? <Heart width={heartSize} height={heartSize} /> : waitedIds && waitedIds.includes(serie.id) ? <HourGlass width={heartSize} height={heartSize} check={true} /> : <BrokenHeart width={heartSize} height={heartSize} />}
             </div>
             {styleType === 'list' && isMylist && (
               <input type="number" min="0" max="10" step="0.01" onClick={(e) => { e.stopPropagation(); }}

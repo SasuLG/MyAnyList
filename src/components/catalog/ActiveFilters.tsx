@@ -6,15 +6,15 @@ interface Props {
     selectedFormats: string[];
     selectedStatuses: string[];
     selectedOriginCountries: string[];
-    selectedProductionCompanies: string[];
-    selectedProductionCountries: string[];
+    selectedProductionCompanies?: string[];
+    selectedProductionCountries?: string[];
     selectedTags: string[];
     selectedNotGenres: string[];
     selectedNotFormats: string[];
     selectedNotStatuses: string[];
     selectedNotOriginCountries: string[];
-    selectedNotProductionCompanies: string[];
-    selectedNotProductionCountries: string[];
+    selectedNotProductionCompanies?: string[];
+    selectedNotProductionCountries?: string[];
     selectedNotTags: string[];
 
     removeFilter: (type: string, value: string) => void;
@@ -89,17 +89,17 @@ export default function ActiveFilters({
                 <span key={country} className="filter-label not-filter" onClick={() => removeFilter('originCountry', country)}>Not {country}</span>
             ))}
 
-            {selectedProductionCompanies.length > 0 && selectedProductionCompanies.map((company) => (
+            {selectedProductionCompanies && selectedProductionCompanies.length > 0 && selectedProductionCompanies.map((company) => (
                 <span key={company} className="filter-label" onClick={() => removeFilter('productionCompany', company)}> {company}</span>
             ))}
-            {selectedNotProductionCompanies.length > 0 && selectedNotProductionCompanies.map((company) => (
+            {selectedNotProductionCompanies && selectedNotProductionCompanies.length > 0 && selectedNotProductionCompanies.map((company) => (
                 <span key={company} className="filter-label not-filter" onClick={() => removeFilter('productionCompany', company)}> Not {company}</span>
             ))}
 
-            {selectedProductionCountries.length > 0 && selectedProductionCountries.map((country) => (
+            {selectedProductionCountries && selectedProductionCountries.length > 0 && selectedProductionCountries.map((country) => (
                 <span key={country} className="filter-label" onClick={() => removeFilter('productionCountry', country)}>{country}</span>
             ))}
-            {selectedNotProductionCountries.length > 0 && selectedNotProductionCountries.map((country) => (
+            {selectedNotProductionCountries && selectedNotProductionCountries.length > 0 && selectedNotProductionCountries.map((country) => (
                 <span key={country} className="filter-label not-filter" onClick={() => removeFilter('productionCountry', country)}> Not {country} </span>
             ))}
 

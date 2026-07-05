@@ -8,6 +8,7 @@ import { Serie } from "@/types/series.type";
 import { useUserContext } from "@/userContext";
 import { Star, StarColored, StarHalfColored } from "@/components/svg/stars.svg";
 import { use } from 'react';
+import TagList from "@/components/tagList";
 
 export default function SerieDetails({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -368,6 +369,9 @@ export default function SerieDetails({ params }: { params: Promise<{ id: string 
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Status:</strong> {serie.status}</p>
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Format:</strong> {serie.media_type != "tv" ? serie.media_type.charAt(0).toUpperCase() + serie.media_type.slice(1) : serie.media_type}</p>
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Date de Première Diffusion:</strong> {new Date(serie.first_air_date).toLocaleDateString()}</p>
+                                {serie.last_air_date && (
+                                    <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Date de Fin:</strong> {new Date(serie.last_air_date).toLocaleDateString()}</p>
+                                )}
                             </div>
                             <div style={{ flex: 1, textAlign: "right" }}>
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Nombre de Saisons:</strong> {serie.number_of_seasons}</p>
@@ -386,6 +390,7 @@ export default function SerieDetails({ params }: { params: Promise<{ id: string 
                                 </button>
                             )}
                         </p>
+                        <TagList tags={serie.tags} title="Tags" />
                     </div>
 
                     {showMoreInfo ? (
@@ -396,9 +401,6 @@ export default function SerieDetails({ params }: { params: Promise<{ id: string 
                             {serie.revenue && (
                                 <h3 style={{ fontSize: "1.2rem", color: "#333", marginBottom: "10px" }}>Revenue : </h3>
                             )}
-                            <ul style={{ listStyleType: "none", paddingLeft: "0", fontSize: "1.1rem", color: "#555" }}>
-                                <li style={{ marginBottom: "5px" }}><strong>Tags:</strong> {serie.tags.map(tag => tag.name).join(", ")}</li>
-                            </ul>
                             <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Production Companies</h2>
                             <ul style={{ listStyleType: "none", paddingLeft: "0", fontSize: "1.1rem", color: "#555" }}>
                                 {serie.production_companies

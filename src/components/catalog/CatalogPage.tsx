@@ -5,16 +5,16 @@ import Filters from "../filters";
 import DisplayControls from "./DisplayControls";
 import Loader from '@/components/loader';
 import { useUserContext } from '@/userContext';
-import { useEffect, useState } from 'react';
-import { MinimalSerie, Range } from '@/types/series.type';
-import { MinimalManga } from '@/types/mangas.type';
+import { useEffect, useMemo, useState } from 'react';
+import { Range } from '@/types/series.type';
+import { CatalogItem } from '@/types/catalog-item.type';
 import { useSeriesActions } from '@/hook/useSeriesActions';
 import ActiveFilters from '@/components/catalog/ActiveFilters';
 import { useCatalogData } from '@/hook/useCatalogData';
 
-interface CatalogPageProps { page: "search" | "myList" | "waitList"; emptyMessage?: string | React.ReactNode; renderExtraContent?: (series: MinimalSerie[]) => React.ReactNode; }
+interface CatalogPageProps { page: "search" | "myList" | "waitList"; emptyMessage?: string | React.ReactNode; renderExtraContent?: (series: CatalogItem[]) => React.ReactNode; defaultSortBy: string }
 
-export default function CatalogPage({ page, emptyMessage, renderExtraContent }: CatalogPageProps) {
+export default function CatalogPage({ page, emptyMessage, renderExtraContent, defaultSortBy }: CatalogPageProps) {
 
     /**
      * Hook pour stocker la largeur de la fenêtre
@@ -33,8 +33,6 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent }: 
      */
     const [displaySize, setDisplaySize] = useState<'large' | 'normal' | 'small' | 'very-small' | 'extra-small'>('normal');
 
-    const [statuses, setStatuses] = useState<string[]>(["En cours", "Terminé", "Annulé"]);
-
     /**
      * Hook pour stocker la visibilité des boutons de settings
      */
@@ -52,13 +50,20 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent }: 
         productionCompanies,
         productionCountries,
         tags,
+        minYear,
+        maxYear,
+        maxEpisodes,
         filtersReady,
         fetchDataFinished,
         seriesIdFollowed,
         setSeriesIdFollowed,
         seriesIdWaited,
         setSeriesIdWaited
-    } = useCatalogData({ page, user });
+    } = useCatalogData({ page, user, mode: mangaMode ? "mangas" : "series" });
+
+    const statuses = useMemo(() => Array.from(new Set(series.map((item) => item.status).filter(Boolean))), [series]);
+    const formats = useMemo(() => Array.from(new Set(series.map((item) => item.media_type).filter(Boolean))), [series]);
+    const tagNames = Array.isArray(tags) ? tags.map((tag) => tag.name) : [];
 
     const {
         filteredSeries,
@@ -93,14 +98,10 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent }: 
         clearEpisodeRange,
         hasActiveFilters,
         isOrdering
-    } = useCatalogFilters(page, series, filtersReady, seriesIdFollowed, seriesIdWaited);
+    } = useCatalogFilters(page, series, filtersReady, seriesIdFollowed, seriesIdWaited, defaultSortBy, minYear, maxYear, maxEpisodes, mangaMode ? "mangas" : "series");
 
 
-    const { onClickHeart, onClickHourGlass } = useSeriesActions(user, seriesIdFollowed, setSeriesIdFollowed, seriesIdWaited, setSeriesIdWaited);
-
-    const [mangas, setMangas] = useState<MinimalManga[]>([]);
-
-    const [filteredMangas, setFilteredMangas] = useState<MinimalManga[]>([]);
+    const { onClickHeart, onClickHourGlass } = useSeriesActions(user, seriesIdFollowed, setSeriesIdFollowed, seriesIdWaited, setSeriesIdWaited, mangaMode ? "mangas" : "series");
 
     /**
      * Fonction pour basculer entre les styles de disposition
@@ -209,6 +210,7 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent }: 
                 toggleLayout={toggleLayout}
                 increaseSize={increaseSize}
                 decreaseSize={decreaseSize}
+                mode={mangaMode ? 'mangas' : 'series'}
                 filteredSeries={page === "myList" ? filteredSeries : undefined}
             />
             {renderExtraContent?.(filteredSeries)}
@@ -216,10 +218,10 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent }: 
                 genres={genres}
                 selectedGenres={selectedGenres}
                 onSelectGenres={setSelectedGenres}
-                formats={['tv', 'Movie', 'Anime', "Film d'animation"]}
+                formats={formats}
                 selectedFormats={selectedFormats}
                 onSelectFormats={setSelectedFormats}
-                sortByOptions={[page === "search" ? 'Added' : page === "myList" ? "Followed" : "Waited", 'Popularity', 'Start date', 'End date', page === "search" ? 'Vote average' : "Note", 'Name', 'Number episodes', 'Total time']}
+                sortByOptions={[page === "search" ? 'Added' : page === "myList" ? "Followed" : "Waited", 'Popularity', 'Start date', 'End date', page === "search" ? 'Vote average' : "Note", 'Name', mangaMode ? 'Number chapters' : 'Number episodes'].concat(mangaMode ? [] : ['Total time'])}
                 selectedSortBy={selectedSortBy}
                 onSelectSortBy={setSelectedSortBy}
                 searchQuery={searchQuery}
@@ -230,12 +232,12 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent }: 
                 originCountries={originCountries}
                 selectedOriginCountries={selectedOriginCountries}
                 onSelectOriginCountries={setSelectedOriginCountries}
-                productionCompanies={productionCompanies.map(pc => pc.name)}
-                selectedProductionCompanies={selectedProductionCompanies}
-                onSelectProductionCompanies={setSelectedProductionCompanies}
-                productionCountries={productionCountries.map(country => country.name)}
-                selectedProductionCountries={selectedProductionCountries}
-                onSelectProductionCountries={setSelectedProductionCountries}
+                {...(!mangaMode && { productionCompanies: productionCompanies.map(pc => pc.name) })}
+                {...(!mangaMode && { selectedProductionCompanies: selectedProductionCompanies })}
+                {...(!mangaMode && { onSelectProductionCompanies: setSelectedProductionCompanies })}
+                {...(!mangaMode && { productionCountries: productionCountries.map(country => country.name) })}
+                {...(!mangaMode && { selectedProductionCountries: selectedProductionCountries })}
+                {...(!mangaMode && { onSelectProductionCountries: setSelectedProductionCountries })}
                 yearRange={filtersReady ? yearRange : undefined}
                 onYearRangeChange={handleYearRangeChange}
                 voteRange={filtersReady ? voteRange : undefined}
@@ -245,7 +247,7 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent }: 
                 {...(page === "search" && { withFollowed, onwithFollowedChange: handleWithFollowedChange })}
                 orderAsc={orderAsc}
                 setOrderChange={handleOrderChange}
-                tags={tags.map(tag => tag.name)}
+                tags={tagNames}
                 selectedTags={selectedTags}
                 onSelectTags={setSelectedTags}
 
@@ -259,10 +261,10 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent }: 
                 onSelectNotStatuses={setSelectedNotStatuses}
                 selectedNotOriginCountries={selectedNotOriginCountries}
                 onSelectNotOriginCountries={setSelectedNotOriginCountries}
-                selectedNotProductionCompanies={selectedNotProductionCompanies}
-                onSelectNotProductionCompanies={setSelectedNotProductionCompanies}
-                selectedNotProductionCountries={selectedNotProductionCountries}
-                onSelectNotProductionCountries={setSelectedNotProductionCountries}
+                {...(!mangaMode && { selectedNotProductionCompanies: selectedNotProductionCompanies })}
+                {...(!mangaMode && { onSelectNotProductionCompanies: setSelectedNotProductionCompanies })}
+                {...(!mangaMode && { selectedNotProductionCountries: selectedNotProductionCountries })}
+                {...(!mangaMode && { onSelectNotProductionCountries: setSelectedNotProductionCountries })}
             />
 
             <ActiveFilters
@@ -270,15 +272,15 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent }: 
                 selectedFormats={selectedFormats}
                 selectedStatuses={selectedStatuses}
                 selectedOriginCountries={selectedOriginCountries}
-                selectedProductionCompanies={selectedProductionCompanies}
-                selectedProductionCountries={selectedProductionCountries}
+                {...(!mangaMode && { selectedProductionCompanies: selectedProductionCompanies })}
+                {...(!mangaMode && { selectedProductionCountries: selectedProductionCountries })}
                 selectedTags={selectedTags}
                 selectedNotGenres={selectedNotGenres}
                 selectedNotFormats={selectedNotFormats}
                 selectedNotStatuses={selectedNotStatuses}
                 selectedNotOriginCountries={selectedNotOriginCountries}
-                selectedNotProductionCompanies={selectedNotProductionCompanies}
-                selectedNotProductionCountries={selectedNotProductionCountries}
+                {...(!mangaMode && { selectedNotProductionCompanies: selectedNotProductionCompanies })}
+                {...(!mangaMode && { selectedNotProductionCountries: selectedNotProductionCountries })}
                 selectedNotTags={selectedNotTags}
 
                 removeFilter={removeFilter}
@@ -314,7 +316,8 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent }: 
                         )}
                     </div>
                 ) : (
-                    <SeriesList series={filteredSeries} styleType={styleType} followedIds={seriesIdFollowed} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} size={displaySize} isMylist={false} isOrdering={isOrdering} />)
+                    <SeriesList series={filteredSeries} styleType={styleType} followedIds={seriesIdFollowed} waitedIds={seriesIdWaited} onClickHeart={onClickHeart} onClickHourGlass={onClickHourGlass} size={displaySize} isMylist={page === "myList"} isOrdering={isOrdering} mode={mangaMode ? "mangas" : "series"} />
+                )
             )}
         </div>
     );

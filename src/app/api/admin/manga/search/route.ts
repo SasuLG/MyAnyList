@@ -16,7 +16,6 @@ export async function GET(req: Request): Promise<Response> {
         const query = url.searchParams.get('query') || '';
 
         const response = await getMangasBySearch(query);
-        console.log(response);
         return new Response(JSON.stringify(response), {
             headers: {
                 'Content-Type': 'application/json'

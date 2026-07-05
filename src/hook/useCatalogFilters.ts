@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { MinimalSerie } from "@/types/series.type";
+import { CatalogItem } from "@/types/catalog-item.type";
 import { Range } from '@/types/series.type';
 
-export const useCatalogFilters = (page:"search" | "myList" | "waitList", series: MinimalSerie[],filtersReady: boolean,seriesIdFollowed: number[], seriesIdWaited: number[]) => {
+export const useCatalogFilters = (page:"search" | "myList" | "waitList", series: CatalogItem[],filtersReady: boolean,seriesIdFollowed: string[], seriesIdWaited: string[], defaultSortBy:string, minYear: number, maxYear: number, maxEpisodes: number, mode: "mangas" | "series") => {
 
-  const [filteredSeries, setFilteredSeries] = useState<MinimalSerie[]>([]);
+  const [filteredSeries, setFilteredSeries] = useState<CatalogItem[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -14,7 +14,7 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
 
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
 
-  const [selectedSortBy, setSelectedSortBy] = useState<string>(page === "search" ? "Added" : page==="myList"?"Followed":"Waited");
+  const [selectedSortBy, setSelectedSortBy] = useState<string>(defaultSortBy);
   
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
 
@@ -26,11 +26,11 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
 
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   
-  const [yearRange, setYearRange] = useState<Range>({ min: 1900, max: new Date().getFullYear(), minimalRange: 1900, maximalRange: new Date().getFullYear() });
+  const [yearRange, setYearRange] = useState<Range>({ min: minYear, max: maxYear, minimalRange: minYear, maximalRange: maxYear });
 
   const [voteRange, setVoteRange] = useState<Range>({ min: 0, max: 10, minimalRange: 0, maximalRange: 10 });
 
-  const [episodeRange, setEpisodeRange] = useState<Range>({ min: 1, max: 2000, minimalRange: 1, maximalRange: 2000 });
+  const [episodeRange, setEpisodeRange] = useState<Range>({ min: 0, max: maxEpisodes, minimalRange: 0, maximalRange: maxEpisodes });
 
 
   const [selectedNotFormats, setSelectedNotFormats] = useState<string[]>([]);
@@ -48,11 +48,6 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
   const [selectedNotTags, setSelectedNotTags] = useState<string[]>([]);
   const [isOrdering, setIsOrdering] = useState<boolean>(false);
 
-    const statusMapping: Record<string, string> = {
-        "Returning Series": "En cours",
-        "Ended": "Terminé",
-        "Canceled": "Annulé"
-    };
     /**
    * Fonction pour appliquer les filtres et le tri
    */
@@ -61,19 +56,15 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
 
     let filtered = series.filter(serie => {
       if(page==="search"){
-        if (!withFollowed && seriesIdFollowed.includes(Number(serie.id))) {
+        if (!withFollowed && seriesIdFollowed.includes(serie.id)) {
           return false;
         }
       }
-      if (page === "myList" && !seriesIdFollowed.includes(Number(serie.id))) return false;
+      if (page === "myList" && !seriesIdFollowed.includes(serie.id)) return false;
 
-      if (page === "waitList" && !seriesIdWaited.includes(Number(serie.id))) return false;
+      if (page === "waitList" && !seriesIdWaited.includes(serie.id)) return false;
       // Apply format filters
-      const matchesFormat = selectedFormats.length === 0 || selectedFormats.includes(serie.media_type) &&
-        (selectedFormats.includes('tv') && serie.media_type === 'tv') ||
-        (selectedFormats.includes('Movie') && serie.media_type === 'movie') ||
-        (selectedFormats.includes('Anime') && serie.media_type === 'anime') ||
-        (selectedFormats.includes('Film d\'animation') && serie.media_type === 'film d\'animation');
+      const matchesFormat = selectedFormats.length === 0 || selectedFormats.includes(serie.media_type);
 
       const matchesGenre = selectedGenres.length === 0 || selectedGenres.every(genre => serie.genres.some(g => g.name === genre));
       const searchWords = searchQuery.toLowerCase().split(/\s+/);
@@ -82,14 +73,12 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
         .some(name =>
           searchWords.every(word => name.toLowerCase().includes(word))
         );
-      const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(statusMapping[serie.status] || serie.status);
+      const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(serie.status);
       //const matchesOriginCountry = selectedOriginCountries.length === 0 || selectedOriginCountries.every(country => serie.origin_country.includes(country));
 
       const matchesOriginCountry =
         selectedOriginCountries.length === 0 ||
-        selectedOriginCountries.every(country =>
-          serie.origin_country.some(origin => (origin as any).iso_3166_1 === country)
-        );
+        selectedOriginCountries.every(country => serie.origin_country.includes(country));
       const matchesProductionCompany = selectedProductionCompanies.every(company => serie.production_companies && serie.production_companies.some(prod => prod.name === company));
       const matchesProductionCountry = selectedProductionCountries.every(country => serie.production_countries.some(c => c.name === country));
       const matchesTags = selectedTags.every(tag => serie.tags.some(t => t.name === tag));
@@ -100,15 +89,11 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
 
       const matchesEpisodeRange = serie.number_of_episodes >= episodeRange.min && serie.number_of_episodes <= episodeRange.max;
 
-      const matchesNotFormat = selectedNotFormats.every(format => !selectedFormats.includes(serie.media_type) &&
-        (selectedNotFormats.includes('tv') && serie.media_type === 'tv') ||
-        (selectedNotFormats.includes('Movie') && serie.media_type === 'movie') ||
-        (selectedNotFormats.includes('Anime') && serie.media_type === 'anime') ||
-        (selectedNotFormats.includes('Film d\'animation') && serie.media_type === 'film d\'animation'));
+      const matchesNotFormat = selectedNotFormats.length === 0 || !selectedNotFormats.includes(serie.media_type);
 
       const matchesNotGenre = selectedNotGenres.every(genre => !serie.genres.some(g => g.name === genre));
-      const matchesNotStatus = selectedNotStatuses.every(status => !((statusMapping[serie.status] || serie.status) === status));
-      const matchesNotOriginCountry = selectedNotOriginCountries.every(country => !serie.origin_country.some(origin => (origin as any).iso_3166_1 === country));
+      const matchesNotStatus = selectedNotStatuses.length === 0 || !selectedNotStatuses.includes(serie.status);
+      const matchesNotOriginCountry = selectedNotOriginCountries.length === 0 || !selectedNotOriginCountries.some(country => serie.origin_country.includes(country));
       const matchesNotTags = selectedNotTags.every(tag => !serie.tags.some(t => t.name === tag));
       const matchesNotProductionCompany = selectedNotProductionCompanies.every(company => !(serie.production_companies && serie.production_companies.some(prod => prod.name === company)));
       const matchesNotProductionCountry = selectedNotProductionCountries.every(country => !serie.production_countries.some(c => c.name === country));
@@ -133,8 +118,11 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       case 'Number episodes':
         filtered.sort((a, b) => b.number_of_episodes - a.number_of_episodes);
         break;
+      case 'Number chapters':
+        filtered.sort((a, b) => b.number_of_episodes - a.number_of_episodes);
+        break;
       case 'Added':
-        filtered.sort((a, b) => Number(b.id) - Number(a.id));
+        filtered.sort((a, b) => (b.follow_date ? new Date(b.follow_date).getTime() : Number(b.id) || 0) - (a.follow_date ? new Date(a.follow_date).getTime() : Number(a.id) || 0));
         break;
       case 'Name':
         filtered.sort((a, b) => a.name.localeCompare(b.name));
@@ -207,7 +195,7 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
   };
 
     const clearYearRange = () => {
-    setYearRange({ min: 1900, max: new Date().getFullYear(), minimalRange: 1900, maximalRange: new Date().getFullYear() });
+    setYearRange({ min: minYear, max: maxYear, minimalRange: minYear, maximalRange: maxYear });
     applyFiltersAndSort();
   };
 
@@ -217,7 +205,7 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
   };
 
   const clearEpisodeRange = () => {
-    setEpisodeRange({ min: 1, max: 2000, minimalRange: 1, maximalRange: 2000 });
+    setEpisodeRange({ min: 0, max: maxEpisodes, minimalRange: 0, maximalRange: maxEpisodes });
     applyFiltersAndSort();
   };
 
@@ -227,15 +215,15 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
   const clearAllFilters = () => {
     setSelectedGenres([]);
     setSelectedFormats([]);
-    setSelectedSortBy(page === "search" ? "Added" :page==="myList"? "Followed":"Waited");
+    setSelectedSortBy(defaultSortBy);
     setSearchQuery('');
     setSelectedStatuses([]);
     setSelectedOriginCountries([]);
     setSelectedProductionCompanies([]);
     setSelectedProductionCountries([]);
-    setYearRange({ min: 1900, max: new Date().getFullYear(), minimalRange: 1900, maximalRange: new Date().getFullYear() });
+    setYearRange({ min: minYear, max: maxYear, minimalRange: minYear, maximalRange: maxYear });
     setVoteRange({ min: 0, max: 10, minimalRange: 0, maximalRange: 10 });
-    setEpisodeRange({ min: 1, max: 2000, minimalRange: 1, maximalRange: 2000 });
+    setEpisodeRange({ min: 0, max: maxEpisodes, minimalRange: 0, maximalRange: maxEpisodes });
     setwithFollowed(false);
     setSelectedTags([]);
     setOrderAsc(true);
@@ -248,145 +236,153 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
     setSelectedNotProductionCountries([]);
     setSelectedNotTags([]);
   };
-useEffect(() => {
-    applyFiltersAndSort();
-}, [
-    filtersReady,
-    series,
-    seriesIdWaited,
-    selectedGenres,
-    selectedFormats,
-    searchQuery,
-    selectedSortBy,
-    selectedStatuses,
-    selectedOriginCountries,
-    selectedProductionCompanies,
-    selectedProductionCountries,
-    yearRange,
-    voteRange,
-    episodeRange,
-    withFollowed,
-    seriesIdFollowed,
-    orderAsc,
-    selectedTags,
-    selectedNotFormats,
-    selectedNotGenres,
-    selectedNotStatuses,
-    selectedNotOriginCountries,
-    selectedNotProductionCompanies,
-    selectedNotProductionCountries,
-    selectedNotTags
-]);
-
-
   useEffect(() => {
-    if (selectedSortBy === (page === "search" ? "Added" : page==="myList"?"Followed":"Waited")) {
-      setIsOrdering(false);
-      return;
-    }
-    setIsOrdering(true);
-  }, [selectedSortBy, page]);
+      applyFiltersAndSort();
+  }, [
+      filtersReady,
+      series,
+      seriesIdWaited,
+      selectedGenres,
+      selectedFormats,
+      searchQuery,
+      selectedSortBy,
+      selectedStatuses,
+      selectedOriginCountries,
+      selectedProductionCompanies,
+      selectedProductionCountries,
+      yearRange,
+      voteRange,
+      episodeRange,
+      withFollowed,
+      seriesIdFollowed,
+      orderAsc,
+      selectedTags,
+      selectedNotFormats,
+      selectedNotGenres,
+      selectedNotStatuses,
+      selectedNotOriginCountries,
+      selectedNotProductionCompanies,
+      selectedNotProductionCountries,
+      selectedNotTags
+  ]);
 
 
-  const hasActiveFilters =
-    selectedGenres.length > 0 ||
-    selectedFormats.length > 0 ||
-    selectedStatuses.length > 0 ||
-    selectedOriginCountries.length > 0 ||
-    selectedProductionCompanies.length > 0 ||
-    selectedProductionCountries.length > 0 ||
-    selectedTags.length > 0 ||
-    (yearRange.min !== yearRange.minimalRange || yearRange.max !== yearRange.maximalRange) ||
-    (voteRange.min !== voteRange.minimalRange || voteRange.max !== voteRange.maximalRange) ||
-    (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange) ||
+    useEffect(() => {
+      if (selectedSortBy === defaultSortBy) {
+        setIsOrdering(false);
+        return;
+      }
+      setIsOrdering(true);
+    }, [selectedSortBy, page]);
 
-    selectedNotFormats.length > 0 ||
-    selectedNotGenres.length > 0 ||
-    selectedNotStatuses.length > 0 ||
-    selectedNotOriginCountries.length > 0 ||
-    selectedNotProductionCompanies.length > 0 ||
-    selectedNotProductionCountries.length > 0 ||
-    selectedNotTags.length > 0;
+    useEffect(()=>{
+      setYearRange({ min: minYear, max: maxYear, minimalRange: minYear, maximalRange: maxYear });
+    }, [minYear, maxYear]);
 
-return {
+    useEffect(() => {
+      setEpisodeRange({ min: 0, max: maxEpisodes, minimalRange: 0, maximalRange: maxEpisodes });
+    }, [maxEpisodes])
 
-    filteredSeries,
 
-    selectedGenres,
-    setSelectedGenres,
+    const hasActiveFilters =
+      selectedGenres.length > 0 ||
+      selectedFormats.length > 0 ||
+      selectedStatuses.length > 0 ||
+      selectedOriginCountries.length > 0 ||
+      selectedProductionCompanies.length > 0 ||
+      selectedProductionCountries.length > 0 ||
+      selectedTags.length > 0 ||
+      (yearRange.min !== yearRange.minimalRange || yearRange.max !== yearRange.maximalRange) ||
+      (voteRange.min !== voteRange.minimalRange || voteRange.max !== voteRange.maximalRange) ||
+      (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange) ||
 
-    selectedFormats,
-    setSelectedFormats,
+      selectedNotFormats.length > 0 ||
+      selectedNotGenres.length > 0 ||
+      selectedNotStatuses.length > 0 ||
+      selectedNotOriginCountries.length > 0 ||
+      selectedNotProductionCompanies.length > 0 ||
+      selectedNotProductionCountries.length > 0 ||
+      selectedNotTags.length > 0;
 
-    selectedSortBy,
-    setSelectedSortBy,
+  return {
 
-    searchQuery,
-    setSearchQuery,
+      filteredSeries,
 
-    selectedStatuses,
-    setSelectedStatuses,
+      selectedGenres,
+      setSelectedGenres,
 
-    selectedOriginCountries,
-    setSelectedOriginCountries,
+      selectedFormats,
+      setSelectedFormats,
 
-    selectedProductionCompanies,
-    setSelectedProductionCompanies,
+      selectedSortBy,
+      setSelectedSortBy,
 
-    selectedProductionCountries,
-    setSelectedProductionCountries,
+      searchQuery,
+      setSearchQuery,
 
-    selectedTags,
-    setSelectedTags,
+      selectedStatuses,
+      setSelectedStatuses,
 
-    yearRange,
-    setYearRange,
+      selectedOriginCountries,
+      setSelectedOriginCountries,
 
-    voteRange,
-    setVoteRange,
+      selectedProductionCompanies,
+      setSelectedProductionCompanies,
 
-    episodeRange,
-    setEpisodeRange,
+      selectedProductionCountries,
+      setSelectedProductionCountries,
 
-    withFollowed,
-    setwithFollowed,
+      selectedTags,
+      setSelectedTags,
 
-    orderAsc,
-    setOrderAsc,
+      yearRange,
+      setYearRange,
 
-    selectedNotFormats,
-    setSelectedNotFormats,
+      voteRange,
+      setVoteRange,
 
-    selectedNotGenres,
-    setSelectedNotGenres,
+      episodeRange,
+      setEpisodeRange,
 
-    selectedNotStatuses,
-    setSelectedNotStatuses,
+      withFollowed,
+      setwithFollowed,
 
-    selectedNotOriginCountries,
-    setSelectedNotOriginCountries,
+      orderAsc,
+      setOrderAsc,
 
-    selectedNotProductionCompanies,
-    setSelectedNotProductionCompanies,
+      selectedNotFormats,
+      setSelectedNotFormats,
 
-    selectedNotProductionCountries,
-    setSelectedNotProductionCountries,
+      selectedNotGenres,
+      setSelectedNotGenres,
 
-    selectedNotTags,
-    setSelectedNotTags,
+      selectedNotStatuses,
+      setSelectedNotStatuses,
 
-    removeFilter,
+      selectedNotOriginCountries,
+      setSelectedNotOriginCountries,
 
-    clearAllFilters,
+      selectedNotProductionCompanies,
+      setSelectedNotProductionCompanies,
 
-    clearYearRange,
+      selectedNotProductionCountries,
+      setSelectedNotProductionCountries,
 
-    clearVoteRange,
+      selectedNotTags,
+      setSelectedNotTags,
 
-    clearEpisodeRange,
+      removeFilter,
 
-    hasActiveFilters,
+      clearAllFilters,
 
-    isOrdering
-};
+      clearYearRange,
+
+      clearVoteRange,
+
+      clearEpisodeRange,
+
+      hasActiveFilters,
+
+      isOrdering
+  };
 };

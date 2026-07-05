@@ -1,4 +1,4 @@
-import { MinimalSerie } from "@/types/series.type";
+import { CatalogItem } from "@/types/catalog-item.type";
 import {
     ReactNode,
     useState,
@@ -13,7 +13,7 @@ import {
 } from "./svg/smileys.svg";
 
 type HoverToolBoxProps = {
-    serie: MinimalSerie;
+    serie: CatalogItem;
     children: ReactNode;
     isMyList: boolean;
     enabled?: boolean;
@@ -32,6 +32,8 @@ const HoverToolBox = ({
 }: HoverToolBoxProps) => {
     const [hoverPosition, setHoverPosition] = useState({ top: 0, left: 0 });
     const [tooltipVisible, setTooltipVisible] = useState(false);
+
+    const episodesChapters = (serie.media_type === "manga" || serie.media_type === "novel" || serie.media_type === "one_shot" || serie.media_type === "manhwa" || serie.media_type === "manhua") ? "chapitres" : "épisodes";
 
     const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -123,7 +125,7 @@ const HoverToolBox = ({
                                     ? serie.romaji_name.length > 35
                                         ? serie.romaji_name.substring(0, 30).concat("…")
                                         : serie.romaji_name
-                                    : "Après reset BD"}
+                                    : serie.name}
                             </span>
 
                             <span>
@@ -142,7 +144,7 @@ const HoverToolBox = ({
 
                         <div className="hover-info-items initial">
                             <span>{serie.first_air_date.substring(0, 4)}</span>
-                            <span>{serie.status === "Ended" ? "✔️" : "🔄"}</span>
+                            <span>{serie.status === "Terminé" ? "✔️" : "🔄"}</span>
                         </div>
 
                         <div className="hover-info-items">
@@ -157,7 +159,7 @@ const HoverToolBox = ({
                                 {serie.media_type === "movie" ||
                                     serie.media_type === "film d'animation"
                                     ? `${hours}h ${minutes}min`
-                                    : `${serie.number_of_episodes} épisodes`}
+                                    : `${serie.number_of_episodes} ${episodesChapters}`}
                             </span>
                         </div>
 

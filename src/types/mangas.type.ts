@@ -116,10 +116,6 @@ type UserWaitManga = {
     date: string;
 };
 
-type UserNoteManga = {
-    note: number;
-    comment?: string | null;
-};
 
 /* --- Type principal : Manga (utilisé dans votre application / BD) --- */
 
@@ -155,13 +151,14 @@ type Manga = {
     /* relations utilisateur (optionnelles) */
     follow_date?: string;
     comment?: string;
-    note?: UserNoteManga;
+    note?: number;
 };
 
 type MinimalManga = {
     id: string;
     anilist_id: string;
     title_romaji: string | null;
+    title_native: string | null;
     title_english: string | null;
     synopsis: string;
     cover_image: string | null;
@@ -174,7 +171,7 @@ type MinimalManga = {
     origin_country: OriginCountry;
     genres: Genre[];
     tags: TagExternal[];
-    note?: UserNoteManga;
+    note?: number;
     comment?: string;
     follow_date?: string;
     start_date: string | null;
@@ -191,6 +188,5 @@ export type {
     MangaStats,
     UserManga,
     UserWaitManga,
-    UserNoteManga,
     MinimalManga
 };

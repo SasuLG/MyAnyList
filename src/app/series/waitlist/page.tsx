@@ -8,6 +8,7 @@ export default function WaitList() {
   return (
     <CatalogPage
       page="waitList"
+      defaultSortBy="Waited"
       emptyMessage={
         <>To add a serie on the wait list click on the hourglass in the page <Link href={SEARCH_ROUTE} style={{ color: "var(--secondary-background-color)" }}>search series</Link></>
       }
