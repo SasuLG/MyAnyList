@@ -4,6 +4,7 @@ import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ABOUT_ROUTE, HOME_ROUTE, LOGIN_ROUTE, MENTIONS_ROUTE, REGISTER_ROUTE } from "@/constants/app.route.const";
+import ThemeSwitcher from "./themeSwitcher";
 
 export const Footer = memo(() => {
 
@@ -11,8 +12,7 @@ export const Footer = memo(() => {
         <div className={`footer-container`}>
             <div className="footer-content">
                 <div className="footer-items1">
-                    <Image unoptimized src="/assets/images/_67465c45-1ba1-4185-a6cb-5ea044a148bf-removebg-preview.png" alt="logo" width={100} height={100} />
-                    <h3>MyAnyList</h3>
+                    <ThemeSwitcher />
                 </div>
                 <div className="footer-items">
                     <h3>Liens</h3>

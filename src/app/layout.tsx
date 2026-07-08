@@ -1,4 +1,4 @@
-"use client";
+
 
 import { Inter } from "next/font/google";
 import { UserContextProvider } from "@/userContext";
@@ -16,16 +16,19 @@ import "@/styles/popup.style.css";
 import "@/styles/slider.caroussel.style.css";
 import "@/styles/tierlist.style.css";
 
+import { cookies } from "next/headers";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const mode = cookieStore.get("darkMode")?.value === "true" ? "dark-mode" : "";
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning={true} className={mode}>
       <head>
         <link rel="icon" href="/favicon.ico" type="image/x-icon" />
         <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />

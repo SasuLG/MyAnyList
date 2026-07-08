@@ -1,8 +1,8 @@
 .footer-container {
-    background-color: brown;
+    background-color: var(--secondary-background-color);
     height: 150px;
     width: 100%;
-    color: var(--var-text2);
+    color: var(--header-footer-text);
     text-align: center;
 }
 
@@ -30,4 +30,6 @@
 .footer-items1 {
     display: flex;
     align-items: flex-end;
+    align-items: center;
+    transform: translateY(5%);
 }

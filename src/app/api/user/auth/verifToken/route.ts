@@ -12,9 +12,9 @@ import { ServerError } from "@/lib/api/response/server.response";
  */
 export async function GET(req: Request, context: any): Promise<Response> {
     try {
-        const { params } = context;
-        const verifToken = decodeURIComponent(params.verifToken);
-        const userRequest = await getUserByVerifToken(verifToken);
+        const { verifToken } = await context.params;
+        const decodedVerifToken = decodeURIComponent(verifToken);
+        const userRequest = await getUserByVerifToken(decodedVerifToken);
         if(userRequest){
             return new Response(JSON.stringify(userRequest), {
                 headers: {

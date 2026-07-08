@@ -1,20 +1,24 @@
 "use client";
 import Loader from "@/components/loader";
 import { IMG_SRC } from "@/constants/tmdb.consts";
-import { ApiSerie, Serie, TmdbId } from "@/tmdb/types/series.type";
+import { ApiSerie, Serie, TmdbId } from "@/types/series.type";
 import { useUserContext } from "@/userContext";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { AnilistId, ApiManga, Manga } from "@/types/mangas.type";
 
 export default function Import() {
 
-    const { setAlert, setSelectedMenu } = useUserContext();
+    const { setAlert, setSelectedMenu, mangaMode } = useUserContext();
 
     const [series, setSeries] = useState<ApiSerie[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [styleType, setStyleType] = useState<'grid' | 'list'>('list');
     const [importedSeriesIds, setImportedSeriesIds] = useState<string[]>([]);
     const [fetchDataFinished, setFetchDataFinished] = useState<Boolean | undefined>(undefined);
+
+    const [mangas, setMangas] = useState<ApiManga[]>([]);
+    const [importedMangaIds, setImportedMangaIds] = useState<string[]>([]);
 
     const searchSeries = async () => {
         setFetchDataFinished(false);
@@ -25,10 +29,16 @@ export default function Import() {
         console.log(data);
     };
 
-    const detailsSeries = async () => {
-        // const response = await fetch(`/api/admin/series/search/details?id=${encodeURIComponent(204832)}&media_type=tv`);
-        // const data = await response.json();
-        // console.log(data);
+    const searchMangas = async () => {
+        setFetchDataFinished(false);
+        const response = await fetch(`/api/admin/manga/search?query=${encodeURIComponent(searchQuery)}`);
+        const data = await response.json() as ApiManga[];
+        setMangas(data);
+        setFetchDataFinished(true);
+        console.log(data);
+    };
+
+    const updateAll = async () => {
         const response = await fetch('/api/admin/series/updateAll', {
             method: 'POST',
             headers: {
@@ -36,6 +46,13 @@ export default function Import() {
             },
             body: JSON.stringify({}),
         });
+    }
+
+    const detailsSeries = async () => {
+        const response = await fetch(`/api/admin/series/search/details?id=${encodeURIComponent(204832)}&media_type=tv`);
+        const data = await response.json();
+        console.log(data);
+
     };
 
     const detailsSeason = async () => {
@@ -228,6 +245,69 @@ export default function Import() {
         }
     };
 
+    const importManga = async (manga: ApiManga) => {
+        console.log("Importing manga:", manga);
+        try {
+            const importedManga: Manga = {
+                id: "",
+                anilist_id: manga.id,
+                title_romaji: manga.title.romaji,
+                title_english: manga.title.english,
+                title_native: manga.title.native,
+                synopsis: manga.description || "",
+                cover_image: manga.coverImage.extraLarge,
+                banner_image: manga.bannerImage,
+                format: manga.format,
+                status: manga.status,
+                isAdult: manga.isAdult,
+                chapters: manga.chapters,
+                volumes: manga.volumes,
+                averageScore: manga.averageScore,
+                meanScore: manga.meanScore,
+                popularity: manga.popularity,
+                source: manga.source,
+                start_date: manga.startDate?.year ? `${manga.startDate.year}-${manga.startDate.month?.toString().padStart(2, '0')}-${manga.startDate.day?.toString().padStart(2, '0')}` : null,
+                end_date: manga.endDate?.year ? `${manga.endDate.year}-${manga.endDate.month?.toString().padStart(2, '0')}-${manga.endDate.day?.toString().padStart(2, '0')}` : null,
+                last_modified: new Date().toISOString(),
+
+                synonyms: manga.synonyms.map((synonym) => ({ id: '', name: synonym })),
+                origin_country: { id: '', iso_3166_1: manga.countryOfOrigin ? manga.countryOfOrigin : '', name: '' },
+                genres: manga.genres.map((genre) => ({ id: '', name: genre })),
+                tags: manga.tags.map((tag) => ({ id: '', anilist_id: tag.id.toString(), name: tag.name, description: tag.description, category: tag.category, rank: tag.rank, isAdult: tag.isAdult })),
+                stats: manga.stats ? {
+                    mangaId: manga.id,
+                    scoreDistribution: manga.stats.scoreDistribution
+                } : null
+            };
+
+            if (importedManga.origin_country.iso_3166_1 === "KR") {
+                importedManga.format = "manhwa";
+            }
+            if (importedManga.origin_country.iso_3166_1 === "CN") {
+                importedManga.format = "manhua";
+            }
+            console.log(importedManga);
+            const response = await fetch(`/api/admin/manga/import`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(importedManga)
+            });
+
+            setAlert(await response.json());
+            getImportedMangaIds();
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error("Erreur lors de l'importation des détails du manga:", error);
+            throw error;
+        }
+
+
+    }
 
     const getImportedSeriesIds = async () => {
         const response = await fetch(`/api/admin/series/import`, {
@@ -242,16 +322,34 @@ export default function Import() {
         }
     }
 
+    const getImportedMangaIds = async () => {
+        const response = await fetch(`/api/admin/manga/import`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        if (response.ok) {
+            const data = await response.json() as AnilistId[];
+            setImportedMangaIds(data.map((id) => id.anilist_id.toString()));
+        }
+    }
+
     const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
             event.preventDefault();
-            searchSeries();
+            mangaMode ? searchMangas() : searchSeries();
         }
     };
 
     useEffect(() => {
-        getImportedSeriesIds();
-    }, []);
+        if (mangaMode) document.documentElement.classList.toggle('manga-mode', mangaMode);
+    }, [mangaMode]);
+
+
+    useEffect(() => {
+        mangaMode ? getImportedMangaIds() : getImportedSeriesIds();
+    }, [mangaMode]);
 
     useEffect(() => {
         setSelectedMenu("");
@@ -261,12 +359,12 @@ export default function Import() {
         <div style={{ height: "100%", padding: "2rem", backgroundColor: "var(--background-color)" }}>
             <h1 style={{ color: "var(--titre-color)", textAlign: "center", marginBottom: "2rem" }}>Import page</h1>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
-                <input onKeyDown={handleKeyPress} style={{ width: "60%", padding: "0.5rem", border: "1px solid var(--border)", borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)", color: "var(--titre-color)", backgroundColor: "var(--background-color)" }} type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search series" />
+                <input onKeyDown={handleKeyPress} style={{ width: "60%", padding: "0.5rem", border: "1px solid var(--border)", borderRadius: "4px", boxShadow: "var(--shadow)", color: "var(--titre-color)", backgroundColor: "var(--background-color)" }} type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search series" />
                 <div style={{ display: "flex", gap: "1rem" }}>
-                    <button style={{ padding: "0.9rem" }} className="button-validate" onClick={searchSeries}>Search series</button>
+                    <button style={{ padding: "0.9rem" }} className="button-validate" onClick={mangaMode ? searchMangas : searchSeries}>Search series</button>
                     {/* <button style={{ padding: "0.9rem" }} className="button-validate" onClick={detailsSeries}>Details series</button> */}
-                    <button style={{ padding: "0.9rem" }} className="button-validate" onClick={detailsSeries}>Update All</button>
-                    <button style={{ padding: "0.9rem" }} className="button-validate" onClick={detailsSeason}>Details season</button>
+                    <button style={{ padding: "0.9rem" }} className="button-validate" onClick={updateAll}>Update All</button>
+                    {/* <button style={{ padding: "0.9rem" }} className="button-validate" onClick={detailsSeason}>Details season</button> */}
                     <button style={{ padding: "0.9rem" }} className="button-validate" onClick={() => setStyleType(styleType === 'grid' ? 'list' : 'grid')}>
                         Toggle Layout
                     </button>
@@ -276,7 +374,7 @@ export default function Import() {
             {fetchDataFinished === false ? (
                 <Loader />
             ) : (
-                series.length > 0 ? (
+                series.length > 0 && !mangaMode ? (
                     <ul style={{ listStyle: "none", padding: 0, display: styleType === 'grid' ? 'grid' : 'flex', gridTemplateColumns: styleType === 'grid' ? 'repeat(auto-fit, minmax(250px, 1fr))' : 'none', gap: "1rem", flexDirection: "column" }}>
                         {series.map((serie) => {
                             const isImported = importedSeriesIds.includes(serie.id.toString());
@@ -294,6 +392,34 @@ export default function Import() {
                                                 <h2 style={{ color: "var(--titre-color)" }}>{serie.first_air_date.substring(0, 4)}</h2>
 
                                                 <button style={{ marginTop: "1rem" }} className="button-validate" onClick={() => importSerie(serie)}>
+                                                    {isImported ? "Update" : "Import"}
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                ) : mangas.length > 0 && mangaMode ? (
+                    <ul style={{ listStyle: "none", padding: 0, display: styleType === 'grid' ? 'grid' : 'flex', gridTemplateColumns: styleType === 'grid' ? 'repeat(auto-fit, minmax(250px, 1fr))' : 'none', gap: "1rem", flexDirection: "column" }}>
+                        {mangas.map((manga) => {
+                            const isImported = importedMangaIds.includes(manga.id.toString());
+                            return (
+                                <li key={manga.id} style={{ display: "flex", flexDirection: styleType === 'grid' ? 'column' : 'row', alignItems: styleType === 'grid' ? 'center' : 'flex-start', padding: "1rem", backgroundColor: isImported ? "var(--secondary-background-color)" : "var(--background-color)", borderRadius: "8px", boxShadow: "0 6px 15px rgba(0, 0, 0, 0.3)" }}>
+                                    {styleType === 'list' && (
+                                        <>
+                                            <div style={{ marginRight: "1rem" }}>
+                                                {manga.coverImage.extraLarge && <Image unoptimized src={`${manga.coverImage.extraLarge}`} alt={manga.title.english || ""} width={100} height={150} style={{ borderRadius: "4px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)" }} />}
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <h2 style={{ color: "var(--titre-color)" }}>{manga.title.english}</h2>
+                                                <h2 style={{ color: "var(--titre-color)" }}>{manga.chapters} chapters</h2>
+                                                <p style={{ color: !isImported ? "var(--main-text-color)" : "var(--secondary-text-color)" }}>{manga.description}</p>
+                                                <h2 style={{ color: "var(--titre-color)" }}>{manga.format}</h2>
+                                                <h2 style={{ color: "var(--titre-color)" }}>{manga.startDate?.day}/{manga.startDate?.month}/{manga.startDate?.year}</h2>
+
+                                                <button style={{ marginTop: "1rem" }} className="button-validate" onClick={() => importManga(manga)}>
                                                     {isImported ? "Update" : "Import"}
                                                 </button>
                                             </div>

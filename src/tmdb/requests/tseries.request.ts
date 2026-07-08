@@ -2,7 +2,7 @@
 
 import fetch from "node-fetch";
 import https from "node:https";
-import { ApiSerie, Serie, Tag } from "../types/series.type";
+import { ApiSerie, Serie, Tag } from "../../types/series.type";
 
 export async function getSeriesBySearch(query: string): Promise<ApiSerie[]> {
     const data = await fetch(`https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(query)}&include_adult=false&language=fr-FR&page=1`, {

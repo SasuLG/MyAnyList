@@ -13,8 +13,8 @@ import { ServerError } from "@/lib/api/response/server.response";
  */
 export async function POST(req: Request, context: any): Promise<Response> {
     try {
-        const { params } = context;
-        const webToken = decodeURIComponent(params.token);
+        const { token } = await context.params;
+        const webToken = decodeURIComponent(token);
         const userRequest = await getUserByToken(webToken);
 
         if(userRequest){

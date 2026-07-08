@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Sun , Moon} from './svg/colors.mode.svg';
+import { Sun, Moon } from './svg/colors.mode.svg';
 
 const ThemeSwitcher = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -8,7 +8,7 @@ const ThemeSwitcher = () => {
     // Vérifier le cookie lors du chargement du composant
     const darkMode = document.cookie.includes('darkMode=true');
     setIsDarkMode(darkMode);
-    document.documentElement.classList.toggle('dark-mode', darkMode);
+    // document.documentElement.classList.toggle('dark-mode', darkMode);
   }, []);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,11 +24,11 @@ const ThemeSwitcher = () => {
 
   return (
     <div>
-        <input type="checkbox" id="toggleLightDark" className="toggleMode" checked={isDarkMode} onChange={handleChange}/>
-        <label htmlFor="toggleLightDark" className="toggleMode-label">
-            <Sun />
-            <Moon  />
-        </label>
+      <input type="checkbox" id="toggleLightDark" className="toggleMode" checked={isDarkMode} onChange={handleChange} />
+      <label htmlFor="toggleLightDark" className="toggleMode-label">
+        <Sun />
+        <Moon />
+      </label>
     </div>
   );
 };

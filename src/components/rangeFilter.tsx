@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Range } from '@/tmdb/types/series.type';
+import { Range } from '@/types/series.type';
 
 type RangeFilterProps = {
   range: Range;
   onChange: (range: Range) => void;
-  minLimit: number;  
-  maxLimit: number;  
+  minLimit: number;
+  maxLimit: number;
 };
 
 const RangeFilter = ({ range, onChange, minLimit, maxLimit }: RangeFilterProps) => {
@@ -53,11 +53,11 @@ const RangeFilter = ({ range, onChange, minLimit, maxLimit }: RangeFilterProps) 
         />
         <div
           className="slider-track"
-          style={{ background: `linear-gradient(to right, #0056b3 ${minPercentage}%, #ddd ${minPercentage}%, #ddd ${maxPercentage}%, #0056b3 ${maxPercentage}%)` }}
+          style={{ background: `linear-gradient(to right, var(--range-filter-color) ${minPercentage}%, #ddd ${minPercentage}%, #ddd ${maxPercentage}%, var(--range-filter-color) ${maxPercentage}%)` }}
         />
         <div
           className="slider-range"
-          style={{ left: `${minPercentage}%`, width: `${maxPercentage - minPercentage}%`, backgroundColor: '#0056b3' }}
+          style={{ left: `${minPercentage}%`, width: `${maxPercentage - minPercentage}%`, backgroundColor: 'var(--range-filter-color)' }}
         />
       </div>
       <div className="slider-labels">

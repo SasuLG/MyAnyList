@@ -3,6 +3,9 @@ import { jsPDF } from "jspdf";
 import { TierList } from './svg/tierList.svg';
 import { useUserContext } from "@/userContext";
 import { IMG_SRC } from "@/constants/tmdb.consts";
+import { createPortal } from "react-dom";
+import { CatalogItem } from "@/types/catalog-item.type";
+import { getCatalogPosterSrc } from "@/lib/catalog-item";
 
 export type Tier = {
   title: string;
@@ -13,6 +16,8 @@ export type Tier = {
 };
 
 type TierListPDFProps = {
+  mode: "mangas" | "series";
+  allSeries: CatalogItem[];
   tiers: Tier[];
   withWaitList?: boolean;
 };
@@ -55,7 +60,7 @@ const hexToRgb = (hex: string): [number, number, number] => {
  * @param {Tier} tiers - Liste des tiers
  * @returns 
  */
-const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
+const TierListPDF = ({ tiers, withWaitList = false, mode, allSeries }: TierListPDFProps) => {
 
   /**
    * Récupérer les informations de l'utilisateur
@@ -82,12 +87,6 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
    */
   const [showWaitlist, setShowWaitlist] = useState<boolean>(withWaitList);
 
-  /**
-   * Hooks d'état pour gérer les images des séries
-   */
-  const [seriesImages, setSeriesImages] = useState(() =>
-    tiers.map((tier) => ({ title: tier.title, images: tier.images }))
-  );
 
   // Exclure les couleurs déjà utilisées pour les nouveaux tiers
   const usedColors = new Set(tiers.map(tier => tier.color));
@@ -109,50 +108,59 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
   const openPopup = () => setOpenPopupTierList(true);
   const closePopup = () => setOpenPopupTierList(false);
 
-  /**
-   * Fonction pour gérer le changement d'un tier
-   * @param {number} index - Index du tier
-   * @param {string} field - Champ à modifier
-   * @param {string | number} value - Valeur à assigner
-   */
-  const handleTierChange = (index: number, field: string, value: string | number) => {
-    const updatedTiers = [...editedTiers];
-    const oldTitle = updatedTiers[index].title;
-
-    // Mise à jour du tier
-    updatedTiers[index] = {
-      ...updatedTiers[index],
-      [field]: value
-    };
-    setEditedTiers(updatedTiers);
-
-    // Si le champ modifié est le titre, mettre à jour également `seriesImages`
-    if (field === 'title' && typeof value === 'string') {
-      const updatedSeriesImages = seriesImages.map(tier =>
-        tier.title === oldTitle ? { ...tier, title: value } : tier
-      );
-      setSeriesImages(updatedSeriesImages);
-    }
+  // Fonction utilitaire pour récupérer les images selon les notes
+  const getImagesForRange = (min: number, max: number) => {
+    return allSeries
+      .filter(serie => {
+        const note = serie.note ?? 0;
+        return note >= min && note <= max;
+      })
+      .sort((a, b) => (b.note ?? 0) - (a.note ?? 0))
+      .map(serie => getCatalogPosterSrc(serie.poster_path, mode));
   };
 
-  /**
-   * Fonction pour ajouter un nouveau tier
-   */
+  // Mettre à jour les images d'un tier quand les notes changent
+  const handleTierChange = (index: number, field: string, value: string | number) => {
+    setEditedTiers(prev => {
+      const updated = [...prev];
+      const currentTier = { ...updated[index], [field]: value };
+
+      // Si on change une note, on recalcule les images de CE tier
+      if (field === 'minNote' || field === 'maxNote') {
+        currentTier.images = getImagesForRange(
+          field === 'minNote' ? (value as number) : (currentTier.minNote || 0),
+          field === 'maxNote' ? (value as number) : (currentTier.maxNote || 10)
+        );
+      }
+
+      updated[index] = currentTier;
+      return updated;
+    });
+  };
+
+  // Ajouter un nouveau tier avec calcul d'images immédiat
   const handleAddTier = () => {
     const nextColor = availableColors[colorIndex] || getRandomColor();
     setColorIndex(colorIndex + 1);
 
+    const min = 0;
+    const max = 10;
+
     const newTier: Tier = {
       title: "New Tier",
       color: nextColor,
-      minNote: 0,
-      maxNote: 10,
-      images: [],
+      minNote: min,
+      maxNote: max,
+      images: getImagesForRange(min, max), // On calcule les images dès l'ajout
     };
-    const updatedTiers = showWaitlist
-      ? [...editedTiers.filter(tier => tier.title !== "Waitlist"), newTier, editedTiers.find(tier => tier.title === "Waitlist")!]
-      : [...editedTiers, newTier];
-    setEditedTiers(updatedTiers);
+
+    if (showWaitlist) {
+      const tiersSansWaitlist = editedTiers.filter(t => t.title !== "Waitlist");
+      const waitlistTier = editedTiers.find(t => t.title === "Waitlist")!;
+      setEditedTiers([...tiersSansWaitlist, newTier, waitlistTier]);
+    } else {
+      setEditedTiers([...editedTiers, newTier]);
+    }
   };
 
   /**
@@ -195,20 +203,12 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
     if (showWaitlist) {
       waitlistImages = await fetchWaitlistData();
     }
-    const allSeriesImages = showWaitlist
-      ? [
-        ...seriesImages,
-        ...(seriesImages.some(tier => tier.title === "Waitlist")
-          ? []
-          : [{ title: "Waitlist", images: waitlistImages }]
-        ),
-      ].map(tier =>
-        tier.title === "Waitlist" ? { ...tier, images: waitlistImages } : tier
-      )
-      : seriesImages;
 
     for (const tier of editedTiers) {
-      const images = allSeriesImages.find((t) => t.title === tier.title)?.images || [];
+      let images = tier.images || [];
+      if (tier.title === "Waitlist") {
+        images = waitlistImages;
+      }
       const { title, color } = tier;
       const rgbColor = hexToRgb(color);
       const nbImages = images.length;
@@ -347,16 +347,12 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
   };
 
 
-  useEffect(() => {
-    setSeriesImages(tiers.map((tier) => ({ title: tier.title, images: tier.images })));
-  }, [tiers]);
-
   return (
     <>
       <div onClick={openPopup}>
         <TierList width={40} height={40} />
       </div>
-      {openPopupTierList && (
+      {openPopupTierList && createPortal(
         <div className="popup-overlay">
           <div className="popup-content" style={{ position: 'relative' }}>
             <div className="close-icon" onClick={closePopup} style={{ position: 'absolute', top: '10px', right: '10px', cursor: 'pointer' }}>
@@ -393,7 +389,8 @@ const TierListPDF = ({ tiers, withWaitList = false }: TierListPDFProps) => {
             <button className="tier-button-validate" onClick={handleAddTier}>Add New Tier</button>
             <button className="tier-button-validate" onClick={generatePDF}>Generate Tier List</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

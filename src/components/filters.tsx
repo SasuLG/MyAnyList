@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import MultiSelectDropdown from '@/components/multiSelectDropdown';
 import RangeFilter from './rangeFilter';
-import { Range } from '@/tmdb/types/series.type';
-import { Order, MoreFilter } from './svg/filter.svg'; 
+import { Range } from '@/types/series.type';
+import { Order, MoreFilter } from './svg/filter.svg';
 
 type FiltersProps = {
   genres: string[];
@@ -41,6 +41,21 @@ type FiltersProps = {
   tags?: string[];
   selectedTags?: string[];
   onSelectTags?: (tags: string[]) => void;
+
+  selectedNotStatuses?: string[];
+  onSelectNotStatuses?: (statuses: string[]) => void;
+  selectedNotOriginCountries?: string[];
+  onSelectNotOriginCountries?: (countries: string[]) => void;
+  selectedNotTags?: string[];
+  onSelectNotTags?: (tags: string[]) => void;
+  selectedNotProductionCompanies?: string[];
+  onSelectNotProductionCompanies?: (companies: string[]) => void;
+  selectedNotProductionCountries?: string[];
+  onSelectNotProductionCountries?: (countries: string[]) => void;
+  selectedNotFormats?: string[];
+  onSelectNotFormats?: (formats: string[]) => void;
+  selectedNotGenres?: string[];
+  onSelectNotGenres?: (genres: string[]) => void;
 };
 
 const Filters = ({
@@ -57,29 +72,44 @@ const Filters = ({
   onSearchChange,
   statuses = [],
   selectedStatuses = [],
-  onSelectStatuses = () => {},
+  onSelectStatuses = () => { },
   originCountries = [],
   selectedOriginCountries = [],
-  onSelectOriginCountries = () => {},
+  onSelectOriginCountries = () => { },
   productionCompanies = [],
   selectedProductionCompanies = [],
-  onSelectProductionCompanies = () => {},
+  onSelectProductionCompanies = () => { },
   productionCountries = [],
   selectedProductionCountries = [],
-  onSelectProductionCountries = () => {},
+  onSelectProductionCountries = () => { },
   yearRange,
-  onYearRangeChange = () => {},
+  onYearRangeChange = () => { },
   voteRange = { min: 0, max: 10, minimalRange: 0, maximalRange: 10 },
-  onVoteRangeChange = () => {},
+  onVoteRangeChange = () => { },
   episodeRange,
-  onEpisodeRangeChange = () => {},
+  onEpisodeRangeChange = () => { },
   withFollowed,
-  onwithFollowedChange = () => {},
+  onwithFollowedChange = () => { },
   orderAsc = true,
   setOrderChange,
   tags = [],
   selectedTags = [],
-  onSelectTags = () => {}
+  onSelectTags = () => { },
+
+  selectedNotFormats = [],
+  onSelectNotFormats = () => { },
+  selectedNotGenres = [],
+  onSelectNotGenres = () => { },
+  selectedNotStatuses = [],
+  onSelectNotStatuses = () => { },
+  selectedNotOriginCountries = [],
+  onSelectNotOriginCountries = () => { },
+  selectedNotTags = [],
+  onSelectNotTags = () => { },
+  selectedNotProductionCompanies = [],
+  onSelectNotProductionCompanies = () => { },
+  selectedNotProductionCountries = [],
+  onSelectNotProductionCountries = () => { },
 }: FiltersProps) => {
 
   const [showTooltip, setShowTooltip] = useState<boolean>(false);
@@ -116,19 +146,19 @@ const Filters = ({
           placeholder="Search"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          style={{ width: '80%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', boxShadow: '0 4px 8px rgba(0,0,0,0.2)', color:"var(--titre-color)" }}
+          style={{ width: '80%', padding: '0.5rem', borderRadius: '4px', boxShadow: 'var(--shadow-light)', color: "var(--titre-color)", backgroundColor: "var(--background-color)" }}
         />
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
           <span>Genres</span>
-          <MultiSelectDropdown options={genres} selectedOptions={selectedGenres} onSelect={onSelectGenres} />
+          <MultiSelectDropdown options={genres} selectedOptions={selectedGenres} onSelect={onSelectGenres} notSelectedOptions={selectedNotGenres} onSelectNot={onSelectNotGenres} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
           <span>Format</span>
-          <MultiSelectDropdown options={formats} selectedOptions={selectedFormats} onSelect={onSelectFormats} />
+          <MultiSelectDropdown options={formats} selectedOptions={selectedFormats} onSelect={onSelectFormats} notSelectedOptions={selectedNotFormats} onSelectNot={onSelectNotFormats} />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', position: 'relative', cursor: 'pointer', marginRight: '-1.5rem' }} onClick={() => setOrderChange(!orderAsc)} onMouseEnter={() => setShowTooltip(true)} onMouseLeave={() => setShowTooltip(false)}>
@@ -141,22 +171,22 @@ const Filters = ({
           <MultiSelectDropdown options={sortByOptions} selectedOptions={[selectedSortBy]} onSelect={(options) => onSelectSortBy(options[0] || 'added')} singleSelect />
         </div>
 
-        {statuses.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}><span>Status</span><MultiSelectDropdown options={statuses} selectedOptions={selectedStatuses} onSelect={onSelectStatuses} /></div>}
+        {statuses.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}><span>Status</span><MultiSelectDropdown options={statuses} selectedOptions={selectedStatuses} onSelect={onSelectStatuses} notSelectedOptions={selectedNotStatuses} onSelectNot={onSelectNotStatuses} /></div>}
 
-        {voteRange && 
+        {voteRange &&
           <div className="slider-filter">
             <span>Vote Range</span>
             <RangeFilter range={voteRange as Range} onChange={onVoteRangeChange} minLimit={voteRange.minimalRange || 0} maxLimit={voteRange.maximalRange || 10} />
           </div>
         }
 
-        <div style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.15)', padding: '0.5rem', borderRadius: '4px' }} onClick={handleSvgClick} ref={svgRef}>
+        <div style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', boxShadow: 'var(--shadow-light)', padding: '0.5rem', borderRadius: '4px' }} onClick={handleSvgClick} ref={svgRef}>
           <MoreFilter width={30} height={30} isOpen={showPopup} />
           {showPopup && <div ref={popupRef} className="popup" onClick={handlePopupClick} style={{ top: svgRef.current?.offsetHeight ?? 0 }}>
-            {originCountries.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Origin Country</span><MultiSelectDropdown options={originCountries} selectedOptions={selectedOriginCountries} onSelect={onSelectOriginCountries} /></div>}
-            {productionCompanies.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Production Companies</span><MultiSelectDropdown options={productionCompanies} selectedOptions={selectedProductionCompanies} onSelect={onSelectProductionCompanies} /></div>}
-            {productionCountries.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Production Countries</span><MultiSelectDropdown options={productionCountries} selectedOptions={selectedProductionCountries} onSelect={onSelectProductionCountries} /></div>}
-            {tags.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Tags</span><MultiSelectDropdown options={tags} selectedOptions={selectedTags} onSelect={onSelectTags} /></div>}
+            {originCountries.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Origin Country</span><MultiSelectDropdown options={originCountries} selectedOptions={selectedOriginCountries} onSelect={onSelectOriginCountries} notSelectedOptions={selectedNotOriginCountries} onSelectNot={onSelectNotOriginCountries} /></div>}
+            {productionCompanies.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Production Companies</span><MultiSelectDropdown options={productionCompanies} selectedOptions={selectedProductionCompanies} onSelect={onSelectProductionCompanies} notSelectedOptions={selectedNotProductionCompanies} onSelectNot={onSelectNotProductionCompanies} /></div>}
+            {productionCountries.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Production Countries</span><MultiSelectDropdown options={productionCountries} selectedOptions={selectedProductionCountries} onSelect={onSelectProductionCountries} notSelectedOptions={selectedNotProductionCountries} onSelectNot={onSelectNotProductionCountries} /></div>}
+            {tags.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Tags</span><MultiSelectDropdown options={tags} selectedOptions={selectedTags} onSelect={onSelectTags} notSelectedOptions={selectedNotTags} onSelectNot={onSelectNotTags} /></div>}
             {yearRange && <div style={{ marginBottom: '1rem', width: "40%" }}><span>Year Range</span><RangeFilter range={yearRange} onChange={onYearRangeChange} minLimit={yearRange.minimalRange} maxLimit={yearRange.maximalRange} /></div>}
             {episodeRange && <div style={{ marginBottom: '1rem', width: "40%" }}><span>Episode Range</span><RangeFilter range={episodeRange} onChange={onEpisodeRangeChange} minLimit={episodeRange.minimalRange} maxLimit={episodeRange.maximalRange} /></div>}
           </div>}

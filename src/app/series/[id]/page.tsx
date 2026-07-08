@@ -4,11 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import Loader from "@/components/loader";
 import { BrokenHeart, Heart } from "@/components/svg/heart.svg";
 import { IMG_SRC } from "@/constants/tmdb.consts";
-import { Serie } from "@/tmdb/types/series.type";
+import { Serie } from "@/types/series.type";
 import { useUserContext } from "@/userContext";
 import { Star, StarColored, StarHalfColored } from "@/components/svg/stars.svg";
+import { use } from 'react';
+import TagList from "@/components/tagList";
 
-export default function SerieDetails({ params }: { params: { id: string } }) {
+export default function SerieDetails({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
 
     /**
      * Récupération des informations de l'utilisateur.
@@ -69,7 +72,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
      * Fonction pour récupérer les informations de la série.
      */
     const fetchSerie = async () => {
-        const response = await fetch(`/api/series/${encodeURIComponent(params.id)}`);
+        const response = await fetch(`/api/series/${encodeURIComponent(id)}`);
         if (!response.ok) {
             setAlert(await response.json());
             return;
@@ -81,7 +84,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
         });
 
         if (user) {
-            const userResponse = await fetch(`/api/series/${encodeURIComponent(params.id)}/user/${encodeURIComponent(user.id)}`);
+            const userResponse = await fetch(`/api/series/${encodeURIComponent(id)}/user/${encodeURIComponent(user.id)}`);
             if (userResponse.ok) {
                 const userData = await userResponse.json();
                 if (userData) {
@@ -298,7 +301,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
 
     useEffect(() => {
         fetchSerie();
-    }, [params.id, user]);
+    }, [id, user]);
 
     useEffect(() => {
         setSelectedMenu("");
@@ -326,7 +329,7 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                                     <span style={{ fontSize: "1.6rem", fontWeight: "bold", cursor: "pointer" }} tabIndex={0} onClick={() => setIsEditing(true)}>
                                         {formatRating(rating ?? 0)}
                                     </span>
-                                    <button onClick={(e) => { updateVote(); setIsEditing(false) }} style={{ background: "none", border: "none", cursor: `${serie.note === rating ? "default" : "pointer"}`, marginLeft: "-2px", fontSize: "1rem", color: `${serie.note === rating ? "var(--titre-color)" : "#007bff"}` }} disabled={serie.note === rating}>
+                                    <button onClick={(e) => { updateVote(); setIsEditing(false) }} style={{ background: "none", border: "none", cursor: `${serie.note === rating ? "default" : "pointer"}`, marginLeft: "-2px", fontSize: "1rem", color: `${serie.note === rating ? "var(--titre-color)" : "var(--button-color)"}` }} disabled={serie.note === rating}>
                                         ✎
                                     </button>
                                 </>
@@ -354,10 +357,10 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
             </div>
 
             <div style={{ display: "flex", gap: "20px", marginBottom: "40px" }}>
-                <img src={`${IMG_SRC}${serie.poster_path}`} alt={serie.name} style={{ width: "300px", height: "450px", borderRadius: "10px", objectFit: "cover", boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} />
+                <img src={`${IMG_SRC}${serie.poster_path}`} alt={serie.name} style={{ width: "300px", height: "450px", borderRadius: "10px", objectFit: "cover", boxShadow: "var(--shadow-light)" }} />
                 <div style={{ flex: 1 }}>
-                    <div style={{ marginBottom: "20px", backgroundColor: "#f9f9f9", borderRadius: "10px", padding: "20px", boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }}>
-                        <h2 style={{ fontSize: "2rem", color: "#333", marginBottom: "10px", textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)" }}>{serie.name}</h2>
+                    <div style={{ marginBottom: "20px", backgroundColor: "var(--above)", borderRadius: "10px", padding: "20px", boxShadow: "var(--shadow-light)" }}>
+                        <h2 style={{ fontSize: "2rem", color: "var(--titre-color)", marginBottom: "10px", textShadow: "1px 1px 2px hsla(0, 0%, 0%, 0.10)" }}>{serie.name}</h2>
                         {serie.status === "Ended" && <p style={{ color: "red", fontWeight: "bold" }}>Cette série est terminée</p>}
                         <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
                             <div style={{ flex: 1 }}>
@@ -366,6 +369,9 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Status:</strong> {serie.status}</p>
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Format:</strong> {serie.media_type != "tv" ? serie.media_type.charAt(0).toUpperCase() + serie.media_type.slice(1) : serie.media_type}</p>
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Date de Première Diffusion:</strong> {new Date(serie.first_air_date).toLocaleDateString()}</p>
+                                {serie.last_air_date && (
+                                    <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Date de Fin:</strong> {new Date(serie.last_air_date).toLocaleDateString()}</p>
+                                )}
                             </div>
                             <div style={{ flex: 1, textAlign: "right" }}>
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Nombre de Saisons:</strong> {serie.number_of_seasons}</p>
@@ -376,14 +382,15 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                             </div>
                         </div>
                         <p style={{ fontSize: "1.1rem", marginBottom: "10px" }}><strong>Synopsis:</strong></p>
-                        <p style={{ fontSize: "1rem", color: "#666", marginBottom: "20px" }}>
+                        <p style={{ fontSize: "1rem", color: "var(--main-text-color)", marginBottom: "20px" }}>
                             {showMore ? serie.overview : truncateText(serie.overview, 200)}
                             {serie.overview.length > 200 && (
-                                <button onClick={() => setShowMore(!showMore)} style={{ color: "#007bff", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+                                <button onClick={() => setShowMore(!showMore)} style={{ color: "var(--button-color)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
                                     {showMore ? "Voir moins" : "Voir plus"}
                                 </button>
                             )}
                         </p>
+                        <TagList tags={serie.tags} title="Tags" />
                     </div>
 
                     {showMoreInfo ? (
@@ -394,9 +401,6 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                             {serie.revenue && (
                                 <h3 style={{ fontSize: "1.2rem", color: "#333", marginBottom: "10px" }}>Revenue : </h3>
                             )}
-                            <ul style={{ listStyleType: "none", paddingLeft: "0", fontSize: "1.1rem", color: "#555" }}>
-                                <li style={{ marginBottom: "5px" }}><strong>Tags:</strong> {serie.tags.map(tag => tag.name).join(", ")}</li>
-                            </ul>
                             <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Production Companies</h2>
                             <ul style={{ listStyleType: "none", paddingLeft: "0", fontSize: "1.1rem", color: "#555" }}>
                                 {serie.production_companies
@@ -420,12 +424,12 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                                     <li key={country.iso_3166_1} style={{ marginBottom: "5px" }}>{country.name}</li>
                                 ))}
                             </ul>
-                            <button onClick={() => setShowMoreInfo(false)} style={{ padding: "10px 20px", backgroundColor: "#007bff", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+                            <button onClick={() => setShowMoreInfo(false)} style={{ padding: "10px 20px", backgroundColor: "var(--button-color)", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
                                 Voir moins
                             </button>
                         </div>
                     ) : (
-                        <button onClick={() => setShowMoreInfo(true)} style={{ padding: "10px 20px", backgroundColor: "#007bff", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+                        <button onClick={() => setShowMoreInfo(true)} style={{ padding: "10px 20px", backgroundColor: "var(--button-color)", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
                             Voir plus de détails
                         </button>
                     )}
@@ -435,9 +439,9 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
 
             {user && (
                 <div style={{ marginTop: "40px" }}>
-                    <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Commentaire</h2>
-                    <textarea id="serie-comment" defaultValue={serie.comment || ""} style={{ width: "100%", height: "150px", padding: "10px", borderRadius: "5px", border: "1px solid #ccc", fontSize: "1rem" }} />
-                    <button onClick={updateVote} style={{ marginTop: "10px", padding: "10px 20px", backgroundColor: "#007bff", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+                    <h2 style={{ fontSize: "1.5rem", color: "var(--titre-color)", marginBottom: "20px" }}>Commentaire</h2>
+                    <textarea id="serie-comment" defaultValue={serie.comment || ""} style={{ width: "100%", height: "150px", padding: "10px", borderRadius: "5px", border: "1px solid #ccc", fontSize: "1rem", color: "var(--titre-color)", backgroundColor: "var(--above)" }} />
+                    <button onClick={updateVote} style={{ marginTop: "10px", padding: "10px 20px", backgroundColor: "var(--button-color)", color: "var(--header-footer-text)", border: "none", borderRadius: "5px", cursor: "pointer" }}>
                         Mettre à jour le commentaire
                     </button>
                 </div>
@@ -445,9 +449,9 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
 
             {(serie.media_type === "anime" || serie.media_type === "tv") && (
                 <div style={{ marginTop: "40px" }}>
-                    <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Saisons</h2>
+                    <h2 style={{ fontSize: "1.5rem", color: "var(--titre-color)", marginBottom: "20px" }}>Saisons</h2>
                     {serie.seasons.length > 1 && (
-                        <select onChange={(e) => setSelectedSeason(Number(e.target.value))} value={selectedSeason} style={{ padding: "10px", marginBottom: "20px", fontSize: "1rem", borderRadius: "5px", border: "1px solid #ccc", cursor: "pointer" }}>
+                        <select onChange={(e) => setSelectedSeason(Number(e.target.value))} value={selectedSeason} style={{ padding: "10px", marginBottom: "20px", fontSize: "1rem", borderRadius: "5px", border: "1px solid #ccc", cursor: "pointer", backgroundColor: "var(--above)", color: "var(--titre-color)" }}>
                             {serie.seasons.map((season, index) => (
                                 <option key={season.id} value={index}>
                                     Saison {season.season_number}: {season.name} ({season.episodes ? season.episodes.length : 0} épisodes)
@@ -456,17 +460,17 @@ export default function SerieDetails({ params }: { params: { id: string } }) {
                         </select>
                     )}
                     {serie.seasons[selectedSeason] && (
-                        <div style={{ padding: "20px", backgroundColor: "#f4f4f4", borderRadius: "10px", boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }}>
-                            <h3 style={{ fontSize: "1.3rem", color: "#333", marginBottom: "10px" }}>{serie.seasons[selectedSeason].name}</h3>
-                            <img src={`${IMG_SRC}${serie.seasons[selectedSeason].poster_path}`} alt={serie.seasons[selectedSeason].name} style={{ width: "200px", borderRadius: "10px", objectFit: "cover", boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} />
-                            <p style={{ fontSize: "1.1rem", color: "#666", marginTop: "10px" }}>{serie.seasons[selectedSeason].overview}</p>
-                            <h4 style={{ fontSize: "1.2rem", color: "#333", marginTop: "20px", marginBottom: "10px" }}>Episodes</h4>
+                        <div style={{ padding: "20px", backgroundColor: "var(--above)", borderRadius: "10px", boxShadow: "var(--shadow-light)" }}>
+                            <h3 style={{ fontSize: "1.3rem", color: "var(--titre-color)", marginBottom: "10px" }}>{serie.seasons[selectedSeason].name}</h3>
+                            <img src={`${IMG_SRC}${serie.seasons[selectedSeason].poster_path}`} alt={serie.seasons[selectedSeason].name} style={{ width: "200px", borderRadius: "10px", objectFit: "cover", boxShadow: "var(--shadow-light)" }} />
+                            <p style={{ fontSize: "1.1rem", color: "var(--main-text-color)", marginTop: "10px" }}>{serie.seasons[selectedSeason].overview}</p>
+                            <h4 style={{ fontSize: "1.2rem", color: "var(--titre-color)", marginTop: "20px", marginBottom: "10px" }}>Episodes</h4>
                             <ul style={{ listStyleType: "none", paddingLeft: "0" }}>
                                 {serie.seasons[selectedSeason].episodes && serie.seasons[selectedSeason].episodes.map((episode) => (
                                     <li key={episode.id} style={{ marginBottom: "20px" }}>
-                                        <h5 style={{ fontSize: "1.1rem", color: "#007bff" }}>Episode {episode.episode_number}: {episode.name}</h5>
+                                        <h5 style={{ fontSize: "1.1rem", color: "var(--button-color)" }}>Episode {episode.episode_number}: {episode.name}</h5>
                                         <img src={`${IMG_SRC}${episode.still_path}`} alt={episode.name} style={{ width: "150px", borderRadius: "5px", objectFit: "cover" }} />
-                                        <p style={{ fontSize: "1rem", color: "#666" }}>{episode.overview}</p>
+                                        <p style={{ fontSize: "1rem", color: "var(--main-text-color)" }}>{episode.overview}</p>
                                         <p style={{ fontSize: "0.9rem", color: "#999" }}>Durée: {episode.runtime} minutes</p>
                                     </li>
                                 ))}

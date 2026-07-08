@@ -1,7 +1,7 @@
 .header-container {
     background-color: var(--secondary-background-color);
     overflow: visible;
-    color: var(--secondary-text-color);
+    color: var(--header-footer-text);
 }
 
 .header-content {
@@ -15,26 +15,16 @@
     display: flex;
     gap: 1rem;
     position: relative;
+    align-items: center;
 }
 
 .header-items .selected{
     font-weight: bold;
     color: var(--selected-text-color, #222);
-    border-bottom: 3px solid var(--selected-border-color, var(--button-color));
-    background-color: var(--selected-background-color, transparent);
+    border-bottom: 3px solid var(--button-color);
     text-decoration: none;
     padding-bottom: 2px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.selected {/* TODO JE SAIS PAS mais je pense pas*/
-    /* font-weight: bold;
-    color: var(--selected-text-color, #222);
-    border-bottom: 3px solid var(--selected-border-color, #007BFF);
-    background-color: var(--selected-background-color, transparent);
-    text-decoration: none;
-    padding-bottom: 2px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); */
 }
 
 .profile-menu {
@@ -81,6 +71,49 @@
     font-size: 0.875rem; /* Réduit la taille de la police pour plus de compacité */
 }
 
-.dropdown-menu a:hover, .dropdown-menu p:hover {
-    background-color: var(--hover-background-color, #f0f0f0);
+.dropdown-menu a:hover, .dropdown-item div:hover {
+    background-color: var(--hover-background-color);
+}
+
+
+.flip-out {
+  animation: flipOut 0.4s ease-in forwards;
+}
+
+.flip-in {
+  animation: flipIn 0.4s ease-out forwards;
+}
+
+@keyframes flipOut {
+  0% {
+    transform: rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateY(90deg) scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+@keyframes flipIn {
+  0% {
+    transform: rotateY(-90deg) scale(0.95);
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+}
+/* .header-logo {
+    filter:
+        drop-shadow(0 0 4px rgba(255,255,255,0.8))
+        drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+} */
+
+.header-logo {
+    filter:
+        drop-shadow(0 0 0.5px white)
+        drop-shadow(0 0 1px white)
+        drop-shadow(0 0 1.5px white);
 }

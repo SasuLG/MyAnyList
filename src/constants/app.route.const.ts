@@ -68,3 +68,8 @@ export const PROFILE_BASE_ROUTE = '/user/profil';
  * Variable qui représente la valeur de la route de profil
  */
 export const BASE_DETAILS_SERIE_ROUTE = '/series';
+
+/**
+ * Variable qui représente la valeur de base de la route de détails manga
+ */
+export const BASE_DETAILS_MANGA_ROUTE = '/mangas';

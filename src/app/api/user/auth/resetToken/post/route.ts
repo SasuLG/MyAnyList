@@ -18,7 +18,7 @@ export async function POST(req: Request): Promise<Response> {
         const resetToken = data.resetToken;
         const user = await getUserByResetToken(resetToken);
         if(user){
-            const resetUrl = `${process.env.MODE === "production" ? process.env.NEXT_PUBLIC_BASE_URL_PROD: process.env.NEXT_PUBLIC_BASE_URL_DEV}/user/reset-password?token=${user.resetToken}`;
+            const resetUrl = `${process.env.MODE === "production" || process.env.NODE_ENV === 'production'  ? process.env.NEXT_PUBLIC_BASE_URL_PROD: process.env.NEXT_PUBLIC_BASE_URL_DEV}/user/reset-password?token=${user.resetToken}`;
             await sendPasswordResetEmail(user.email, `${resetUrl}`);
             return new Response(JSON.stringify({ valid: true, message: 'Un email de réinitialisation vous a été envoyé.' }), { status: 200 });
         }

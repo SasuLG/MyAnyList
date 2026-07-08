@@ -9,12 +9,12 @@ import { PROFILE_BASE_ROUTE } from "@/constants/app.route.const";
 import { useRouter } from "next/navigation";
 
 export default function ListUsers() {
-    
+
     /**
      * Récupération des informations de l'utilisateur connecté.
      */
     const { user, setAlert, setUserCookie } = useUserContext();
-    
+
     /**
      * React hook pour permettre la navigation entre les différents endpoints de l'application web.
      */
@@ -58,10 +58,10 @@ export default function ListUsers() {
         });
         const data = await response.json();
         if (data.valid) {
-            setAlert({ message: `User ${user.login} ${user.banned?"unBan":"ban"} successfully`, valid: true });
+            setAlert({ message: `User ${user.login} ${user.banned ? "unBan" : "ban"} successfully`, valid: true });
             fetchUsers();
         } else {
-            setAlert({ message: `Failed to ${user.banned?"unBan":"ban"} user ${user.login}`, valid: false });
+            setAlert({ message: `Failed to ${user.banned ? "unBan" : "ban"} user ${user.login}`, valid: false });
         }
     }
 
@@ -103,7 +103,7 @@ export default function ListUsers() {
      * Fonction qui permet de changer l'ordre de tri des utilisateurs.
      */
     const handleOrderChange = () => {
-        setOrderAsc(prevOrder => !prevOrder);  
+        setOrderAsc(prevOrder => !prevOrder);
     }
 
     useEffect(() => {
@@ -112,7 +112,7 @@ export default function ListUsers() {
 
     const sortedUsers = [...users].sort((a, b) => {
         let aValue: number = 0, bValue: number = 0;
-    
+
         switch (sortBy) {
             case 'createdAt':
                 aValue = new Date(a.createdAt).getTime();
@@ -131,7 +131,7 @@ export default function ListUsers() {
                 bValue = b.verifToken ? 0 : 1;
                 break;
         }
-    
+
         return orderAsc ? aValue - bValue : bValue - aValue;
     });
 
@@ -167,8 +167,8 @@ export default function ListUsers() {
                 </thead>
                 <tbody>
                     {sortedUsers.map((u, index) => (
-                        <tr 
-                            key={index} 
+                        <tr
+                            key={index}
                             style={{
                                 backgroundColor: u.verifToken ? '#e6ffed' : 'transparent',
                             }}
@@ -179,7 +179,7 @@ export default function ListUsers() {
                                     {u.login}
                                 </Link>
                             </td>
-                            <td className="tableCell"  style={{maxWidth: 'none', whiteSpace: 'normal',  wordBreak: 'break-all'  }}>
+                            <td className="tableCell" style={{ maxWidth: 'none', whiteSpace: 'normal', wordBreak: 'break-all' }}>
                                 {u.email}
                             </td>
                             <td className="tableCell">{u.admin ? 'Yes' : 'No'}</td>
@@ -194,14 +194,14 @@ export default function ListUsers() {
                             <td className="tableCell">{new Date(u.createdAt).toLocaleDateString()}</td>
                             <td className="tableCell">{new Date(u.last_activity).toLocaleDateString()}</td>
                             <td className="tableCell">
-                                <button 
-                                    onClick={() => incarnUser(u)} 
+                                <button
+                                    onClick={() => incarnUser(u)}
                                     className={`button button--small ${user && u.id === user.id ? "disabled-button" : ""}`}
                                 >
                                     Incarn
                                 </button>
-                                <button 
-                                    onClick={() => toggleBanUser(u)} 
+                                <button
+                                    onClick={() => toggleBanUser(u)}
                                     className={`button button--small ${user && u.id === user.id ? "disabled-button" : ""}`}
                                 >
                                     {u.banned ? "UnBan" : "Ban"}

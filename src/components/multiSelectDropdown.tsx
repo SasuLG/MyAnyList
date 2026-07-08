@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Check } from './svg/check.svg';
+import { Check, UnCheck } from './svg/check.svg';
 import { Down, Up } from './svg/upAndDown.svg';
 
 type MultiSelectDropdownProps = {
@@ -7,9 +7,11 @@ type MultiSelectDropdownProps = {
   selectedOptions: string[];
   onSelect: (options: string[]) => void;
   singleSelect?: boolean;
+  notSelectedOptions?: string[];
+  onSelectNot?: (options: string[]) => void;
 };
 
-const MultiSelectDropdown = ({ options, selectedOptions, onSelect, singleSelect = false }: MultiSelectDropdownProps) => {
+const MultiSelectDropdown = ({ options, selectedOptions, onSelect, singleSelect = false, notSelectedOptions = [], onSelectNot = () => { } }: MultiSelectDropdownProps) => {
 
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -20,7 +22,10 @@ const MultiSelectDropdown = ({ options, selectedOptions, onSelect, singleSelect 
       setIsOpen(false);
     } else {
       if (selectedOptions.includes(option)) {
+        onSelectNot([...notSelectedOptions, option]);
         onSelect(selectedOptions.filter(opt => opt !== option));
+      } else if (notSelectedOptions.includes(option)) {
+        onSelectNot(notSelectedOptions.filter(opt => opt !== option));
       } else {
         onSelect([...selectedOptions, option]);
       }
@@ -40,16 +45,18 @@ const MultiSelectDropdown = ({ options, selectedOptions, onSelect, singleSelect 
     };
   }, []);
 
-  const displayText = selectedOptions.length > 2 
+  const displayText = selectedOptions.length > 2
     ? `${selectedOptions.slice(0, 2).join(', ')} +${selectedOptions.length - 2}`
-    : selectedOptions.join(', ') || 'Any';
+    : notSelectedOptions.length > 0
+      ? `not ${notSelectedOptions.slice(0, 2).join(', ')}`
+      : selectedOptions.join(', ') || 'Any';
 
   return (
     <div ref={dropdownRef} className="dropdown">
       <div className="dropdown-label" onClick={() => setIsOpen(!isOpen)}>
         {displayText}
         <div className="icon">
-          {isOpen ? <Up width={20} height={20}/> : <Down width={20} height={20}/>}
+          {isOpen ? <Up width={20} height={20} /> : <Down width={20} height={20} />}
         </div>
       </div>
       {isOpen && (
@@ -57,11 +64,12 @@ const MultiSelectDropdown = ({ options, selectedOptions, onSelect, singleSelect 
           {options.map((option) => (
             <div
               key={option}
-              className={`dropdown-option ${selectedOptions.includes(option) ? 'selected' : ''}`}
+              className={`dropdown-option ${selectedOptions.includes(option) ? 'selected' : ''} ${notSelectedOptions.includes(option) ? 'not-selected' : ''}`}
               onClick={() => toggleOption(option)}
             >
               {option}
               {selectedOptions.includes(option) && <Check width={20} height={20} />}
+              {notSelectedOptions.includes(option) && <UnCheck width={20} height={20} />}
             </div>
           ))}
         </div>
