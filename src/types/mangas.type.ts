@@ -179,6 +179,19 @@ type MinimalManga = {
     end_date: string | null;
 }
 
+type SearchManga = {
+    id: string;
+    anilist_id: string;
+    title_romaji: string | null;
+    title_native: string | null;
+    title_english: string | null;
+    cover_image: string | null;
+    format: string | null;
+    note?: number;
+    synonyms: { id: string; name: string }[];
+    //nb chapitres, status, start_date?
+};
+
 export type {
     AnilistId,
     ApiManga,
@@ -189,5 +202,6 @@ export type {
     MangaStats,
     UserManga,
     UserWaitManga,
-    MinimalManga
+    MinimalManga,
+    SearchManga
 };

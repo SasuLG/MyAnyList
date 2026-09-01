@@ -1,4 +1,4 @@
-import { MinimalManga, TagExternal } from '@/types/mangas.type';
+import { Manga, MinimalManga, TagExternal } from '@/types/mangas.type';
 import Query from '../postgre.middleware';
 
 export async function getMangas(limit: number, page: number): Promise<MinimalManga[]> {
@@ -326,7 +326,7 @@ export async function getRecommendedMangas(userId: string, limit: number, page: 
     }
 }
 
-export async function getMangasByIds(ids: string[]):Promise<MinimalManga[]> {
+export async function getMangasByIds(ids: string[]):Promise<Manga[]> {
     if (!ids.length) return [];
 
     try {
@@ -345,6 +345,7 @@ export async function getMangasByIds(ids: string[]):Promise<MinimalManga[]> {
                     "m"."cover_image",
                     "m"."synopsis",
                     "m"."status",
+                    "m"."volumes",
                     "m"."format",
                     "m"."chapters",
                     "m"."averageScore",
@@ -424,7 +425,7 @@ export async function getMangasByIds(ids: string[]):Promise<MinimalManga[]> {
     }
 }
 
-export async function getMangaDetailsById(mangaId: string): Promise<MinimalManga | null> {
+export async function getMangaDetailsById(mangaId: string): Promise<Manga | null> {
     const mangas = await getMangasByIds([mangaId]);
     return mangas[0] ?? null;
 }

@@ -78,7 +78,9 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
 
       const matchesOriginCountry =
         selectedOriginCountries.length === 0 ||
-        selectedOriginCountries.every(country => serie.origin_country.includes(country));
+        selectedOriginCountries.every(country =>
+          serie.origin_country.some(origin => origin.iso_3166_1.iso_3166_1 === country)
+        );
       const matchesProductionCompany = selectedProductionCompanies.every(company => serie.production_companies && serie.production_companies.some(prod => prod.name === company));
       const matchesProductionCountry = selectedProductionCountries.every(country => serie.production_countries.some(c => c.name === country));
       const matchesTags = selectedTags.every(tag => serie.tags.some(t => t.name === tag));
@@ -93,7 +95,7 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
 
       const matchesNotGenre = selectedNotGenres.every(genre => !serie.genres.some(g => g.name === genre));
       const matchesNotStatus = selectedNotStatuses.length === 0 || !selectedNotStatuses.includes(serie.status);
-      const matchesNotOriginCountry = selectedNotOriginCountries.length === 0 || !selectedNotOriginCountries.some(country => serie.origin_country.includes(country));
+      const matchesNotOriginCountry = selectedNotOriginCountries.length === 0 || !selectedNotOriginCountries.some(country => serie.origin_country.some(origin => origin.iso_3166_1.iso_3166_1 === country));
       const matchesNotTags = selectedNotTags.every(tag => !serie.tags.some(t => t.name === tag));
       const matchesNotProductionCompany = selectedNotProductionCompanies.every(company => !(serie.production_companies && serie.production_companies.some(prod => prod.name === company)));
       const matchesNotProductionCountry = selectedNotProductionCountries.every(country => !serie.production_countries.some(c => c.name === country));

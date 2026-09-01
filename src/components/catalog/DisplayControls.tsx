@@ -1,7 +1,6 @@
 import { Settings, ToggleLayout, IncreaseSize, DecreaseSize } from '@/components/svg/buttons.svg';
 import TierListGenerator from '../tierListGenerator';
 import { CatalogItem } from '@/types/catalog-item.type';
-import { getCatalogPosterSrc } from '@/lib/catalog-item';
 
 interface Props {
     buttonsVisible: boolean;
@@ -113,72 +112,48 @@ export default function DisplayControls({ buttonsVisible, rotating, styleType, t
                                     color: "#ff7f7f",
                                     minNote: 9.5,
                                     maxNote: 10,
-                                    images: [
-                                        ...filteredSeries.filter(serie => serie.note && serie.note >= 9.5).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => getCatalogPosterSrc(serie.poster_path, mode))
-                                    ],
                                 },
                                 {
                                     title: "Amazing",
                                     color: "#ffbf7f",
                                     minNote: 8.5,
                                     maxNote: 9.49,
-                                    images: [
-                                        ...filteredSeries.filter(serie => serie.note && serie.note >= 8.5 && serie.note <= 9.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => getCatalogPosterSrc(serie.poster_path, mode))
-                                    ],
                                 },
                                 {
                                     title: "Very good",
                                     color: "#ffdf7f",
                                     minNote: 7.5,
                                     maxNote: 8.49,
-                                    images: [
-                                        ...filteredSeries.filter(serie => serie.note && serie.note >= 7.5 && serie.note <= 8.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => getCatalogPosterSrc(serie.poster_path, mode))
-                                    ],
                                 },
                                 {
                                     title: "Good",
                                     color: "#FFFF7F",
                                     minNote: 6.5,
                                     maxNote: 7.49,
-                                    images: [
-                                        ...filteredSeries.filter(serie => serie.note && serie.note >= 6.5 && serie.note <= 7.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => getCatalogPosterSrc(serie.poster_path, mode))
-                                    ],
                                 },
                                 {
                                     title: "Ok Tier",
                                     color: "#bfff7f",
                                     minNote: 5,
                                     maxNote: 6.49,
-                                    images: [
-                                        ...filteredSeries.filter(serie => serie.note && serie.note >= 5 && serie.note <= 6.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => getCatalogPosterSrc(serie.poster_path, mode))
-                                    ],
                                 },
                                 {
                                     title: "Bof Tier",
                                     color: "#7fff7f",
                                     minNote: 3.5,
                                     maxNote: 4.99,
-                                    images: [
-                                        ...filteredSeries.filter(serie => serie.note && serie.note >= 3.5 && serie.note <= 4.99).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => getCatalogPosterSrc(serie.poster_path, mode))
-                                    ],
                                 },
                                 {
                                     title: "Bad Tier",
                                     color: "#7fffff",
                                     minNote: 2,
                                     maxNote: 3.49,
-                                    images: [
-                                        ...filteredSeries.filter(serie => serie.note && serie.note >= 2 && serie.note <= 3.49).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => getCatalogPosterSrc(serie.poster_path, mode))
-                                    ],
                                 },
                                 {
                                     title: "Shit Tier",
                                     color: "#7fbfff",
                                     minNote: 0,
                                     maxNote: 1.99,
-                                    images: [
-                                        ...filteredSeries.filter(serie => (serie.note ?? 0) < 2).sort((a, b) => (b.note ?? 0) - (a.note ?? 0)).map(serie => getCatalogPosterSrc(serie.poster_path, mode))
-                                    ],
                                 }
                             ]} />
                     )}

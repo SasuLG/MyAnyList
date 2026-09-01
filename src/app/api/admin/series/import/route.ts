@@ -1,4 +1,4 @@
-import { getTmdbIdsSeries, importSerie } from "@/bdd/requests/admin-series.request";
+import { getIdsSeries, importSerie } from "@/bdd/requests/admin-series.request";
 import { ServerError } from "@/lib/api/response/server.response";
 export const maxDuration = 60; // This function can run for a maximum of 10 seconds
 
@@ -41,8 +41,8 @@ export async function POST(req: Request, context: any): Promise<Response> {
  */
 export async function GET(req: Request, context: any): Promise<Response> {
     try {
-        const tmdbIds = await getTmdbIdsSeries();
-        if(!tmdbIds || tmdbIds.length <= 0) {
+        const ids = await getIdsSeries();
+        if(!ids || ids.length <= 0) {
             return new Response(JSON.stringify({ message: 'Aucune série à importer' }), {
                 headers: {
                     'Content-Type': 'application/json'
@@ -50,7 +50,7 @@ export async function GET(req: Request, context: any): Promise<Response> {
                 status: 400
             });
         }
-        return new Response(JSON.stringify(tmdbIds), {
+        return new Response(JSON.stringify(ids), {
             headers: {
                 'Content-Type': 'application/json'
             },

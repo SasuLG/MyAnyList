@@ -14,23 +14,37 @@ const RangeFilter = ({ range, onChange, minLimit, maxLimit }: RangeFilterProps) 
   const [maxValue, setMaxValue] = useState(range.max);
 
   const handleMinChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newMinValue = Number(event.target.value);
-    if (newMinValue < maxValue) {
-      setMinValue(newMinValue);
-      onChange({ min: newMinValue, max: maxValue, minimalRange: minLimit, maximalRange: maxLimit });
-    }
+    let val = Number(event.target.value);
+    val = Math.max(minLimit, Math.min(val, maxValue));
+
+    setMinValue(val);
+    onChange({ min: val, max: maxValue, minimalRange: minLimit, maximalRange: maxLimit });
   };
 
   const handleMaxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newMaxValue = Number(event.target.value);
-    if (newMaxValue > minValue) {
-      setMaxValue(newMaxValue);
-      onChange({ min: minValue, max: newMaxValue, minimalRange: minLimit, maximalRange: maxLimit });
-    }
+    let val = Number(event.target.value);
+    val = Math.min(maxLimit, Math.max(val, minValue));
+
+    setMaxValue(val);
+    onChange({ min: minValue, max: val, minimalRange: minLimit, maximalRange: maxLimit });
   };
 
   const minPercentage = ((minValue - minLimit) / (maxLimit - minLimit)) * 100;
   const maxPercentage = ((maxValue - minLimit) / (maxLimit - minLimit)) * 100;
+
+  const editableTextStyle: React.CSSProperties = {
+    background: 'transparent',
+    border: 'none',
+    outline: 'none',
+    color: 'inherit',
+    fontSize: 'inherit',
+    fontFamily: 'inherit',
+    width: '45px',
+    padding: 0,
+    margin: 0,
+    textAlign: 'center',
+    cursor: 'pointer'
+  };
 
   return (
     <div className="range-filter-container">
@@ -61,8 +75,14 @@ const RangeFilter = ({ range, onChange, minLimit, maxLimit }: RangeFilterProps) 
         />
       </div>
       <div className="slider-labels">
-        <span>Min: {minValue}</span>
-        <span>Max: {maxValue}</span>
+        <span>
+          Min:
+          <input type="number" value={minValue} className="no-spin" onChange={handleMinChange} style={editableTextStyle} />
+        </span>
+        <span>
+          Max:
+          <input type="number" value={maxValue} className="no-spin" onChange={handleMaxChange} style={editableTextStyle} />
+        </span>
       </div>
     </div>
   );

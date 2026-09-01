@@ -322,7 +322,7 @@ export async function deleteSerie(serieId: number) {
  * Récupère les identifiants TMDB des séries.
  * @returns Les identifiants TMDB des séries.
  */
-export async function getTmdbIdsSeries() {
-    const bddResponse = await Query(`select tmdb_id from "Serie"`);
-    return bddResponse.rows as TmdbId[];
+export async function getIdsSeries() {
+    const bddResponse = await Query(`select tmdb_id, id from "Serie"`);
+    return bddResponse.rows as { tmdb_id: number; id: number }[];
 }

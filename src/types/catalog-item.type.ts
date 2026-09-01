@@ -1,4 +1,4 @@
-import { Genre, ProductionCompany, ProductionCountry, Tag } from '@/types/series.type';
+import { Genre, OriginCountry, ProductionCompany, ProductionCountry, Tag } from '@/types/series.type';
 
 type CatalogItem = {
     id: string;
@@ -16,7 +16,7 @@ type CatalogItem = {
     genres: Genre[];
     vote_average: number;
     popularity: number;
-    origin_country: string[];
+    origin_country: OriginCountry[];
     episode_run_time: number;
     note?: number;
     comment?: string;

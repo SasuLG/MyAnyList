@@ -53,12 +53,14 @@
 
 .hover-info-items.initial {
     position: relative;
-    padding-right: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }
 
 .hover-info-items.initial span:last-child {
-    position: absolute;
-    right: 10px;
+    position: static; 
 }
 
 .hover-info-genres {
@@ -103,4 +105,12 @@
   opacity: 0;
   transform: translateY(-100px);
   pointer-events: none;
+}
+
+.follow-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85em;
+  white-space: nowrap;
 }

@@ -1,7 +1,7 @@
 import { MinimalSerie } from '@/types/series.type';
 import { MinimalManga } from '@/types/mangas.type';
 import { CatalogItem } from '@/types/catalog-item.type';
-import { IMG_SRC } from '@/constants/tmdb.consts';
+import { IMG_THUMB_SRC } from '@/constants/tmdb.consts';
 
 const MANGA_IMG_SRC = 'https://s4.anilist.co/file/anilistcdn/media/manga/cover/large/';
 
@@ -48,7 +48,7 @@ export const serieToCatalogItem = (serie: MinimalSerie): CatalogItem => ({
     genres: serie.genres ?? [],
     vote_average: serie.vote_average ?? 0,
     popularity: serie.popularity ?? 0,
-    origin_country: serie.origin_country ?? [],
+    origin_country: (serie.origin_country ?? []).map((c: string) => ({ iso_3166_1: c })),
     episode_run_time: serie.episode_run_time ?? 0,
     note: serie.note,
     comment: serie.comment,
@@ -75,7 +75,7 @@ export const mangaToCatalogItem = (manga: MinimalManga): CatalogItem => ({
     genres: manga.genres ?? [],
     vote_average: normalizeScore(manga.meanScore ?? manga.meanScore),
     popularity: manga.popularity ?? 0,
-    origin_country: manga.origin_country ? [normalizeOriginCountry(manga.origin_country)] : [],
+    origin_country: [{ iso_3166_1: "" }],
     episode_run_time: 0,
     note: manga.note,
     comment: manga.comment,
@@ -98,7 +98,7 @@ export const getCatalogPosterSrc = (posterPath: string | null | undefined, mode:
     }
 
     if (mode === 'series') {
-        return `${IMG_SRC}${posterPath}`;
+        return `${IMG_THUMB_SRC}${posterPath}`;
     }
 
     const trimmedPath = posterPath.startsWith('/') ? posterPath.slice(1) : posterPath;

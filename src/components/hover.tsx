@@ -91,6 +91,14 @@ const HoverToolBox = ({
         ? serie.note ?? undefined
         : serie.vote_average;
 
+    const followDate = serie.follow_date
+        ? new Intl.DateTimeFormat("fr-FR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        }).format(new Date(serie.follow_date))
+        : "";
+
     return (
         <>
             <div
@@ -143,8 +151,22 @@ const HoverToolBox = ({
                         </div>
 
                         <div className="hover-info-items initial">
-                            <span>{serie.first_air_date.substring(0, 4)}</span>
-                            <span>{serie.status === "Terminé" ? "✔️" : "🔄"}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span>{serie.first_air_date.substring(0, 4)}</span>
+                                <span>•</span>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', lineHeight: 1 }}>
+                                    {serie.status === "Terminé" ? "✔️" : "🔄"}
+                                </span>
+                            </div>
+
+                            {isMyList && (
+                                <div className="follow-status">
+                                    {/* <span>Suivie :</span> */}
+                                    <span style={{ color: "var(--accent-color, #ffb000)", fontWeight: 600 }}>
+                                        {followDate}
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         <div className="hover-info-items">

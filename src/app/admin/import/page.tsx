@@ -14,11 +14,11 @@ export default function Import() {
     const [series, setSeries] = useState<ApiSerie[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [styleType, setStyleType] = useState<'grid' | 'list'>('list');
-    const [importedSeriesIds, setImportedSeriesIds] = useState<string[]>([]);
+    const [importedSeriesIds, setImportedSeriesIds] = useState<{ tmdb_id: number; id: number }[]>([]);
     const [fetchDataFinished, setFetchDataFinished] = useState<Boolean | undefined>(undefined);
 
     const [mangas, setMangas] = useState<ApiManga[]>([]);
-    const [importedMangaIds, setImportedMangaIds] = useState<string[]>([]);
+    const [importedMangaIds, setImportedMangaIds] = useState<{ anilist_id: string; id: string }[]>([]);
 
     const searchSeries = async () => {
         setFetchDataFinished(false);
@@ -317,8 +317,8 @@ export default function Import() {
             }
         });
         if (response.ok) {
-            const data = await response.json() as TmdbId[];
-            setImportedSeriesIds(data.map((id) => id.tmdb_id.toString()));
+            const data = await response.json() as { tmdb_id: number, id: number }[];
+            setImportedSeriesIds(data);
         }
     }
 
@@ -330,8 +330,8 @@ export default function Import() {
             }
         });
         if (response.ok) {
-            const data = await response.json() as AnilistId[];
-            setImportedMangaIds(data.map((id) => id.anilist_id.toString()));
+            const data = await response.json() as { anilist_id: string, id: string }[];
+            setImportedMangaIds(data);
         }
     }
 
@@ -339,6 +339,50 @@ export default function Import() {
         if (event.key === 'Enter') {
             event.preventDefault();
             mangaMode ? searchMangas() : searchSeries();
+        }
+    };
+
+    const handleDeleteSerie = async (serieId: string) => {
+        try {
+            const response = await fetch(`/api/admin/series/delete`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(serieId)
+            });
+            if (response.ok) {
+                setAlert(await response.json());
+                getImportedSeriesIds();
+            } else {
+                const errorData = await response.json();
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error("Erreur lors de la suppression de la série:", error);
+            throw error;
+        }
+    };
+
+    const handleDeleteManga = async (mangaId: string) => {
+        try {
+            const response = await fetch(`/api/admin/manga/delete`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(mangaId)
+            });
+            if (response.ok) {
+                setAlert(await response.json());
+                getImportedMangaIds();
+            } else {
+                const errorData = await response.json();
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error("Erreur lors de la suppression du manga:", error);
+            throw error;
         }
     };
 
@@ -377,7 +421,7 @@ export default function Import() {
                 series.length > 0 && !mangaMode ? (
                     <ul style={{ listStyle: "none", padding: 0, display: styleType === 'grid' ? 'grid' : 'flex', gridTemplateColumns: styleType === 'grid' ? 'repeat(auto-fit, minmax(250px, 1fr))' : 'none', gap: "1rem", flexDirection: "column" }}>
                         {series.map((serie) => {
-                            const isImported = importedSeriesIds.includes(serie.id.toString());
+                            const isImported = importedSeriesIds.some(item => item.tmdb_id.toString() === serie.id.toString());
                             return serie.media_type !== "person" && (
                                 <li key={serie.id} style={{ display: "flex", flexDirection: styleType === 'grid' ? 'column' : 'row', alignItems: styleType === 'grid' ? 'center' : 'flex-start', padding: "1rem", backgroundColor: isImported ? "var(--secondary-background-color)" : "var(--background-color)", borderRadius: "8px", boxShadow: "0 6px 15px rgba(0, 0, 0, 0.3)" }}>
                                     {styleType === 'list' && (
@@ -394,6 +438,11 @@ export default function Import() {
                                                 <button style={{ marginTop: "1rem" }} className="button-validate" onClick={() => importSerie(serie)}>
                                                     {isImported ? "Update" : "Import"}
                                                 </button>
+                                                {isImported && (
+                                                    <button style={{ marginTop: "1rem", marginLeft: "1rem" }} className="button-delete" onClick={() => handleDeleteSerie(importedSeriesIds.find(item => item.tmdb_id.toString() === serie.id.toString())?.id.toString() || '')}>
+                                                        Delete
+                                                    </button>
+                                                )}
                                             </div>
                                         </>
                                     )}
@@ -404,7 +453,7 @@ export default function Import() {
                 ) : mangas.length > 0 && mangaMode ? (
                     <ul style={{ listStyle: "none", padding: 0, display: styleType === 'grid' ? 'grid' : 'flex', gridTemplateColumns: styleType === 'grid' ? 'repeat(auto-fit, minmax(250px, 1fr))' : 'none', gap: "1rem", flexDirection: "column" }}>
                         {mangas.map((manga) => {
-                            const isImported = importedMangaIds.includes(manga.id.toString());
+                            const isImported = importedMangaIds.some(item => item.anilist_id.toString() === manga.id.toString());
                             return (
                                 <li key={manga.id} style={{ display: "flex", flexDirection: styleType === 'grid' ? 'column' : 'row', alignItems: styleType === 'grid' ? 'center' : 'flex-start', padding: "1rem", backgroundColor: isImported ? "var(--secondary-background-color)" : "var(--background-color)", borderRadius: "8px", boxShadow: "0 6px 15px rgba(0, 0, 0, 0.3)" }}>
                                     {styleType === 'list' && (
@@ -422,6 +471,11 @@ export default function Import() {
                                                 <button style={{ marginTop: "1rem" }} className="button-validate" onClick={() => importManga(manga)}>
                                                     {isImported ? "Update" : "Import"}
                                                 </button>
+                                                {isImported && (
+                                                    <button style={{ marginTop: "1rem", marginLeft: "1rem" }} className="button-delete" onClick={() => handleDeleteManga(importedMangaIds.find(item => item.anilist_id.toString() === manga.id.toString())?.id.toString() || '')}>
+                                                        Delete
+                                                    </button>
+                                                )}
                                             </div>
                                         </>
                                     )}

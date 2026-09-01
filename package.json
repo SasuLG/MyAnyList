@@ -24,6 +24,7 @@
     "pg": "^8.12.0",
     "react": "^18",
     "react-dom": "^18",
+    "react-virtuoso": "^4.18.12",
     "wanakana": "^5.3.1"
   },
   "devDependencies": {

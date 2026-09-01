@@ -164,42 +164,42 @@ export async function importManga(mangaData: Manga) {
     }
 }
 
-export async function deleteManga(anilistId: string) {
+export async function deleteManga(id: string) {
     try {
         //Suppresion des associations dans la table User_manga
         await Query(`
             DELETE FROM "User_manga" WHERE "manga_id" = $1
-        `, [anilistId]);
+        `, [id]);
 
         //Suppresion des associations dans la table Genre_manga
         await Query(`
-            DELETE FROM "Genre_manga" WHERE "mangaId" = (SELECT "id" FROM "Manga" WHERE "anilist_id" = $1)
-        `, [anilistId]);
+            DELETE FROM "Genre_manga" WHERE "mangaId" = $1
+        `, [id]);
         
         //Suppresion des associations dans la table Tag_manga
         await Query(`
-            DELETE FROM "Tag_manga" WHERE "mangaId" = (SELECT "id" FROM "Manga" WHERE "anilist_id" = $1)
-        `, [anilistId]);
+            DELETE FROM "Tag_manga" WHERE "mangaId" = $1
+        `, [id]);
 
         //Suppresion des associations dans la table OriginCountry_manga
         await Query(`
-            DELETE FROM "OriginCountry_manga" WHERE "mangaId" = (SELECT "id" FROM "Manga" WHERE "anilist_id" = $1)
-        `, [anilistId]);
+            DELETE FROM "OriginCountry_manga" WHERE "mangaId" = $1
+        `, [id]);
 
         //Suppresion des statistiques dans la table Manga_stats
         await Query(`
-            DELETE FROM "Manga_stats" WHERE "mangaId" = (SELECT "id" FROM "Manga" WHERE "anilist_id" = $1)
-        `, [anilistId]);
+            DELETE FROM "Manga_stats" WHERE "mangaId" = $1
+        `, [id]);
 
         //Suppresion des synonymes dans la table Synonym_manga
         await Query(`
-            DELETE FROM "Synonym_manga" WHERE "mangaId" = (SELECT "id" FROM "Manga" WHERE "anilist_id" = $1)
-        `, [anilistId]);
+            DELETE FROM "Synonym_manga" WHERE "mangaId" = $1
+        `, [id]);
 
         //Suppresion du manga dans la table Manga
         await Query(`
-            DELETE FROM "Manga" WHERE "anilist_id" = $1
-        `, [anilistId]);
+            DELETE FROM "Manga" WHERE "id" = $1
+        `, [id]);
     } catch (error) {
         console.error('Erreur lors de la suppression du manga :', error);
         throw error;
@@ -211,7 +211,7 @@ export async function deleteManga(anilistId: string) {
  * Récupère les identifiants TMDB des séries.
  * @returns Les identifiants TMDB des mangas.
  */
-export async function getTmdbIdsMangas() {
-    const bddResponse = await Query(`select anilist_id from "Manga"`);
-    return bddResponse.rows as string[];
+export async function getIdsMangas() {
+    const bddResponse = await Query(`select anilist_id, id from "Manga"`);
+    return bddResponse.rows as { anilist_id: string; id: string }[];
 }

@@ -1,4 +1,4 @@
-import { getTmdbIdsMangas } from "@/bdd/requests/admin-manga.request";
+import { getIdsMangas } from "@/bdd/requests/admin-manga.request";
 import { importManga } from "@/bdd/requests/admin-manga.request";
 import { ServerError } from "@/lib/api/response/server.response";
 export const maxDuration = 60; // This function can run for a maximum of 10 seconds
@@ -103,8 +103,8 @@ export async function POST(req: Request, context: any): Promise<Response> {
  */
 export async function GET(req: Request, context: any): Promise<Response> {
     try {
-        const anilistIds = await getTmdbIdsMangas();
-        if(!anilistIds || anilistIds.length <= 0) {
+        const ids = await getIdsMangas();
+        if(!ids || ids.length <= 0) {
             return new Response(JSON.stringify({ message: 'Aucun manga à importer' }), {
                 headers: {
                     'Content-Type': 'application/json'
@@ -112,7 +112,7 @@ export async function GET(req: Request, context: any): Promise<Response> {
                 status: 400
             });
         }
-        return new Response(JSON.stringify(anilistIds), {
+        return new Response(JSON.stringify(ids), {
             headers: {
                 'Content-Type': 'application/json'
             },

@@ -8,6 +8,7 @@ import { useUserContext } from '@/userContext';
 import { Manga } from '@/types/mangas.type';
 import TagList from '@/components/tagList';
 import { getCatalogPosterSrc } from '@/lib/catalog-item';
+import { MANGA_PRICE, NOVEL_PRICE, ONESHOT_PRICE } from '@/constants/price.const';
 
 export default function MangaDetails({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -214,6 +215,9 @@ export default function MangaDetails({ params }: { params: Promise<{ id: string 
                                 <p style={{ fontSize: '1.1rem', marginBottom: '5px' }}><strong>Volumes:</strong> {manga.volumes ?? '-'}</p>
                                 <p style={{ fontSize: '1.1rem', marginBottom: '5px' }}><strong>Note moyenne:</strong> {manga.meanScore ?? manga.averageScore ?? 0}</p>
                                 <p style={{ fontSize: '1.1rem', marginBottom: '5px' }}><strong>Genres:</strong> {manga.genres.map((genre) => genre.name).join(', ')}</p>
+                                {(manga.format?.toLowerCase() === "manga" || manga.format?.toLowerCase() === "novel" || manga.format?.toLowerCase() === "one_shot") && manga.chapters && (
+                                    <p style={{ fontSize: '1.1rem', marginBottom: '5px' }}><strong>Prix total :</strong> {manga.format.toLowerCase() === "manga" ? (manga.chapters * MANGA_PRICE).toFixed(2) : manga.format.toLowerCase() === "novel" ? (manga.chapters * NOVEL_PRICE).toFixed(2) : manga.format.toLowerCase() === "one_shot" ? (manga.chapters * ONESHOT_PRICE).toFixed(2) : 0} €</p>
+                                )}
                             </div>
                         </div>
                         <p style={{ fontSize: '1.1rem', marginBottom: '10px' }}><strong>Synopsis:</strong></p>

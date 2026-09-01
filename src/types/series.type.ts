@@ -71,6 +71,12 @@ type Season = {
     episodes: Episode[];
 }
 
+type OriginCountry = {
+  iso_3166_1:{
+    iso_3166_1: string;
+  }
+}
+
 type Serie = {
     id: string; 
     tmdb_id: string;
@@ -98,7 +104,7 @@ type Serie = {
     seasons: Season[];
     vote_average: number; 
     vote_count: number;   
-    origin_country: string[];
+    origin_country: OriginCountry[];
     popularity: number;
     budget: number;
     revenue: number;
@@ -132,6 +138,18 @@ type MinimalSerie = {
     tags: Tag[];
 }
 
+type SearchSerie = {
+    id: string;
+    tmdb_id: string;
+    name: string;
+    original_name: string;
+    romaji_name: string;
+    poster_path: string;
+    note?: number;//affiche la note a droite si ajouté
+    media_type: string;
+    //nb episodes, status, first_air_date?
+}
+
 type Range = {
     min: number;
     max: number;
@@ -140,4 +158,4 @@ type Range = {
 };
 
 
-export type { TmdbId, ApiSerie, Genre, Language, ProductionCountry, ProductionCompany, Episode, Season, Serie, MinimalSerie, Range, Tag };
+export type { TmdbId, ApiSerie, Genre, Language, ProductionCountry, ProductionCompany, Episode, Season, Serie, MinimalSerie, Range, Tag, OriginCountry, SearchSerie };

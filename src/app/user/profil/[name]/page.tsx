@@ -15,6 +15,7 @@ import { use } from 'react';
 import { mangaToCatalogItem, normalizeCatalogItems } from "@/lib/catalog-item";
 import { CatalogItem } from "@/types/catalog-item.type";
 import { MinimalManga } from "@/types/mangas.type";
+import { MANGA_PRICE, NOVEL_PRICE, ONESHOT_PRICE } from "@/constants/price.const";
 
 export default function Profil({ params }: { params: Promise<{ name: string }> }) {
     const { name } = use(params);
@@ -270,12 +271,16 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
     /**
      * Fonction pour récupérer les données des séries suivies par l'utilisateur.
      */
-    const { nbTv, nbMovie, nbAnime, TotalTimeTv, TotalTimeMovie, TotalTimeAnime, totalEpisodesTv, totalEpisodesMovie, totalEpisodesAnime } = useMemo(() => {
+    const { nbTv, nbMovie, nbAnime, TotalTimeTv, TotalTimeMovie, TotalTimeAnime, totalEpisodesTv, totalEpisodesMovie, totalEpisodesAnime, avgTvTime, avgTvEpisodes, avgAnimeTime, avgAnimeEpisodes, mangaChapters, avgMangaChapters, manhwaChapters, avgManhwaChapters, manhuaChapters, avgManhuaChapters, novelChapters, avgNovelChapters, completedTv, completedAnime, completedManga, completedManhwa, completedManhua, completedNovel, mangaPrice, novelPrice, oneShotPrice } = useMemo(() => {
         if (!userProfil) return {
             nbTv: 0, nbMovie: 0, nbAnime: 0,
             TotalTimeTv: 0, TotalTimeMovie: 0, TotalTimeAnime: 0,
             TotalMedia: 0, TotalTime: 0,
-            totalEpisodesTv: 0, totalEpisodesMovie: 0, totalEpisodesAnime: 0
+            totalEpisodesTv: 0, totalEpisodesMovie: 0, totalEpisodesAnime: 0,
+            avgTvTime: 0, avgTvEpisodes: "0", avgAnimeTime: 0, avgAnimeEpisodes: "0",
+            mangaChapters: 0, avgMangaChapters: "0", manhwaChapters: 0, avgManhwaChapters: "0", manhuaChapters: 0, avgManhuaChapters: "0", novelChapters: 0, avgNovelChapters: "0",
+            completedTv: 0, completedAnime: 0, completedManga: 0, completedManhwa: 0, completedManhua: 0, completedNovel: 0,
+            mangaPrice: 0, novelPrice: 0, oneShotPrice: 0
         };
 
         const tvSeries = seriesFollowed.filter(serie =>
@@ -285,6 +290,10 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
         const animeSeries = seriesFollowed.filter(serie =>
             serie.media_type === "anime"
         );
+        const mangaSeries = seriesFollowed.filter(serie => serie.media_type === "manga");
+        const manhwaSeries = seriesFollowed.filter(serie => serie.media_type === "manhwa");
+        const manhuaSeries = seriesFollowed.filter(serie => serie.media_type === "manhua");
+        const novelSeries = seriesFollowed.filter(serie => serie.media_type === "novel");
 
         const nbTv = tvSeries.length;
         const nbMovie = movies.length;
@@ -301,9 +310,54 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
         const TotalMedia = nbTv + nbMovie + nbAnime;
         const TotalTime = TotalTimeTv + TotalTimeMovie + TotalTimeAnime;
 
+        // Moyennes pour TV
+        const avgTvTime = nbTv > 0 ? Math.round(TotalTimeTv / nbTv) : 0;
+        const avgTvEpisodes = nbTv > 0 ? (totalEpisodesTv / nbTv).toFixed(1) : "0";
+
+        // Moyennes pour Anime
+        const avgAnimeTime = nbAnime > 0 ? Math.round(TotalTimeAnime / nbAnime) : 0;
+        const avgAnimeEpisodes = nbAnime > 0 ? (totalEpisodesAnime / nbAnime).toFixed(1) : "0";
+
+        // Chapitres pour Mangas
+        const mangaChapters = mangaSeries.reduce((acc, serie) => acc + (serie.number_of_episodes || 0), 0);
+        const avgMangaChapters = mangaSeries.length > 0 ? (mangaChapters / mangaSeries.length).toFixed(1) : "0";
+
+        // Chapitres pour Manhwa
+        const manhwaChapters = manhwaSeries.reduce((acc, serie) => acc + (serie.number_of_episodes || 0), 0);
+        const avgManhwaChapters = manhwaSeries.length > 0 ? (manhwaChapters / manhwaSeries.length).toFixed(1) : "0";
+
+        // Chapitres pour Manhua
+        const manhuaChapters = manhuaSeries.reduce((acc, serie) => acc + (serie.number_of_episodes || 0), 0);
+        const avgManhuaChapters = manhuaSeries.length > 0 ? (manhuaChapters / manhuaSeries.length).toFixed(1) : "0";
+
+        // Chapitres pour Novel
+        const novelChapters = novelSeries.reduce((acc, serie) => acc + (serie.number_of_episodes || 0), 0);
+        const avgNovelChapters = novelSeries.length > 0 ? (novelChapters / novelSeries.length).toFixed(1) : "0";
+
+        // Contenus terminés (status = "ended", "released", "finished")
+        const completedTv = tvSeries.filter(s => s.status && ['ended', 'released', 'finished', "terminé"].includes(s.status?.toLowerCase())).length;
+        const completedAnime = animeSeries.filter(s => s.status && ['ended', 'released', 'finished', "terminé"].includes(s.status?.toLowerCase())).length;
+        const completedManga = mangaSeries.filter(s => s.status && ['ended', 'released', 'finished', "terminé"].includes(s.status?.toLowerCase())).length;
+        const completedManhwa = manhwaSeries.filter(s => s.status && ['ended', 'released', 'finished', "terminé"].includes(s.status?.toLowerCase())).length;
+        const completedManhua = manhuaSeries.filter(s => s.status && ['ended', 'released', 'finished', "terminé"].includes(s.status?.toLowerCase())).length;
+        const completedNovel = novelSeries.filter(s => s.status && ['ended', 'released', 'finished', "terminé"].includes(s.status?.toLowerCase())).length;
+
+        const mangaPrice = seriesFollowed
+            .filter(s => s.media_type === 'manga')
+            .reduce((acc, s) => acc + (s.number_of_episodes || 0) * MANGA_PRICE, 0);
+
+        const novelPrice = seriesFollowed
+            .filter(s => s.media_type === 'novel')
+            .reduce((acc, s) => acc + (s.number_of_episodes || 0) * NOVEL_PRICE, 0);
+        const oneShotPrice = seriesFollowed
+            .filter(s => ['one_shot', 'oneshot', 'one-shot'].includes(s.media_type))
+            .length * ONESHOT_PRICE;
         return {
             nbTv, nbMovie, nbAnime, TotalTimeTv, TotalTimeMovie, TotalTimeAnime, TotalMedia, TotalTime,
-            totalEpisodesTv, totalEpisodesMovie, totalEpisodesAnime
+            totalEpisodesTv, totalEpisodesMovie, totalEpisodesAnime, avgTvTime, avgTvEpisodes, avgAnimeTime, avgAnimeEpisodes,
+            mangaChapters, avgMangaChapters, manhwaChapters, avgManhwaChapters, manhuaChapters, avgManhuaChapters, novelChapters, avgNovelChapters,
+            completedTv, completedAnime, completedManga, completedManhwa, completedManhua, completedNovel,
+            mangaPrice, novelPrice, oneShotPrice
         };
     }, [userProfil, seriesFollowed]);
 
@@ -601,6 +655,7 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
         });
         return { combinedGenreData: genCount, combinedEpisodeData: epCount };
     }, [contentStats]);
+
     return (
         <div style={{ margin: '20px' }}>
             <h1 style={{ fontSize: '2rem', color: 'var(--titre-color)', marginBottom: "3rem" }}>Profil : {userProfil?.login}</h1>
@@ -743,9 +798,9 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
 
                 {/* Sections principales en rangée */}
                 {mangaMode ? (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "20px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "15px" }}>
                         {contentStats.map((group, index) => (
-                            <div key={group.key} style={{ gridColumn: index < 2 ? "span 3" : "span 2", border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '20px', backgroundColor: 'var(--card-background-color)', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
+                            <div key={group.key} style={{ gridColumn: index < 2 ? "span 3" : "span 2", border: '1px solid var(--card-border-color)', borderRadius: '8px', padding: '20px', marginBottom: '5px', backgroundColor: 'var(--card-background-color)', flex: '1 1 calc(33.333% - 20px)', boxSizing: 'border-box' }}>
                                 <div style={{ position: 'relative', marginBottom: '20px' }}>
 
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
@@ -771,6 +826,20 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                                     )}
                                 </div>
 
+                                {mangaMode && (
+                                    <div style={{ marginBottom: '15px' }}>
+                                        {group.key === 'manga' && mangaPrice && mangaPrice > 0 && (
+                                            <p style={{ fontSize: '1.2rem', color: '#28a745', fontWeight: 'bold' }}>{mangaPrice.toFixed(2)}€</p>
+                                        )}
+                                        {group.key === 'novel' && novelPrice && novelPrice > 0 && (
+                                            <p style={{ fontSize: '1.2rem', color: '#28a745', fontWeight: 'bold' }}>{novelPrice.toFixed(2)}€</p>
+                                        )}
+                                        {group.key === 'one_shot' && oneShotPrice && oneShotPrice > 0 && (
+                                            <p style={{ fontSize: '1.2rem', color: '#28a745', fontWeight: 'bold' }}>{oneShotPrice.toFixed(2)}€</p>
+                                        )}
+                                    </div>
+                                )}
+
                                 <div onMouseEnter={() => setHoveredElement(`${group.key}-count`)} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
                                     <p><strong>Nombre total de {group.label.toLowerCase()} suivis :</strong> </p>
                                     <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{group.count}</p>
@@ -787,9 +856,15 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                                     )}
                                 </div>
 
-                                <div onMouseEnter={() => setHoveredElement(`${group.key}-time`)} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
+                                <div onMouseEnter={() => setHoveredElement(`${group.key}-time`)} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
                                     <p><strong>Total de {totalUnitLabel} :</strong></p>
                                     <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{group.totalEpisodes}</p>
+                                    {mangaMode && group.label !== "One_shot" && (
+                                        <div style={{ marginTop: '10px', fontSize: '0.9rem', color: 'var(--titre-color)', borderTop: '1px solid var(--card-border-color)', paddingTop: '10px' }}>
+                                            <p>Moyennes de chapitres par {group.label} :</p>
+                                            <p> 📖 <strong>{group.label === "Manga" ? avgMangaChapters : group.label === "Manhwa" ? avgManhwaChapters : group.label === "Manhua" ? avgManhuaChapters : group.label === "Novel" ? avgNovelChapters : 0}</strong> ch.</p>
+                                        </div>
+                                    )}
                                     {hoveredElement === `${group.key}-time` && (
                                         <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                             {Object.keys(group.genreData.episodeCount).map(genre => (
@@ -799,6 +874,22 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                                                 </p>
                                             ))}
                                             <p style={{ fontWeight: 'bold' }}><strong>Total :</strong> {group.totalEpisodes} {totalUnitLabel} ({totalEpisodesPercentage(group.totalEpisodes, TotalEpisodes)})</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div style={{ position: 'relative' }} onMouseEnter={() => setHoveredElement(`completed-${group.key}`)} onMouseLeave={() => setHoveredElement(null)}>
+                                    <p><strong>Nombre de {group.label.toLowerCase()} terminés :</strong> </p>
+                                    <p style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>
+                                        {group.key === 'manga' ? completedManga : group.key === 'manhwa' ? completedManhwa : group.key === 'manhua' ? completedManhua : group.key === 'novel' ? completedNovel : 0} / {group.count}
+                                    </p>
+                                    {group.count > 0 && (
+                                        <div style={{ position: 'relative' }}>
+                                            {hoveredElement === `completed-${group.key}` && (
+                                                <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                                    <p><strong>Pourcentage :</strong> {totalEpisodesPercentage(group.key === 'manga' ? completedManga : group.key === 'manhwa' ? completedManhwa : group.key === 'manhua' ? completedManhua : group.key === 'novel' ? completedNovel : 0, group.count)}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -852,10 +943,15 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                                 )}
                             </div>
 
-                            <div onMouseEnter={() => setHoveredElement('totalTvTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
+                            <div onMouseEnter={() => setHoveredElement('totalTvTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
                                 <p><strong>Temps total pour les séries TV :</strong> </p>
                                 <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTimeTv)}</p>
-
+                                {!mangaMode && nbTv > 0 && (
+                                    <div style={{ marginTop: '10px', fontSize: '0.9rem', color: 'var(--titre-color)', borderTop: '1px solid var(--card-border-color)', paddingTop: '10px' }}>
+                                        <p>Moyennes par série :</p>
+                                        <p>⏱ <strong>{formatTime(avgTvTime || 0)}</strong> | 📺 <strong>{avgTvEpisodes}</strong> ép.</p>
+                                    </div>
+                                )}
                                 {hoveredElement === 'totalTvTime' && (
                                     <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                         {Object.keys(tvGenreData.timeCount).map(genre => (
@@ -864,6 +960,20 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                                                 <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(tvGenreData.timeCount[genre] || 0, TotalTimeTv)}</span>
                                             </p>
                                         ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div style={{ position: 'relative' }} onMouseEnter={() => setHoveredElement('completedTv')} onMouseLeave={() => setHoveredElement(null)}>
+                                <p><strong>Nombre de séries terminées :</strong> </p>
+                                <p style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{completedTv} / {nbTv}</p>
+                                {nbTv > 0 && (
+                                    <div style={{ position: 'relative' }}>
+                                        {hoveredElement === 'completedTv' && (
+                                            <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                                <p><strong>Pourcentage :</strong> {totalEpisodesPercentage(completedTv, nbTv)}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -914,10 +1024,15 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                                 )}
                             </div>
 
-                            <div onMouseEnter={() => setHoveredElement('totalAnimeTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
+                            <div onMouseEnter={() => setHoveredElement('totalAnimeTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
                                 <p><strong>Temps total pour les animés :</strong> </p>
                                 <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTimeAnime)}</p>
-
+                                {!mangaMode && nbAnime > 0 && (
+                                    <div style={{ marginTop: '10px', fontSize: '0.9rem', color: 'var(--titre-color)', borderTop: '1px solid var(--card-border-color)', paddingTop: '10px' }}>
+                                        <p>Moyennes par animé :</p>
+                                        <p>⏱ <strong>{formatTime(avgAnimeTime || 0)}</strong> | 📺 <strong>{avgAnimeEpisodes}</strong> ép.</p>
+                                    </div>
+                                )}
                                 {hoveredElement === 'totalAnimeTime' && (
                                     <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
                                         {Object.keys(animeGenreData.timeCount).map(genre => (
@@ -926,6 +1041,20 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                                                 <span style={{ fontWeight: 'bold' }}>{totalTimePercentage(animeGenreData.timeCount[genre] || 0, TotalTimeAnime)}</span>
                                             </p>
                                         ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div style={{ position: 'relative', marginBottom: '20px' }} onMouseEnter={() => setHoveredElement('completedAnime')} onMouseLeave={() => setHoveredElement(null)}>
+                                <p><strong>Nombre d&apos;animés terminés :</strong> </p>
+                                <p style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{completedAnime} / {nbAnime}</p>
+                                {nbAnime > 0 && (
+                                    <div style={{ position: 'relative' }}>
+                                        {hoveredElement === 'completedAnime' && (
+                                            <div style={{ position: 'absolute', backgroundColor: 'var(--tooltip-background-section)', border: '2px solid var(--tooltip-border-section)', padding: '10px', zIndex: 1, top: '100%', left: 0, boxShadow: 'var(--shadow)', borderRadius: '4px' }}>
+                                                <p><strong>Pourcentage :</strong> {totalEpisodesPercentage(completedAnime, nbAnime)}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -976,7 +1105,7 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                                 )}
                             </div>
 
-                            <div onMouseEnter={() => setHoveredElement('totalMovieTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative' }}>
+                            <div onMouseEnter={() => setHoveredElement('totalMovieTime')} onMouseLeave={() => setHoveredElement(null)} style={{ position: 'relative', marginBottom: '20px' }}>
                                 <p><strong>Temps total pour les films :</strong> </p>
                                 <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--titre-color)' }}>{formatTime(TotalTimeMovie)}</p>
 

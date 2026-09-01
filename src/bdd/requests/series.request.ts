@@ -183,6 +183,7 @@ export async function getSeries(limit: number, page: number): Promise<MinimalSer
                     "s"."episode_run_time" AS "episode_run_time",
                     "s"."total_time" AS "total_time"
                 FROM "Serie" AS "s"
+                ORDER BY "s"."id" DESC
                 LIMIT $1 OFFSET $2
             ),
             "Genres" AS (
