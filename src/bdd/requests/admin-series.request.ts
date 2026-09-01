@@ -131,7 +131,7 @@ export async function importSerie(serieData: Serie) {
                 ON CONFLICT ("serieId", "countryId") DO NOTHING
             `, [serieId, countryId]);
 
-            if (origin_country.includes(country.iso_3166_1)) {
+            if (origin_country && origin_country.some((oc: any) => oc.iso_3166_1 === country.iso_3166_1)) {//if (origin_country.includes(country.iso_3166_1)) {
                 await Query(`
                     INSERT INTO "OriginCountry_serie" ("serieId", "countryId")
                     VALUES ($1, $2)
