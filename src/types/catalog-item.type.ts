@@ -24,6 +24,7 @@ type CatalogItem = {
     production_countries: ProductionCountry[];
     production_companies: ProductionCompany[];
     total_time: number;
+    total_time_exclude_special?: number;
     tags: Tag[];
 };
 

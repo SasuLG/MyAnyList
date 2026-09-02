@@ -28,6 +28,8 @@ interface Props {
     clearYearRange: () => void;
     clearVoteRange: () => void;
     clearEpisodeRange: () => void;
+    totalTimeExcludeSpecialRange: Range;
+    clearTotalTimeExcludeSpecialRange: () => void;
 }
 
 export default function ActiveFilters({
@@ -53,7 +55,9 @@ export default function ActiveFilters({
     episodeRange,
     clearYearRange,
     clearVoteRange,
-    clearEpisodeRange
+    clearEpisodeRange,
+    totalTimeExcludeSpecialRange,
+    clearTotalTimeExcludeSpecialRange
 }: Props) {
     return (
         <div className="filter-container">
@@ -118,6 +122,9 @@ export default function ActiveFilters({
             )}
             {(episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange) && (
                 <span className="filter-label" onClick={() => clearEpisodeRange()}>Episodes: {episodeRange.min} - {episodeRange.max}</span>
+            )}
+            {(totalTimeExcludeSpecialRange.min !== totalTimeExcludeSpecialRange.minimalRange || totalTimeExcludeSpecialRange.max !== totalTimeExcludeSpecialRange.maximalRange) && (
+                <span className="filter-label" onClick={() => clearTotalTimeExcludeSpecialRange()}>Total Time: {totalTimeExcludeSpecialRange.min} - {totalTimeExcludeSpecialRange.max}</span>
             )}
             {hasActiveFilters && (
                 <span className="clear-all" onClick={clearAllFilters}>Clear All</span>

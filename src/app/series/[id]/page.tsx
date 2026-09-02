@@ -69,6 +69,11 @@ export default function SerieDetails({ params }: { params: Promise<{ id: string 
     const [isChangeDate, setIsChangeDate] = useState<boolean>(false);
 
     /**
+     * Hook qui permet de stocker l'état de l'affichage du total_time_exclude_special.
+     */
+    const [showTotalTimeExcludeSpecial, setShowTotalTimeExcludeSpecial] = useState<boolean>(false);
+
+    /**
      * Fonction pour récupérer les informations de la série.
      */
     const fetchSerie = async () => {
@@ -378,7 +383,14 @@ export default function SerieDetails({ params }: { params: Promise<{ id: string 
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Nombre d&apos;Épisodes:</strong> {serie.number_of_episodes}</p>
                                 {serie.number_of_episodes > 1 && <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Temps Épisodes:</strong> {serie.episode_run_time} minutes</p>}
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Genres:</strong> {serie.genres.map((genre) => genre.name).join(", ")}</p>
-                                <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Durée Totale:</strong> {formatTime(serie.total_time)}minutes</p>
+                                <p style={{ fontSize: "1.1rem", marginBottom: "5px", cursor: 'pointer' }} onClick={() => setShowTotalTimeExcludeSpecial(!showTotalTimeExcludeSpecial)}>
+                                    <strong>Durée Totale:</strong> {formatTime(showTotalTimeExcludeSpecial ? (serie.total_time_exclude_special || 0) : serie.total_time)}
+                                    {serie.total_time_exclude_special && serie.total_time_exclude_special !== serie.total_time && (
+                                        <span style={{ marginLeft: "10px", fontSize: "0.9rem", color: "var(--accent-color)" }}>
+                                            ({showTotalTimeExcludeSpecial ? 'excl. spéciaux' : 'tous inclus'})
+                                        </span>
+                                    )}
+                                </p>
                             </div>
                         </div>
                         <p style={{ fontSize: "1.1rem", marginBottom: "10px" }}><strong>Synopsis:</strong></p>
@@ -415,6 +427,15 @@ export default function SerieDetails({ params }: { params: Promise<{ id: string 
                             <ul style={{ listStyleType: "none", paddingLeft: "0", fontSize: "1.1rem", color: "#555" }}>
                                 {serie.spoken_languages.map((language) => (
                                     <li key={language.iso_639_1} style={{ marginBottom: "5px" }}>{language.english_name}</li>
+                                ))}
+                            </ul>
+
+                            <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "20px" }}>Origin Countries</h2>
+                            <ul style={{ listStyleType: "none", paddingLeft: "0", fontSize: "1.1rem", color: "#555" }}>
+                                {serie.origin_country.map((iso) => (
+                                    iso && (
+                                        <li key={iso} style={{ marginBottom: "5px" }}>{iso}</li>
+                                    )
                                 ))}
                             </ul>
 

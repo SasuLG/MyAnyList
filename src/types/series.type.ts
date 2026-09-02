@@ -72,9 +72,7 @@ type Season = {
 }
 
 type OriginCountry = {
-  iso_3166_1:{
-    iso_3166_1: string;
-  }
+  iso_3166_1: string;
 }
 
 type Serie = {
@@ -91,6 +89,7 @@ type Serie = {
     first_air_date: string;
     last_air_date: string;
     total_time: number;
+    total_time_exclude_special?: number;
     number_of_seasons: number;
     number_of_episodes: number;
     episode_run_time: number | null;
@@ -104,7 +103,7 @@ type Serie = {
     seasons: Season[];
     vote_average: number; 
     vote_count: number;   
-    origin_country: OriginCountry[];
+    origin_country: string[];
     popularity: number;
     budget: number;
     revenue: number;
@@ -135,6 +134,7 @@ type MinimalSerie = {
     first_air_date: string;
     last_air_date: string;
     total_time: number;
+    total_time_exclude_special?: number;
     tags: Tag[];
 }
 

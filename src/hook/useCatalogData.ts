@@ -24,6 +24,8 @@ export const useCatalogData = ({page, user, mode}: UseCatalogDataProps) => {//TO
 
     const [minYear, setMinYear] = useState(1900);
     const [maxYear, setMaxYear] = useState(new Date().getFullYear());
+    const [minTotalTime, setMinTotalTime] = useState<string | number>(0);
+    const [maxTotalTime, setMaxTotalTime] = useState<string | number>(0);
     const [maxEpisodes, setMaxEpisodes] = useState(2000);
     const [filtersReady, setFiltersReady] = useState<boolean>(false);
     const [fetchDataFinished, setFetchDataFinished] = useState<boolean>(false);
@@ -81,7 +83,10 @@ export const useCatalogData = ({page, user, mode}: UseCatalogDataProps) => {//TO
                     if (years.length > 0) {
                         setMinYear(Math.min(...years));
                     }
+                    console.log(Math.max(...normalizedSeries.map((serie) => serie.total_time_exclude_special || 0)));
                     setMaxEpisodes(Math.max(...normalizedSeries.map((serie) => serie.number_of_episodes)));
+                    setMinTotalTime((Math.min(...normalizedSeries.map((serie) => serie.total_time_exclude_special || 0))/60).toFixed(2));
+                    setMaxTotalTime((Math.max(...normalizedSeries.map((serie) => serie.total_time_exclude_special || 0))/60).toFixed(2));
                 }
 
                 if (user) {
@@ -122,6 +127,8 @@ export const useCatalogData = ({page, user, mode}: UseCatalogDataProps) => {//TO
 
         minYear,
         maxYear,
+        minTotalTime,
+        maxTotalTime,
         maxEpisodes
     };
 };

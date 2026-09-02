@@ -75,6 +75,7 @@ create table if not exists "Serie" (
     "vote_count" integer, /* Le nombre de votes */
     "note" float, /* La note de l'utilisateur */
     "total_time" integer, /* La durée totale de la série */
+    "total_time_exclude_special" integer, /* La durée totale de la série sans les épisodes spéciaux */
     "nb_seasons" integer, /* Le nombre de saisons */
     "nb_episodes" integer, /* Le nombre d'épisodes */
     "popularity" float, /* La popularité */
@@ -202,7 +203,8 @@ CREATE OR REPLACE FUNCTION update_serie_total_time()
 RETURNS TRIGGER AS $$
 BEGIN
     UPDATE "Serie"
-    SET "total_time" = (SELECT COALESCE(SUM("total_time"), 0) FROM "Season" WHERE "serie_id" = NEW.serie_id)
+    SET "total_time" = (SELECT COALESCE(SUM("total_time"), 0) FROM "Season" WHERE "serie_id" = NEW.serie_id),
+        "total_time_exclude_special" = (SELECT COALESCE(SUM("total_time"), 0) FROM "Season" WHERE "serie_id" = NEW.serie_id AND "name" != 'Épisodes spéciaux')
     WHERE "id" = NEW.serie_id;
     RETURN NEW;
 END;

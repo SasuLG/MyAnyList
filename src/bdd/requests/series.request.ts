@@ -23,6 +23,7 @@ export async function getSerieDetailsById(serieId: string): Promise<Serie | null
                 "s"."first_air_date" AS "first_air_date",
                 "s"."last_air_date" AS "last_air_date",
                 "s"."total_time" AS "total_time",
+                "s"."total_time_exclude_special" AS "total_time_exclude_special",
                 "s"."nb_seasons" AS "number_of_seasons",
                 "s"."nb_episodes" AS "number_of_episodes",
                 "s"."episode_run_time" AS "episode_run_time",
@@ -130,6 +131,7 @@ export async function getSerieDetailsById(serieId: string): Promise<Serie | null
             first_air_date: serie.first_air_date,
             last_air_date: serie.last_air_date,
             total_time: serie.total_time,
+            total_time_exclude_special: serie.total_time_exclude_special,
             number_of_seasons: serie.number_of_seasons,
             number_of_episodes: serie.number_of_episodes,
             episode_run_time: serie.episode_run_time,
@@ -181,7 +183,8 @@ export async function getSeries(limit: number, page: number): Promise<MinimalSer
                     "s"."vote_average" AS "vote_average",
                     "s"."popularity" AS "popularity",
                     "s"."episode_run_time" AS "episode_run_time",
-                    "s"."total_time" AS "total_time"
+                    "s"."total_time" AS "total_time",
+                    "s"."total_time_exclude_special" AS "total_time_exclude_special"
                 FROM "Serie" AS "s"
                 ORDER BY "s"."id" DESC
                 LIMIT $1 OFFSET $2
@@ -305,7 +308,8 @@ export async function getSeriesFollowed(limit: number, page: number, userId: str
                     "s"."popularity" AS "popularity",
                     "s"."episode_run_time" AS "episode_run_time",
                     "us"."date" AS "follow_date",
-                    "s"."total_time" AS "total_time"
+                    "s"."total_time" AS "total_time",
+                    "s"."total_time_exclude_special" AS "total_time_exclude_special"
                 FROM "Serie" AS "s"
                 JOIN "${table}" AS "us" ON "s"."id" = "us"."serie_id"
                 WHERE "us"."user_id" = $3
@@ -975,7 +979,8 @@ export async function getSeriesByIds(ids: number[]): Promise<MinimalSerie[]> {
                     "s"."vote_average" AS "vote_average",
                     "s"."popularity" AS "popularity",
                     "s"."episode_run_time" AS "episode_run_time",
-                    "s"."total_time" AS "total_time"
+                    "s"."total_time" AS "total_time",
+                    "s"."total_time_exclude_special" AS "total_time_exclude_special"
                 FROM "Serie" AS "s"
                 WHERE "s"."id" IN (${idsPlaceholder})
             ),
@@ -1091,7 +1096,8 @@ export async function getPopularSeries(limit: number, page: number): Promise<Min
                     "s"."vote_average" AS "vote_average",
                     "s"."popularity" AS "popularity",
                     "s"."episode_run_time" AS "episode_run_time",
-                    "s"."total_time" AS "total_time"
+                    "s"."total_time" AS "total_time",
+                    "s"."total_time_exclude_special" AS "total_time_exclude_special"
                 FROM "Serie" AS "s"
                 ORDER BY "s"."popularity" DESC
                 LIMIT $1 OFFSET $2

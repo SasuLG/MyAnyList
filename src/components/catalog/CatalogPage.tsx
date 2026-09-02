@@ -52,6 +52,8 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent, de
         tags,
         minYear,
         maxYear,
+        minTotalTime,
+        maxTotalTime,
         maxEpisodes,
         filtersReady,
         fetchDataFinished,
@@ -91,14 +93,17 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent, de
         selectedNotProductionCountries, setSelectedNotProductionCountries,
         selectedNotTags, setSelectedNotTags,
 
+        totalTimeExcludeSpecialRange, setTotalTimeExcludeSpecialRange,
+
         removeFilter,
         clearAllFilters,
         clearYearRange,
         clearVoteRange,
         clearEpisodeRange,
+        clearTotalTimeExcludeSpecialRange,
         hasActiveFilters,
         isOrdering
-    } = useCatalogFilters(page, series, filtersReady, seriesIdFollowed, seriesIdWaited, defaultSortBy, minYear, maxYear, maxEpisodes, mangaMode ? "mangas" : "series");
+    } = useCatalogFilters(page, series, filtersReady, seriesIdFollowed, seriesIdWaited, defaultSortBy, Number(minYear), Number(maxYear), Number(maxEpisodes), mangaMode ? "mangas" : "series", Number(minTotalTime), Number(maxTotalTime));
 
 
     const { onClickHeart, onClickHourGlass } = useSeriesActions(user, seriesIdFollowed, setSeriesIdFollowed, seriesIdWaited, setSeriesIdWaited, mangaMode ? "mangas" : "series");
@@ -265,6 +270,8 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent, de
                 {...(!mangaMode && { onSelectNotProductionCompanies: setSelectedNotProductionCompanies })}
                 {...(!mangaMode && { selectedNotProductionCountries: selectedNotProductionCountries })}
                 {...(!mangaMode && { onSelectNotProductionCountries: setSelectedNotProductionCountries })}
+                totalTimeExcludeSpecialRange={totalTimeExcludeSpecialRange}
+                onTotalTimeExcludeSpecialRangeChange={setTotalTimeExcludeSpecialRange}
             />
 
             <ActiveFilters
@@ -294,6 +301,8 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent, de
                 clearYearRange={clearYearRange}
                 clearVoteRange={clearVoteRange}
                 clearEpisodeRange={clearEpisodeRange}
+                totalTimeExcludeSpecialRange={totalTimeExcludeSpecialRange}
+                clearTotalTimeExcludeSpecialRange={clearTotalTimeExcludeSpecialRange}
             />
 
             <div style={{ textAlign: 'center', margin: '1rem 0' }}>

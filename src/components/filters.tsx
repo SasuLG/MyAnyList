@@ -34,6 +34,8 @@ type FiltersProps = {
   onVoteRangeChange?: (range: Range) => void;
   episodeRange?: Range;
   onEpisodeRangeChange?: (range: Range) => void;
+  totalTimeExcludeSpecialRange?: Range;
+  onTotalTimeExcludeSpecialRangeChange?: (range: Range) => void;
   withFollowed?: boolean;
   onwithFollowedChange?: (onlyFollowed: boolean) => void;
   orderAsc: boolean;
@@ -88,6 +90,8 @@ const Filters = ({
   onVoteRangeChange = () => { },
   episodeRange,
   onEpisodeRangeChange = () => { },
+  totalTimeExcludeSpecialRange,
+  onTotalTimeExcludeSpecialRangeChange = () => { },
   withFollowed,
   onwithFollowedChange = () => { },
   orderAsc = true,
@@ -188,6 +192,7 @@ const Filters = ({
             {productionCountries.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Production Countries</span><MultiSelectDropdown options={productionCountries} selectedOptions={selectedProductionCountries} onSelect={onSelectProductionCountries} notSelectedOptions={selectedNotProductionCountries} onSelectNot={onSelectNotProductionCountries} /></div>}
             {tags.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Tags</span><MultiSelectDropdown options={tags} selectedOptions={selectedTags} onSelect={onSelectTags} notSelectedOptions={selectedNotTags} onSelectNot={onSelectNotTags} /></div>}
             {yearRange && <div style={{ marginBottom: '1rem', width: "40%" }}><span>Year Range</span><RangeFilter range={yearRange} onChange={onYearRangeChange} minLimit={yearRange.minimalRange} maxLimit={yearRange.maximalRange} /></div>}
+            {totalTimeExcludeSpecialRange && <div style={{ marginBottom: '1rem', width: "40%" }}><span>Total Time (excl. special)</span><RangeFilter range={totalTimeExcludeSpecialRange} onChange={onTotalTimeExcludeSpecialRangeChange} minLimit={totalTimeExcludeSpecialRange.minimalRange} maxLimit={totalTimeExcludeSpecialRange.maximalRange} /></div>}
             {episodeRange && <div style={{ marginBottom: '1rem', width: "40%" }}><span>Episode Range</span><RangeFilter range={episodeRange} onChange={onEpisodeRangeChange} minLimit={episodeRange.minimalRange} maxLimit={episodeRange.maximalRange} /></div>}
           </div>}
         </div>

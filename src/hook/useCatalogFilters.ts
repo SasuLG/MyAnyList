@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { CatalogItem } from "@/types/catalog-item.type";
 import { Range } from '@/types/series.type';
 
-export const useCatalogFilters = (page:"search" | "myList" | "waitList", series: CatalogItem[],filtersReady: boolean,seriesIdFollowed: string[], seriesIdWaited: string[], defaultSortBy:string, minYear: number, maxYear: number, maxEpisodes: number, mode: "mangas" | "series") => {
+export const useCatalogFilters = (page:"search" | "myList" | "waitList", series: CatalogItem[],filtersReady: boolean,seriesIdFollowed: string[], seriesIdWaited: string[], defaultSortBy:string, minYear: number, maxYear: number, maxEpisodes: number, mode: "mangas" | "series", minTotalTime: number, maxTotalTime: number) => {
 
   const [filteredSeries, setFilteredSeries] = useState<CatalogItem[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
@@ -32,6 +32,7 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
 
   const [episodeRange, setEpisodeRange] = useState<Range>({ min: 0, max: maxEpisodes, minimalRange: 0, maximalRange: maxEpisodes });
 
+  const [totalTimeExcludeSpecialRange, setTotalTimeExcludeSpecialRange] = useState<Range>({ min: minTotalTime, max: maxTotalTime, minimalRange: minTotalTime, maximalRange: maxTotalTime });
 
   const [selectedNotFormats, setSelectedNotFormats] = useState<string[]>([]);
 
@@ -79,7 +80,7 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       const matchesOriginCountry =
         selectedOriginCountries.length === 0 ||
         selectedOriginCountries.every(country =>
-          serie.origin_country.some(origin => origin.iso_3166_1.iso_3166_1 === country)
+          serie.origin_country.some(origin => origin.iso_3166_1 === country)
         );
       const matchesProductionCompany = selectedProductionCompanies.every(company => serie.production_companies && serie.production_companies.some(prod => prod.name === company));
       const matchesProductionCountry = selectedProductionCountries.every(country => serie.production_countries.some(c => c.name === country));
@@ -95,12 +96,14 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
 
       const matchesNotGenre = selectedNotGenres.every(genre => !serie.genres.some(g => g.name === genre));
       const matchesNotStatus = selectedNotStatuses.length === 0 || !selectedNotStatuses.includes(serie.status);
-      const matchesNotOriginCountry = selectedNotOriginCountries.length === 0 || !selectedNotOriginCountries.some(country => serie.origin_country.some(origin => origin.iso_3166_1.iso_3166_1 === country));
+      const matchesNotOriginCountry = selectedNotOriginCountries.length === 0 || !selectedNotOriginCountries.some(country => serie.origin_country.some(origin => origin.iso_3166_1 === country));
       const matchesNotTags = selectedNotTags.every(tag => !serie.tags.some(t => t.name === tag));
       const matchesNotProductionCompany = selectedNotProductionCompanies.every(company => !(serie.production_companies && serie.production_companies.some(prod => prod.name === company)));
       const matchesNotProductionCountry = selectedNotProductionCountries.every(country => !serie.production_countries.some(c => c.name === country));
 
-      return matchesNotFormat && matchesNotGenre && matchesNotStatus && matchesNotOriginCountry && matchesNotTags && matchesNotProductionCompany && matchesNotProductionCountry && matchesFormat && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange && matchesTags;
+      const matchesTotalTimeExcludeSpecialRange = totalTimeExcludeSpecialRange === null || (serie.total_time_exclude_special !== undefined && serie.total_time_exclude_special >= totalTimeExcludeSpecialRange.min && serie.total_time_exclude_special <= totalTimeExcludeSpecialRange.max);
+
+      return matchesNotFormat && matchesNotGenre && matchesNotStatus && matchesNotOriginCountry && matchesNotTags && matchesNotProductionCompany && matchesNotProductionCountry && matchesFormat && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange && matchesTags && matchesTotalTimeExcludeSpecialRange;
     });
 
     // Apply sorting
@@ -130,7 +133,7 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
         filtered.sort((a, b) => a.name.localeCompare(b.name));
         break;
       case 'Total time':
-        filtered.sort((a, b) => b.total_time - a.total_time);
+        filtered.sort((a, b) => (b.total_time_exclude_special || 0) - (a.total_time_exclude_special || 0));
         break;
       case 'Note':
         filtered.sort((a, b) => (b.note || 0) - (a.note || 0));
@@ -211,6 +214,11 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
     applyFiltersAndSort();
   };
 
+  const clearTotalTimeExcludeSpecialRange = () => {
+    setTotalTimeExcludeSpecialRange({ min: minTotalTime, max: maxTotalTime, minimalRange: minTotalTime, maximalRange: maxTotalTime });
+    applyFiltersAndSort();
+  }
+
     /**
    * Fonction pour réinitialiser tous les filtres
    */
@@ -230,6 +238,7 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
     setSelectedTags([]);
     setOrderAsc(true);
 
+    setTotalTimeExcludeSpecialRange({ min: minTotalTime, max: maxTotalTime, minimalRange: minTotalTime, maximalRange: maxTotalTime });
     setSelectedNotFormats([]);
     setSelectedNotGenres([]);
     setSelectedNotStatuses([]);
@@ -265,7 +274,8 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       selectedNotOriginCountries,
       selectedNotProductionCompanies,
       selectedNotProductionCountries,
-      selectedNotTags
+      selectedNotTags,
+      totalTimeExcludeSpecialRange
   ]);
 
 
@@ -285,6 +295,10 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       setEpisodeRange({ min: 0, max: maxEpisodes, minimalRange: 0, maximalRange: maxEpisodes });
     }, [maxEpisodes])
 
+    useEffect(() => {
+      setTotalTimeExcludeSpecialRange({ min: minTotalTime, max: maxTotalTime, minimalRange: minTotalTime, maximalRange: maxTotalTime });
+    }, [minTotalTime, maxTotalTime])
+
 
     const hasActiveFilters =
       selectedGenres.length > 0 ||
@@ -297,6 +311,7 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       (yearRange.min !== yearRange.minimalRange || yearRange.max !== yearRange.maximalRange) ||
       (voteRange.min !== voteRange.minimalRange || voteRange.max !== voteRange.maximalRange) ||
       (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange) ||
+      (totalTimeExcludeSpecialRange !== null && (totalTimeExcludeSpecialRange.min !== totalTimeExcludeSpecialRange.minimalRange || totalTimeExcludeSpecialRange.max !== totalTimeExcludeSpecialRange.maximalRange)) ||
 
       selectedNotFormats.length > 0 ||
       selectedNotGenres.length > 0 ||
@@ -346,6 +361,9 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       episodeRange,
       setEpisodeRange,
 
+      totalTimeExcludeSpecialRange,
+      setTotalTimeExcludeSpecialRange,
+
       withFollowed,
       setwithFollowed,
 
@@ -382,6 +400,8 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       clearVoteRange,
 
       clearEpisodeRange,
+
+      clearTotalTimeExcludeSpecialRange,
 
       hasActiveFilters,
 
