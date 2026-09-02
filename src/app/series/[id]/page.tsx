@@ -383,14 +383,20 @@ export default function SerieDetails({ params }: { params: Promise<{ id: string 
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Nombre d&apos;Épisodes:</strong> {serie.number_of_episodes}</p>
                                 {serie.number_of_episodes > 1 && <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Temps Épisodes:</strong> {serie.episode_run_time} minutes</p>}
                                 <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}><strong>Genres:</strong> {serie.genres.map((genre) => genre.name).join(", ")}</p>
-                                <p style={{ fontSize: "1.1rem", marginBottom: "5px", cursor: 'pointer' }} onClick={() => setShowTotalTimeExcludeSpecial(!showTotalTimeExcludeSpecial)}>
-                                    <strong>Durée Totale:</strong> {formatTime(showTotalTimeExcludeSpecial ? (serie.total_time_exclude_special || 0) : serie.total_time)}
-                                    {serie.total_time_exclude_special && serie.total_time_exclude_special !== serie.total_time && (
-                                        <span style={{ marginLeft: "10px", fontSize: "0.9rem", color: "var(--accent-color)" }}>
-                                            ({showTotalTimeExcludeSpecial ? 'excl. spéciaux' : 'tous inclus'})
-                                        </span>
-                                    )}
-                                </p>
+                                {serie.media_type.toLocaleLowerCase() === "movie" || serie.media_type.toLocaleLowerCase() === "film d'animation" ? (
+                                    <p style={{ fontSize: "1.1rem", marginBottom: "5px" }}>
+                                        <strong>Durée Totale:</strong> {formatTime(serie.episode_run_time || 0)}
+                                    </p>
+                                ) : (
+                                    <p style={{ fontSize: "1.1rem", marginBottom: "5px", cursor: 'pointer' }} onClick={() => setShowTotalTimeExcludeSpecial(!showTotalTimeExcludeSpecial)}>
+                                        <strong>Durée Totale:</strong> {formatTime(showTotalTimeExcludeSpecial ? (serie.total_time_exclude_special || 0) : serie.total_time)}
+                                        {serie.total_time_exclude_special && serie.total_time_exclude_special !== serie.total_time && (
+                                            <span style={{ marginLeft: "10px", fontSize: "0.9rem", color: "var(--accent-color)" }}>
+                                                ({showTotalTimeExcludeSpecial ? 'excl. spéciaux' : 'tous inclus'})
+                                            </span>
+                                        )}
+                                    </p>
+                                )}
                             </div>
                         </div>
                         <p style={{ fontSize: "1.1rem", marginBottom: "10px" }}><strong>Synopsis:</strong></p>
