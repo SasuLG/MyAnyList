@@ -83,7 +83,6 @@ export const useCatalogData = ({page, user, mode}: UseCatalogDataProps) => {//TO
                     if (years.length > 0) {
                         setMinYear(Math.min(...years));
                     }
-                    console.log(Math.max(...normalizedSeries.map((serie) => serie.total_time_exclude_special || 0)));
                     setMaxEpisodes(Math.max(...normalizedSeries.map((serie) => serie.number_of_episodes)));
                     setMinTotalTime((Math.min(...normalizedSeries.map((serie) => serie.total_time_exclude_special || 0))/60).toFixed(2));
                     setMaxTotalTime((Math.max(...normalizedSeries.map((serie) => serie.total_time_exclude_special || 0))/60).toFixed(2));

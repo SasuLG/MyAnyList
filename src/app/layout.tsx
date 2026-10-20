@@ -15,6 +15,8 @@ import "@/styles/alert.box.style.css";
 import "@/styles/popup.style.css";
 import "@/styles/slider.caroussel.style.css";
 import "@/styles/tierlist.style.css";
+import "@/styles/char.style.css";
+
 
 import { cookies } from "next/headers";
 

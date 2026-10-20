@@ -78,6 +78,7 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent, de
         selectedProductionCompanies, setSelectedProductionCompanies,
         selectedProductionCountries, setSelectedProductionCountries,
         selectedTags, setSelectedTags,
+        useInclusiveFilters, setUseInclusiveFilters,
 
         yearRange, setYearRange,
         voteRange, setVoteRange,
@@ -255,6 +256,8 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent, de
                 tags={tagNames}
                 selectedTags={selectedTags}
                 onSelectTags={setSelectedTags}
+                useInclusiveFilters={useInclusiveFilters}
+                onInclusiveFiltersChange={setUseInclusiveFilters}
 
                 selectedNotTags={selectedNotTags}
                 onSelectNotTags={setSelectedNotTags}

@@ -25,6 +25,8 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
   const [selectedProductionCountries, setSelectedProductionCountries] = useState<string[]>([]);
 
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const [useInclusiveFilters, setUseInclusiveFilters] = useState<boolean>(false);
   
   const [yearRange, setYearRange] = useState<Range>({ min: minYear, max: maxYear, minimalRange: minYear, maximalRange: maxYear });
 
@@ -67,7 +69,15 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       // Apply format filters
       const matchesFormat = selectedFormats.length === 0 || selectedFormats.includes(serie.media_type);
 
-      const matchesGenre = selectedGenres.length === 0 || selectedGenres.every(genre => serie.genres.some(g => g.name === genre));
+      const matchesSelectedValues = (selectedValues: string[], matchesValue: (value: string) => boolean) =>
+        selectedValues.length === 0 ||
+        (useInclusiveFilters
+          ? selectedValues.some(matchesValue)
+          : selectedValues.every(matchesValue));
+
+      const matchesGenre = matchesSelectedValues(selectedGenres, genre =>
+        serie.genres.some(g => g.name === genre)
+      );
       const searchWords = searchQuery.toLowerCase().split(/\s+/);
       const matchesSearchQuery = [serie.name, serie.original_name, serie.romaji_name]
         .filter(name => name)
@@ -77,14 +87,18 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(serie.status);
       //const matchesOriginCountry = selectedOriginCountries.length === 0 || selectedOriginCountries.every(country => serie.origin_country.includes(country));
 
-      const matchesOriginCountry =
-        selectedOriginCountries.length === 0 ||
-        selectedOriginCountries.every(country =>
-          serie.origin_country.some(origin => origin.iso_3166_1 === country)
-        );
-      const matchesProductionCompany = selectedProductionCompanies.every(company => serie.production_companies && serie.production_companies.some(prod => prod.name === company));
-      const matchesProductionCountry = selectedProductionCountries.every(country => serie.production_countries.some(c => c.name === country));
-      const matchesTags = selectedTags.every(tag => serie.tags.some(t => t.name === tag));
+      const matchesOriginCountry = matchesSelectedValues(selectedOriginCountries, country =>
+        serie.origin_country.some(origin => origin.iso_3166_1 === country)
+      );
+      const matchesProductionCompany = matchesSelectedValues(selectedProductionCompanies, company =>
+        Boolean(serie.production_companies && serie.production_companies.some(prod => prod.name === company))
+      );
+      const matchesProductionCountry = matchesSelectedValues(selectedProductionCountries, country =>
+        serie.production_countries.some(c => c.name === country)
+      );
+      const matchesTags = matchesSelectedValues(selectedTags, tag =>
+        serie.tags.some(t => t.name === tag)
+      );
       const serieYear = new Date(serie.first_air_date).getFullYear();
       const matchesYearRange = serieYear >= yearRange.min && serieYear <= yearRange.max;
       const matchesVoteRange = page==="search"?(serie.vote_average || 0) >= voteRange.min && (serie.vote_average || 0) <= voteRange.max
@@ -236,6 +250,7 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
     setEpisodeRange({ min: 0, max: maxEpisodes, minimalRange: 0, maximalRange: maxEpisodes });
     setwithFollowed(false);
     setSelectedTags([]);
+    setUseInclusiveFilters(false);
     setOrderAsc(true);
 
     setTotalTimeExcludeSpecialRange({ min: minTotalTime, max: maxTotalTime, minimalRange: minTotalTime, maximalRange: maxTotalTime });
@@ -268,6 +283,7 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       seriesIdFollowed,
       orderAsc,
       selectedTags,
+      useInclusiveFilters,
       selectedNotFormats,
       selectedNotGenres,
       selectedNotStatuses,
@@ -351,6 +367,9 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
 
       selectedTags,
       setSelectedTags,
+
+      useInclusiveFilters,
+      setUseInclusiveFilters,
 
       yearRange,
       setYearRange,

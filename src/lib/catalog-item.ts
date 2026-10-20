@@ -55,7 +55,11 @@ export const serieToCatalogItem = (serie: MinimalSerie): CatalogItem => ({
     follow_date: serie.follow_date,
     production_countries: serie.production_countries ?? [],
     production_companies: serie.production_companies ?? [],
-    total_time: serie.total_time ?? 0,
+    total_time: serie.total_time || (
+        ['movie', 'film d\'animation'].includes(serie.media_type)
+            ? serie.episode_run_time ?? 0
+            : 0
+    ),
     total_time_exclude_special: serie.total_time_exclude_special ?? 0,
     tags: serie.tags ?? [],
 });

@@ -16,6 +16,7 @@ import { mangaToCatalogItem, normalizeCatalogItems } from "@/lib/catalog-item";
 import { CatalogItem } from "@/types/catalog-item.type";
 import { MinimalManga } from "@/types/mangas.type";
 import { MANGA_PRICE, NOVEL_PRICE, ONESHOT_PRICE } from "@/constants/price.const";
+import ProfileStatisticsChart from "@/components/profileStatisticsChart";
 
 export default function Profil({ params }: { params: Promise<{ name: string }> }) {
     const { name } = use(params);
@@ -809,8 +810,8 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                                             <svg width="53" height="53" viewBox="23.3 23.3 46.6 46.6">
                                                 <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
                                                 <circle cx="46.7" cy="46.7" r="20" style={{ fill: 'transparent', stroke: '#191919', strokeWidth: '4' }} />
-                                                <circle cx="46.7" cy="46.7" r="20" style={{ strokeDasharray: 2 * Math.PI * 20, strokeDashoffset: 2 * Math.PI * 20 * (1 - group.totalEpisodes / TotalEpisodes), fill: 'transparent', stroke: '#da2121', strokeWidth: '4', transform: "rotate(-90deg)", transformOrigin: "46.7px 46.7px" }} />
-                                                <circle cx={46.7 + 20 * Math.cos((group.totalEpisodes / TotalEpisodes) * 2 * Math.PI - Math.PI / 2)} cy={46.7 + 20 * Math.sin((group.totalEpisodes / TotalEpisodes) * 2 * Math.PI - Math.PI / 2)} r="3" fill="#da2121" filter="url(#glow)" />
+                                                <circle cx="46.7" cy="46.7" r="20" style={{ strokeDasharray: 2 * Math.PI * 20, strokeDashoffset: 2 * Math.PI * 20 * (1 - (TotalEpisodes > 0 ? group.totalEpisodes / TotalEpisodes : 0)), fill: 'transparent', stroke: '#da2121', strokeWidth: '4', transform: "rotate(-90deg)", transformOrigin: "46.7px 46.7px" }} />
+                                                <circle cx={46.7 + 20 * Math.cos((TotalEpisodes > 0 ? group.totalEpisodes / TotalEpisodes : 0) * 2 * Math.PI - Math.PI / 2)} cy={46.7 + 20 * Math.sin((TotalEpisodes > 0 ? group.totalEpisodes / TotalEpisodes : 0) * 2 * Math.PI - Math.PI / 2)} r="3" fill="#da2121" filter="url(#glow)" />
                                             </svg>
                                             <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "center", alignItems: "center", fontSize: "0.6rem", fontWeight: "bold", color: "var(--titre-color)", pointerEvents: "none" }}>
                                                 {totalEpisodesPercentage(group.totalEpisodes, TotalEpisodes)}
@@ -908,8 +909,8 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                                         <svg width="53" height="53" viewBox="23.3 23.3 46.6 46.6">
                                             <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
                                             <circle cx="46.7" cy="46.7" r="20" style={{ fill: 'transparent', stroke: '#191919', strokeWidth: '4' }} />
-                                            <circle cx="46.7" cy="46.7" r="20" style={{ strokeDasharray: 2 * Math.PI * 20, strokeDashoffset: 2 * Math.PI * 20 * (1 - TotalTimeTv / TotalTime), fill: 'transparent', stroke: '#da2121', strokeWidth: '4', transform: "rotate(-90deg)", transformOrigin: "46.7px 46.7px" }} />
-                                            <circle cx={46.7 + 20 * Math.cos((TotalTimeTv / TotalTime) * 2 * Math.PI - Math.PI / 2)} cy={46.7 + 20 * Math.sin((TotalTimeTv / TotalTime) * 2 * Math.PI - Math.PI / 2)} r="3" fill="#da2121" filter="url(#glow)" />
+                                            <circle cx="46.7" cy="46.7" r="20" style={{ strokeDasharray: 2 * Math.PI * 20, strokeDashoffset: 2 * Math.PI * 20 * (1 - (TotalTime > 0 ? TotalTimeTv / TotalTime : 0)), fill: 'transparent', stroke: '#da2121', strokeWidth: '4', transform: "rotate(-90deg)", transformOrigin: "46.7px 46.7px" }} />
+                                            <circle cx={46.7 + 20 * Math.cos((TotalTime > 0 ? TotalTimeTv / TotalTime : 0) * 2 * Math.PI - Math.PI / 2)} cy={46.7 + 20 * Math.sin((TotalTime > 0 ? TotalTimeTv / TotalTime : 0) * 2 * Math.PI - Math.PI / 2)} r="3" fill="#da2121" filter="url(#glow)" />
                                         </svg>
                                         <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "center", alignItems: "center", fontSize: "0.6rem", fontWeight: "bold", color: "var(--titre-color)", pointerEvents: "none" }}>
                                             {totalTimePercentage(TotalTimeTv, TotalTime)}
@@ -989,8 +990,8 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                                         <svg width="53" height="53" viewBox="23.3 23.3 46.6 46.6">
                                             <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
                                             <circle cx="46.7" cy="46.7" r="20" style={{ fill: 'transparent', stroke: '#191919', strokeWidth: '4' }} />
-                                            <circle cx="46.7" cy="46.7" r="20" style={{ strokeDasharray: 2 * Math.PI * 20, strokeDashoffset: 2 * Math.PI * 20 * (1 - TotalTimeAnime / TotalTime), fill: 'transparent', stroke: '#200ec2', strokeWidth: '4', transform: "rotate(-90deg)", transformOrigin: "46.7px 46.7px" }} />
-                                            <circle cx={46.7 + 20 * Math.cos((TotalTimeAnime / TotalTime) * 2 * Math.PI - Math.PI / 2)} cy={46.7 + 20 * Math.sin((TotalTimeAnime / TotalTime) * 2 * Math.PI - Math.PI / 2)} r="3" fill="#200ec2" filter="url(#glow)" />
+                                            <circle cx="46.7" cy="46.7" r="20" style={{ strokeDasharray: 2 * Math.PI * 20, strokeDashoffset: 2 * Math.PI * 20 * (1 - (TotalTime > 0 ? TotalTimeAnime / TotalTime : 0)), fill: 'transparent', stroke: '#200ec2', strokeWidth: '4', transform: "rotate(-90deg)", transformOrigin: "46.7px 46.7px" }} />
+                                            <circle cx={46.7 + 20 * Math.cos((TotalTime > 0 ? TotalTimeAnime / TotalTime : 0) * 2 * Math.PI - Math.PI / 2)} cy={46.7 + 20 * Math.sin((TotalTime > 0 ? TotalTimeAnime / TotalTime : 0) * 2 * Math.PI - Math.PI / 2)} r="3" fill="#200ec2" filter="url(#glow)" />
                                         </svg>
                                         <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "center", alignItems: "center", fontSize: "0.6rem", fontWeight: "bold", color: "var(--titre-color)", pointerEvents: "none" }}>
                                             {totalTimePercentage(TotalTimeAnime, TotalTime)}
@@ -1070,8 +1071,8 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                                         <svg width="53" height="53" viewBox="23.3 23.3 46.6 46.6">
                                             <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
                                             <circle cx="46.7" cy="46.7" r="20" style={{ fill: 'transparent', stroke: '#191919', strokeWidth: '4' }} />
-                                            <circle cx="46.7" cy="46.7" r="20" style={{ strokeDasharray: 2 * Math.PI * 20, strokeDashoffset: 2 * Math.PI * 20 * (1 - TotalTimeMovie / TotalTime), fill: 'transparent', stroke: '#21da2a', strokeWidth: '4', transform: "rotate(-90deg)", transformOrigin: "46.7px 46.7px" }} />
-                                            <circle cx={46.7 + 20 * Math.cos((TotalTimeMovie / TotalTime) * 2 * Math.PI - Math.PI / 2)} cy={46.7 + 20 * Math.sin((TotalTimeMovie / TotalTime) * 2 * Math.PI - Math.PI / 2)} r="3" fill="#21da2a" filter="url(#glow)" />
+                                            <circle cx="46.7" cy="46.7" r="20" style={{ strokeDasharray: 2 * Math.PI * 20, strokeDashoffset: 2 * Math.PI * 20 * (1 - (TotalTime > 0 ? TotalTimeMovie / TotalTime : 0)), fill: 'transparent', stroke: '#21da2a', strokeWidth: '4', transform: "rotate(-90deg)", transformOrigin: "46.7px 46.7px" }} />
+                                            <circle cx={46.7 + 20 * Math.cos((TotalTime > 0 ? TotalTimeMovie / TotalTime : 0) * 2 * Math.PI - Math.PI / 2)} cy={46.7 + 20 * Math.sin((TotalTime > 0 ? TotalTimeMovie / TotalTime : 0) * 2 * Math.PI - Math.PI / 2)} r="3" fill="#21da2a" filter="url(#glow)" />
                                         </svg>
                                         <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "center", alignItems: "center", fontSize: "0.6rem", fontWeight: "bold", color: "var(--titre-color)", pointerEvents: "none" }}>
                                             {totalTimePercentage(TotalTimeMovie, TotalTime)}
@@ -1125,6 +1126,7 @@ export default function Profil({ params }: { params: Promise<{ name: string }> }
                 )}
             </div>
 
+            <ProfileStatisticsChart items={seriesFollowed} mangaMode={mangaMode} />
 
             <div>
                 <h1 style={{ color: "var(--titre-color)" }}>TOP</h1>

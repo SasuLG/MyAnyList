@@ -43,6 +43,8 @@ type FiltersProps = {
   tags?: string[];
   selectedTags?: string[];
   onSelectTags?: (tags: string[]) => void;
+  useInclusiveFilters?: boolean;
+  onInclusiveFiltersChange?: (inclusive: boolean) => void;
 
   selectedNotStatuses?: string[];
   onSelectNotStatuses?: (statuses: string[]) => void;
@@ -99,6 +101,8 @@ const Filters = ({
   tags = [],
   selectedTags = [],
   onSelectTags = () => { },
+  useInclusiveFilters = false,
+  onInclusiveFiltersChange = () => { },
 
   selectedNotFormats = [],
   onSelectNotFormats = () => { },
@@ -183,6 +187,27 @@ const Filters = ({
             <RangeFilter range={voteRange as Range} onChange={onVoteRangeChange} minLimit={voteRange.minimalRange || 0} maxLimit={voteRange.maximalRange || 10} />
           </div>
         }
+
+        <button
+          type="button"
+          aria-label="Change filter mode"
+          aria-pressed={useInclusiveFilters}
+          title={useInclusiveFilters ? 'OR: at least one selected value' : 'AND: all selected values'}
+          onClick={() => onInclusiveFiltersChange(!useInclusiveFilters)}
+          style={{
+            padding: '0.25rem 0.5rem',
+            border: '1px solid var(--card-border-color)',
+            borderRadius: '4px',
+            backgroundColor: 'var(--background-color)',
+            color: 'var(--titre-color)',
+            cursor: 'pointer',
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            lineHeight: 1.2
+          }}
+        >
+          {useInclusiveFilters ? 'OR' : 'AND'}
+        </button>
 
         <div style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', boxShadow: 'var(--shadow-light)', padding: '0.5rem', borderRadius: '4px' }} onClick={handleSvgClick} ref={svgRef}>
           <MoreFilter width={30} height={30} isOpen={showPopup} />

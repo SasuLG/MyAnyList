@@ -1,5 +1,69 @@
-import { Manga, MinimalManga, TagExternal } from '@/types/mangas.type';
+import { Manga, MinimalManga, SearchManga, TagExternal } from '@/types/mangas.type';
 import Query from '../postgre.middleware';
+
+export async function getMangasSearch(query: string, userId?: string): Promise<SearchManga[]> {
+    const searchPattern = `%${query.trim()}%`;
+
+    try {
+        const result = await Query(`
+            WITH "MatchingMangas" AS (
+                SELECT
+                    "m"."id",
+                    "m"."anilist_id",
+                    "m"."title_romaji",
+                    "m"."title_native",
+                    "m"."title_english",
+                    "m"."cover_image"
+                FROM "Manga" AS "m"
+                WHERE
+                    "m"."title_romaji" ILIKE $1
+                    OR "m"."title_native" ILIKE $1
+                    OR "m"."title_english" ILIKE $1
+                    OR EXISTS (
+                        SELECT 1
+                        FROM "Synonym_manga" AS "sm"
+                        WHERE "sm"."mangaId" = "m"."id"
+                          AND "sm"."name" ILIKE $1
+                    )
+                ORDER BY "m"."title_english" NULLS LAST, "m"."title_romaji"
+                LIMIT 10
+            ),
+            "Genres" AS (
+                SELECT
+                    "gm"."mangaId" AS "id",
+                    json_agg(json_build_object('id', "g"."id", 'name', "g"."name")) AS "genres"
+                FROM "Genre_manga" AS "gm"
+                JOIN "Genre_external" AS "g" ON "g"."id" = "gm"."genreId"
+                WHERE "gm"."mangaId" IN (SELECT "id" FROM "MatchingMangas")
+                GROUP BY "gm"."mangaId"
+            ),
+            "Synonyms" AS (
+                SELECT
+                    "sm"."mangaId" AS "id",
+                    json_agg(json_build_object('id', "sm"."id", 'name', "sm"."name")) AS "synonyms"
+                FROM "Synonym_manga" AS "sm"
+                WHERE "sm"."mangaId" IN (SELECT "id" FROM "MatchingMangas")
+                GROUP BY "sm"."mangaId"
+            )
+            SELECT
+                "m".*,
+                COALESCE("g"."genres", '[]') AS "genres",
+                COALESCE("s"."synonyms", '[]') AS "synonyms",
+                "n"."note" AS "note"
+            FROM "MatchingMangas" AS "m"
+            LEFT JOIN "Genres" AS "g" ON "g"."id" = "m"."id"
+            LEFT JOIN "Synonyms" AS "s" ON "s"."id" = "m"."id"
+            LEFT JOIN "User_note_manga" AS "n"
+                ON "n"."manga_id" = "m"."id" AND "n"."user_id" = $2
+            ORDER BY "m"."title_english" NULLS LAST, "m"."title_romaji"
+        `, [searchPattern, userId ?? null]);
+
+        return result.rows as SearchManga[];
+    } catch (error) {
+        console.error('Erreur lors de la recherche des mangas:', error);
+        throw error;
+    }
+}
 
 export async function getMangas(limit: number, page: number): Promise<MinimalManga[]> {
     const offset = (page - 1) * limit;

@@ -1,5 +1,54 @@
-import { Genre, MinimalSerie, ProductionCompany, ProductionCountry, Serie, Tag, TmdbId } from '@/types/series.type';
+import { Genre, MinimalSerie, ProductionCompany, ProductionCountry, SearchSerie, Serie, Tag, TmdbId } from '@/types/series.type';
 import Query from '../postgre.middleware';
+
+export async function getSeriesSearch(query: string, userId?: string): Promise<SearchSerie[]> {
+    const searchPattern = `%${query.trim()}%`;
+
+    try {
+        const result = await Query(`
+            WITH "MatchingSeries" AS (
+                SELECT
+                    "s"."id",
+                    "s"."tmdb_id",
+                    "s"."title" AS "name",
+                    "s"."original_name",
+                    "s"."romaji_name",
+                    "s"."poster" AS "poster_path",
+                    "s"."media" AS "media_type"
+                FROM "Serie" AS "s"
+                WHERE
+                    "s"."title" ILIKE $1
+                    OR "s"."original_name" ILIKE $1
+                    OR "s"."romaji_name" ILIKE $1
+                ORDER BY "s"."title"
+                LIMIT 10
+            ),
+            "Genres" AS (
+                SELECT
+                    "gs"."serieId" AS "id",
+                    json_agg(json_build_object('id', "g"."id", 'name', "g"."name")) AS "genres"
+                FROM "Genre_serie" AS "gs"
+                JOIN "Genre" AS "g" ON "g"."id" = "gs"."genreId"
+                WHERE "gs"."serieId" IN (SELECT "id" FROM "MatchingSeries")
+                GROUP BY "gs"."serieId"
+            )
+            SELECT
+                "s".*,
+                COALESCE("g"."genres", '[]') AS "genres",
+                "n"."note" AS "note"
+            FROM "MatchingSeries" AS "s"
+            LEFT JOIN "Genres" AS "g" ON "g"."id" = "s"."id"
+            LEFT JOIN "User_note" AS "n"
+                ON "n"."serie_id" = "s"."id" AND "n"."user_id" = $2
+            ORDER BY "s"."name"
+        `, [searchPattern, userId ?? null]);
+
+        return result.rows as SearchSerie[];
+    } catch (error) {
+        console.error('Erreur lors de la recherche des séries:', error);
+        throw error;
+    }
+}
 
 /**
  * Fonction qui permet de récupérer les détails d'une série en fonction de son identifiant.

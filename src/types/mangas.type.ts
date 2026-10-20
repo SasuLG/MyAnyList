@@ -186,10 +186,9 @@ type SearchManga = {
     title_native: string | null;
     title_english: string | null;
     cover_image: string | null;
-    format: string | null;
+    genres: Genre[];
     note?: number;
     synonyms: { id: string; name: string }[];
-    //nb chapitres, status, start_date?
 };
 
 export type {

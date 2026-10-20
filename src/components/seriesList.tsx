@@ -220,9 +220,6 @@ const SeriesList = ({ series, styleType, followedIds, waitedIds, onClickHeart, o
 
   const colors = ['#F1C40F', '#E67E22', '#1F8EFA', '#2ECC71', '#9B59B6', '#FF5733', '#16A085', '#F39C12', '#D35400', '#8E44AD', '#3498DB', '#C0392B', '#27AE60', '#2980B9', '#D5A6BD', '#7F8C8D', '#F4D03F', '#9B59B6', '#F5B7B1', '#E74C3C', '#16A085', '#C7D8D1', '#E67E22', '#FF6F61', '#F1C40F', '#F44336', '#E91E63', '#F39C12', '#7FDBFF', '#BDC3C7', '#F44336', '#8D6E63', '#9C27B0', '#3F51B5', '#81C784'];
 
-  useEffect(() => {
-    console.log(series)
-  }, [series])
   return (
     <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexWrap: 'wrap', gap: `${gap}px`, flexDirection: styleType === 'list' ? 'column' : undefined }}>
       {limitedSeries.map((serie, index) => {

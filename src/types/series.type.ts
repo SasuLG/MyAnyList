@@ -145,9 +145,9 @@ type SearchSerie = {
     original_name: string;
     romaji_name: string;
     poster_path: string;
-    note?: number;//affiche la note a droite si ajouté
+    genres: Genre[];
+    note?: number;
     media_type: string;
-    //nb episodes, status, first_air_date?
 }
 
 type Range = {

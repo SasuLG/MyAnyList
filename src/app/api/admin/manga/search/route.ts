@@ -24,6 +24,6 @@ export async function GET(req: Request): Promise<Response> {
         });
 
     } catch (err) {
-        return ServerError('/api/series/import', err);
+        return ServerError('/api/admin/manga/search', err);
     }
 }

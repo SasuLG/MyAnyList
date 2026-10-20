@@ -9,7 +9,8 @@ import { AdminKey } from "./svg/key.svg";
 import { ProfilCircle } from "./svg/profil.svg";
 import { Logout } from "./svg/logout.svg";
 import { SwitchManga, SwitchSerie } from "./svg/switchMode.svg";
-import { CatalogItem } from "@/types/catalog-item.type";
+import { SearchManga } from "@/types/mangas.type";
+import { SearchSerie } from "@/types/series.type";
 import { getCatalogPosterSrc } from "@/lib/catalog-item";
 
 
@@ -33,7 +34,7 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
 
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<CatalogItem[]>([]);
+    const [searchResults, setSearchResults] = useState<(SearchManga | SearchSerie)[]>([]);
     const [isLoadingSearch, setIsLoadingSearch] = useState(false);
     const searchContainerRef = useRef<HTMLDivElement>(null);
 
@@ -92,10 +93,8 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
 
         const timer = setTimeout(async () => {
             try {
-                const modeParam = mangaMode ? "mangas" : "series";
-                // Modifiez l'URL selon votre API (ex: /api/mangas/search?q=... ou /api/search?q=...)
-                // const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&mode=${modeParam}`);
-                const response = await fetch(`/api/${encodeURIComponent("series")}/all?limit=5&page=1`)
+                const modeParam = mangaMode ? "manga" : "series";
+                const response = await fetch(`/api/search?query=${encodeURIComponent(searchQuery)}&mode=${modeParam}`);
 
                 if (response.ok) {
                     const data = await response.json();
@@ -198,10 +197,13 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                                                     onClick={() => setIsSearchOpen(false)}
                                                 >
                                                     <div className="quick-search-item-poster">
-                                                        {item.poster_path ? (
+                                                        {('poster_path' in item ? item.poster_path : item.cover_image) ? (
                                                             <img
-                                                                src={getCatalogPosterSrc(item.poster_path, mangaMode ? 'mangas' : 'series')}
-                                                                alt={item.name}
+                                                                src={getCatalogPosterSrc(
+                                                                    'poster_path' in item ? item.poster_path : item.cover_image,
+                                                                    mangaMode ? 'mangas' : 'series'
+                                                                )}
+                                                                alt={'name' in item ? item.name : (item.title_english || item.title_romaji || item.title_native || '')}
                                                             />
                                                         ) : (
                                                             <div className="poster-placeholder" />
@@ -209,18 +211,22 @@ export const Header = memo(({ selected_menu }: HeaderProps) => {
                                                     </div>
 
                                                     <div className="quick-search-item-details">
-                                                        <span className="quick-search-item-title">{item.name}</span>
+                                                        <span className="quick-search-item-title">
+                                                            {'name' in item
+                                                                ? item.name
+                                                                : (item.title_english || item.title_romaji || item.title_native || '')}
+                                                        </span>
                                                         <span className="quick-search-item-meta">
                                                             {item.genres && item.genres.length > 0
                                                                 ? item.genres.map(g => g.name).slice(0, 2).join(' · ')
-                                                                : item.media_type || (mangaMode ? 'Manga' : 'Série')}
+                                                                : ('media_type' in item ? item.media_type : 'Manga')}
                                                         </span>
                                                     </div>
 
-                                                    {(item.vote_average !== undefined || item.note !== undefined) && (
+                                                    {item.note !== undefined && item.note !== null && (
                                                         <div className="quick-search-item-rating">
                                                             <span>✦</span>
-                                                            <span>{(item.note ?? item.vote_average ?? 0).toFixed(1)}</span>
+                                                            <span>{item.note.toFixed(1)}</span>
                                                         </div>
                                                     )}
                                                 </Link>
