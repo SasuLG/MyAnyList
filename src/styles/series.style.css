@@ -114,3 +114,68 @@
   font-size: 0.85em;
   white-space: nowrap;
 }
+
+.follow-date-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  padding-top: 0.15rem;
+}
+
+.follow-date-title {
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.follow-date-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.follow-date-field {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.follow-date-input {
+  width: 8.5rem;
+  padding: 0.25rem 0.35rem;
+  border: 1px solid var(--card-border-color);
+  border-radius: 4px;
+  background-color: var(--background-color);
+  color: var(--titre-color);
+  font: inherit;
+}
+
+.catalog-filters-popup {
+  min-height: 0;
+  gap: 1.25rem 2rem;
+}
+
+@media (max-width: 480px) {
+  .follow-date-filter {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .follow-date-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .follow-date-field {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .follow-date-input {
+    width: 100%;
+  }
+}

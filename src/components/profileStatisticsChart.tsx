@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CatalogItem } from "@/types/catalog-item.type";
 
 type Metric = "time" | "episodes" | "count";
+type ChartMode = "line" | "bar";
 type FilterKind = "genre" | "tag" | "country";
 type Period = "all" | "current-month" | "previous-month" | "current-year" | "previous-year" | "custom";
 type FormatOption = { key: string; label: string; formats: string[] };
@@ -94,6 +95,7 @@ export default function ProfileStatisticsChart({ items, mangaMode }: { items: Ca
     const formats = mangaMode ? MANGA_FORMATS : SERIES_FORMATS;
     const [period, setPeriod] = useState<Period>("all");
     const [metric, setMetric] = useState<Metric>(mangaMode ? "episodes" : "time");
+    const [chartMode, setChartMode] = useState<ChartMode>("line");
     const [selectedFormats, setSelectedFormats] = useState<string[]>(formats.map((format) => format.key));
     const [includeAllFormats, setIncludeAllFormats] = useState(false);
     const [showFormatCurves, setShowFormatCurves] = useState(true);
@@ -156,6 +158,11 @@ export default function ProfileStatisticsChart({ items, mangaMode }: { items: Ca
         }, 0)));
         return { bins, values, maximum: Math.max(1, ...values.flat()) };
     }, [chartWindow, granularity, curves, metric]);
+    const periodTotals = useMemo(() => curves.map((curve) => curve.items.reduce((total, item) => {
+        if (metric === "time") return total + (item.total_time || 0);
+        if (metric === "episodes") return total + (item.number_of_episodes || 0);
+        return total + 1;
+    }, 0)), [curves, metric]);
     useEffect(() => {
         setHoveredPoint((point) => point && point.index < chart.bins.length ? point : null);
     }, [chart.bins.length]);
@@ -172,6 +179,7 @@ export default function ProfileStatisticsChart({ items, mangaMode }: { items: Ca
         if (value > 300) return `${Math.floor(value / 60)}h${value % 60 ? ` ${value % 60}m` : ""}`;
         return `${value} min`;
     };
+    const metricLabel = metric === "time" ? "Temps total" : metric === "episodes" ? (mangaMode ? "Chapitres" : "Épisodes") : "Contenus";
     const resetZoom = () => {
         setZoom(null);
         setHoveredPoint(null);
@@ -214,7 +222,8 @@ export default function ProfileStatisticsChart({ items, mangaMode }: { items: Ca
                 <label>Période<select value={period} onChange={(event) => { setPeriod(event.target.value as Period); resetZoom(); }}>
                     <option value="all">Tout le temps</option><option value="current-month">Mois courant</option><option value="previous-month">Mois précédent</option><option value="current-year">Année courante</option><option value="previous-year">Année précédente</option><option value="custom">Période personnalisée</option>
                 </select></label>
-                <label>Mesure<select value={metric} onChange={(event) => setMetric(event.target.value as Metric)}><option value="time">Temps total</option><option value="episodes">{mangaMode ? "Nombre de chapitres" : "Nombre d&apos;épisodes"}</option><option value="count">Nombre de contenus</option></select></label>
+                <label>Mesure<select value={metric} onChange={(event) => setMetric(event.target.value as Metric)}>{!mangaMode && <option value="time">Temps total</option>}<option value="episodes">{mangaMode ? "Nombre de chapitres" : "Nombre d&apos;épisodes"}</option><option value="count">Nombre de contenus</option></select></label>
+                <label>Affichage<select value={chartMode} onChange={(event) => setChartMode(event.target.value as ChartMode)}><option value="line">Courbes</option><option value="bar">Colonnes</option></select></label>
                 {period === "custom" && <><label>Du<input type="date" value={startDate} onChange={(event) => { setStartDate(event.target.value); resetZoom(); }} /></label><label>Au<input type="date" value={endDate} onChange={(event) => { setEndDate(event.target.value); resetZoom(); }} /></label></>}
             </div>
             <div className="profile-statistics-filter"><div className="profile-statistics-filter-title">Courbes par type</div><div className="profile-statistics-checks">
@@ -229,10 +238,19 @@ export default function ProfileStatisticsChart({ items, mangaMode }: { items: Ca
             {chart.bins.length === 0 ? <p className="profile-statistics-empty">Aucune activité à afficher pour cette période.</p> : <div className="profile-statistics-chart-wrap">
                 <svg ref={chartRef} viewBox="0 0 900 460" role="img" aria-label="Graphique des statistiques d'activité" className="profile-statistics-chart" onMouseLeave={() => setHoveredPoint(null)}>
                     {[0, 0.25, 0.5, 0.75, 1].map((ratio) => { const y = 375 - ratio * 300; return <g key={ratio}><line x1="55" x2="875" y1={y} y2={y} className="profile-statistics-grid" /><text x="48" y={y + 4} textAnchor="end" className="profile-statistics-axis">{formatValue(Math.round(chart.maximum * ratio))}</text></g>; })}
-                    {curves.map((curve, curveIndex) => {
+                    {chartMode === "line" && curves.map((curve, curveIndex) => {
                         const points = chart.values[curveIndex].map((value, index) => `${chart.bins.length === 1 ? 465 : 55 + (index / (chart.bins.length - 1)) * 820},${375 - (value / chart.maximum) * 300}`).join(" ");
                         return <g key={curve.id}><polyline points={points} fill="none" stroke={curve.color} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />{chart.values[curveIndex].map((value, index) => { const x = chart.bins.length === 1 ? 465 : 55 + (index / (chart.bins.length - 1)) * 820; const y = 375 - (value / chart.maximum) * 300; const bin = chart.bins[index]; const pointItems = curve.items.filter((item) => { const date = item.follow_date ? parseFollowDate(item.follow_date) : null; return date !== null && date >= bin.start && date <= bin.end; }); return <circle key={`${curve.id}-${bin.key}`} cx={x} cy={y} r="5" fill={curve.color} className="profile-statistics-point" onMouseEnter={() => setHoveredPoint({ index, x, y })} onClick={() => setSelectedPoint({ title: `${curve.label} — ${formatTooltipDate(bin, granularity)}`, items: pointItems })} />; })}</g>;
                     })}
+                    {chartMode === "bar" && chart.values.map((values, curveIndex) => values.map((value, index) => {
+                        const bin = chart.bins[index];
+                        const groupWidth = 820 / Math.max(chart.bins.length, 1);
+                        const barWidth = Math.max(4, (groupWidth * 0.72) / Math.max(curves.length, 1));
+                        const x = 55 + index * groupWidth + groupWidth * 0.14 + curveIndex * barWidth;
+                        const height = (value / chart.maximum) * 300;
+                        const pointItems = curves[curveIndex].items.filter((item) => { const date = item.follow_date ? parseFollowDate(item.follow_date) : null; return date !== null && date >= bin.start && date <= bin.end; });
+                        return <rect key={`${curves[curveIndex].id}-${bin.key}`} x={x} y={375 - height} width={barWidth - 1} height={height} rx="2" fill={curves[curveIndex].color} className="profile-statistics-bar" onMouseEnter={() => setHoveredPoint({ index, x: x + barWidth / 2, y: 375 - height })} onClick={() => setSelectedPoint({ title: `${curves[curveIndex].label} — ${formatTooltipDate(bin, granularity)}`, items: pointItems })} />;
+                    }))}
                     {tickIndexes.map((index) => { const bin = chart.bins[index]; return <text key={bin.key} x={chart.bins.length === 1 ? 465 : 55 + (index / (chart.bins.length - 1)) * 820} y="410" textAnchor="middle" className="profile-statistics-axis">{bin.label}</text>; })}
                     {hoveredPoint && <line x1={hoveredPoint.x} x2={hoveredPoint.x} y1="35" y2="375" className="profile-statistics-guide" />}
                 </svg>
@@ -241,6 +259,10 @@ export default function ProfileStatisticsChart({ items, mangaMode }: { items: Ca
                         {curves.map((curve, index) => <div key={curve.id}><span style={{ color: curve.color }}>●</span> {curve.label} : <b>{formatValue(chart.values[index][hoveredPoint.index] ?? 0)}</b></div>)}
                     </>}
                 </div>}
+            </div>}
+            {curves.length > 0 && <div className="profile-statistics-totals">
+                <div className="profile-statistics-filter-title">Total de la période sélectionnée — {metricLabel}</div>
+                <div className="profile-statistics-total-grid">{curves.map((curve, index) => <div className="profile-statistics-total-card" key={curve.id}><span><i style={{ backgroundColor: curve.color }} />{curve.label}</span><strong>{formatValue(periodTotals[index])}</strong></div>)}</div>
             </div>}
             {selectedPoint && <div className="profile-statistics-content-list">
                 <div className="profile-statistics-content-list-heading"><strong>{selectedPoint.title}</strong><button type="button" onClick={() => setSelectedPoint(null)}>Fermer</button></div>

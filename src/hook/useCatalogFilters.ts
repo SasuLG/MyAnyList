@@ -27,6 +27,9 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const [useInclusiveFilters, setUseInclusiveFilters] = useState<boolean>(false);
+
+  const [followDateFrom, setFollowDateFrom] = useState<string>('');
+  const [followDateTo, setFollowDateTo] = useState<string>('');
   
   const [yearRange, setYearRange] = useState<Range>({ min: minYear, max: maxYear, minimalRange: minYear, maximalRange: maxYear });
 
@@ -116,8 +119,12 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       const matchesNotProductionCountry = selectedNotProductionCountries.every(country => !serie.production_countries.some(c => c.name === country));
 
       const matchesTotalTimeExcludeSpecialRange = totalTimeExcludeSpecialRange === null || (serie.total_time_exclude_special !== undefined && serie.total_time_exclude_special >= totalTimeExcludeSpecialRange.min && serie.total_time_exclude_special <= totalTimeExcludeSpecialRange.max);
+      const followDate = serie.follow_date ? serie.follow_date.slice(0, 10) : '';
+      const matchesFollowDateRange = page !== "myList" ||
+        ((!followDateFrom || (followDate && followDate >= followDateFrom)) &&
+          (!followDateTo || (followDate && followDate <= followDateTo)));
 
-      return matchesNotFormat && matchesNotGenre && matchesNotStatus && matchesNotOriginCountry && matchesNotTags && matchesNotProductionCompany && matchesNotProductionCountry && matchesFormat && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange && matchesTags && matchesTotalTimeExcludeSpecialRange;
+      return matchesNotFormat && matchesNotGenre && matchesNotStatus && matchesNotOriginCountry && matchesNotTags && matchesNotProductionCompany && matchesNotProductionCountry && matchesFormat && matchesGenre && matchesSearchQuery && matchesStatus && matchesOriginCountry && matchesProductionCompany && matchesProductionCountry && matchesYearRange && matchesVoteRange && matchesEpisodeRange && matchesTags && matchesTotalTimeExcludeSpecialRange && matchesFollowDateRange;
     });
 
     // Apply sorting
@@ -233,6 +240,11 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
     applyFiltersAndSort();
   }
 
+  const clearFollowDateRange = () => {
+    setFollowDateFrom('');
+    setFollowDateTo('');
+  };
+
     /**
    * Fonction pour réinitialiser tous les filtres
    */
@@ -251,6 +263,8 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
     setwithFollowed(false);
     setSelectedTags([]);
     setUseInclusiveFilters(false);
+    setFollowDateFrom('');
+    setFollowDateTo('');
     setOrderAsc(true);
 
     setTotalTimeExcludeSpecialRange({ min: minTotalTime, max: maxTotalTime, minimalRange: minTotalTime, maximalRange: maxTotalTime });
@@ -291,7 +305,9 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       selectedNotProductionCompanies,
       selectedNotProductionCountries,
       selectedNotTags,
-      totalTimeExcludeSpecialRange
+      totalTimeExcludeSpecialRange,
+      followDateFrom,
+      followDateTo
   ]);
 
 
@@ -328,6 +344,8 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       (voteRange.min !== voteRange.minimalRange || voteRange.max !== voteRange.maximalRange) ||
       (episodeRange.min !== episodeRange.minimalRange || episodeRange.max !== episodeRange.maximalRange) ||
       (totalTimeExcludeSpecialRange !== null && (totalTimeExcludeSpecialRange.min !== totalTimeExcludeSpecialRange.minimalRange || totalTimeExcludeSpecialRange.max !== totalTimeExcludeSpecialRange.maximalRange)) ||
+      followDateFrom !== '' ||
+      followDateTo !== '' ||
 
       selectedNotFormats.length > 0 ||
       selectedNotGenres.length > 0 ||
@@ -370,6 +388,11 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
 
       useInclusiveFilters,
       setUseInclusiveFilters,
+
+      followDateFrom,
+      setFollowDateFrom,
+      followDateTo,
+      setFollowDateTo,
 
       yearRange,
       setYearRange,
@@ -421,6 +444,8 @@ export const useCatalogFilters = (page:"search" | "myList" | "waitList", series:
       clearEpisodeRange,
 
       clearTotalTimeExcludeSpecialRange,
+
+      clearFollowDateRange,
 
       hasActiveFilters,
 

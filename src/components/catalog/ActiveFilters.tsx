@@ -30,6 +30,9 @@ interface Props {
     clearEpisodeRange: () => void;
     totalTimeExcludeSpecialRange: Range;
     clearTotalTimeExcludeSpecialRange: () => void;
+    followDateFrom?: string;
+    followDateTo?: string;
+    clearFollowDateRange?: () => void;
 }
 
 export default function ActiveFilters({
@@ -57,7 +60,10 @@ export default function ActiveFilters({
     clearVoteRange,
     clearEpisodeRange,
     totalTimeExcludeSpecialRange,
-    clearTotalTimeExcludeSpecialRange
+    clearTotalTimeExcludeSpecialRange,
+    followDateFrom,
+    followDateTo,
+    clearFollowDateRange
 }: Props) {
     return (
         <div className="filter-container">
@@ -125,6 +131,11 @@ export default function ActiveFilters({
             )}
             {(totalTimeExcludeSpecialRange.min !== totalTimeExcludeSpecialRange.minimalRange || totalTimeExcludeSpecialRange.max !== totalTimeExcludeSpecialRange.maximalRange) && (
                 <span className="filter-label" onClick={() => clearTotalTimeExcludeSpecialRange()}>Total Time: {totalTimeExcludeSpecialRange.min} - {totalTimeExcludeSpecialRange.max}</span>
+            )}
+            {(followDateFrom || followDateTo) && (
+                <span className="filter-label" onClick={() => clearFollowDateRange?.()}>
+                    Followed: {followDateFrom || '...'} - {followDateTo || '...'}
+                </span>
             )}
             {hasActiveFilters && (
                 <span className="clear-all" onClick={clearAllFilters}>Clear All</span>

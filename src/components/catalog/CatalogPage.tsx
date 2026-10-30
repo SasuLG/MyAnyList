@@ -95,6 +95,8 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent, de
         selectedNotTags, setSelectedNotTags,
 
         totalTimeExcludeSpecialRange, setTotalTimeExcludeSpecialRange,
+        followDateFrom, setFollowDateFrom,
+        followDateTo, setFollowDateTo,
 
         removeFilter,
         clearAllFilters,
@@ -102,6 +104,7 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent, de
         clearVoteRange,
         clearEpisodeRange,
         clearTotalTimeExcludeSpecialRange,
+        clearFollowDateRange,
         hasActiveFilters,
         isOrdering
     } = useCatalogFilters(page, series, filtersReady, seriesIdFollowed, seriesIdWaited, defaultSortBy, Number(minYear), Number(maxYear), Number(maxEpisodes), mangaMode ? "mangas" : "series", Number(minTotalTime), Number(maxTotalTime));
@@ -275,6 +278,13 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent, de
                 {...(!mangaMode && { onSelectNotProductionCountries: setSelectedNotProductionCountries })}
                 totalTimeExcludeSpecialRange={totalTimeExcludeSpecialRange}
                 onTotalTimeExcludeSpecialRangeChange={setTotalTimeExcludeSpecialRange}
+                {...(page === "myList" && {
+                    showFollowDateFilter: true,
+                    followDateFrom,
+                    onFollowDateFromChange: setFollowDateFrom,
+                    followDateTo,
+                    onFollowDateToChange: setFollowDateTo
+                })}
             />
 
             <ActiveFilters
@@ -306,6 +316,11 @@ export default function CatalogPage({ page, emptyMessage, renderExtraContent, de
                 clearEpisodeRange={clearEpisodeRange}
                 totalTimeExcludeSpecialRange={totalTimeExcludeSpecialRange}
                 clearTotalTimeExcludeSpecialRange={clearTotalTimeExcludeSpecialRange}
+                {...(page === "myList" && {
+                    followDateFrom,
+                    followDateTo,
+                    clearFollowDateRange
+                })}
             />
 
             <div style={{ textAlign: 'center', margin: '1rem 0' }}>

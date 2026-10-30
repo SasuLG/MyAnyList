@@ -36,6 +36,11 @@ type FiltersProps = {
   onEpisodeRangeChange?: (range: Range) => void;
   totalTimeExcludeSpecialRange?: Range;
   onTotalTimeExcludeSpecialRangeChange?: (range: Range) => void;
+  showFollowDateFilter?: boolean;
+  followDateFrom?: string;
+  onFollowDateFromChange?: (date: string) => void;
+  followDateTo?: string;
+  onFollowDateToChange?: (date: string) => void;
   withFollowed?: boolean;
   onwithFollowedChange?: (onlyFollowed: boolean) => void;
   orderAsc: boolean;
@@ -94,6 +99,11 @@ const Filters = ({
   onEpisodeRangeChange = () => { },
   totalTimeExcludeSpecialRange,
   onTotalTimeExcludeSpecialRangeChange = () => { },
+  showFollowDateFilter = false,
+  followDateFrom = '',
+  onFollowDateFromChange = () => { },
+  followDateTo = '',
+  onFollowDateToChange = () => { },
   withFollowed,
   onwithFollowedChange = () => { },
   orderAsc = true,
@@ -211,7 +221,7 @@ const Filters = ({
 
         <div style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', boxShadow: 'var(--shadow-light)', padding: '0.5rem', borderRadius: '4px' }} onClick={handleSvgClick} ref={svgRef}>
           <MoreFilter width={30} height={30} isOpen={showPopup} />
-          {showPopup && <div ref={popupRef} className="popup" onClick={handlePopupClick} style={{ top: svgRef.current?.offsetHeight ?? 0 }}>
+          {showPopup && <div ref={popupRef} className="popup catalog-filters-popup" onClick={handlePopupClick} style={{ top: svgRef.current?.offsetHeight ?? 0 }}>
             {originCountries.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Origin Country</span><MultiSelectDropdown options={originCountries} selectedOptions={selectedOriginCountries} onSelect={onSelectOriginCountries} notSelectedOptions={selectedNotOriginCountries} onSelectNot={onSelectNotOriginCountries} /></div>}
             {productionCompanies.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Production Companies</span><MultiSelectDropdown options={productionCompanies} selectedOptions={selectedProductionCompanies} onSelect={onSelectProductionCompanies} notSelectedOptions={selectedNotProductionCompanies} onSelectNot={onSelectNotProductionCompanies} /></div>}
             {productionCountries.length > 0 && <div style={{ marginBottom: '1rem' }}><span>Production Countries</span><MultiSelectDropdown options={productionCountries} selectedOptions={selectedProductionCountries} onSelect={onSelectProductionCountries} notSelectedOptions={selectedNotProductionCountries} onSelectNot={onSelectNotProductionCountries} /></div>}
@@ -219,6 +229,31 @@ const Filters = ({
             {yearRange && <div style={{ marginBottom: '1rem', width: "40%" }}><span>Year Range</span><RangeFilter range={yearRange} onChange={onYearRangeChange} minLimit={yearRange.minimalRange} maxLimit={yearRange.maximalRange} /></div>}
             {totalTimeExcludeSpecialRange && <div style={{ marginBottom: '1rem', width: "40%" }}><span>Total Time (excl. special)</span><RangeFilter range={totalTimeExcludeSpecialRange} onChange={onTotalTimeExcludeSpecialRangeChange} minLimit={totalTimeExcludeSpecialRange.minimalRange} maxLimit={totalTimeExcludeSpecialRange.maximalRange} /></div>}
             {episodeRange && <div style={{ marginBottom: '1rem', width: "40%" }}><span>Episode Range</span><RangeFilter range={episodeRange} onChange={onEpisodeRangeChange} minLimit={episodeRange.minimalRange} maxLimit={episodeRange.maximalRange} /></div>}
+            {showFollowDateFilter && <div className="follow-date-filter">
+              <span className="follow-date-title">Followed date</span>
+              <div className="follow-date-controls">
+                <label className="follow-date-field">
+                  <span>From</span>
+                  <input
+                    className="follow-date-input"
+                    type="date"
+                    value={followDateFrom}
+                    max={followDateTo || undefined}
+                    onChange={(event) => onFollowDateFromChange(event.target.value)}
+                  />
+                </label>
+                <label className="follow-date-field">
+                  <span>To</span>
+                  <input
+                    className="follow-date-input"
+                    type="date"
+                    value={followDateTo}
+                    min={followDateFrom || undefined}
+                    onChange={(event) => onFollowDateToChange(event.target.value)}
+                  />
+                </label>
+              </div>
+            </div>}
           </div>}
         </div>
 

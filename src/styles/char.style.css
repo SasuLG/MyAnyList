@@ -38,6 +38,8 @@
 .profile-statistics-point { stroke: var(--background-color); stroke-width: 2; cursor: crosshair; transition: r .15s ease; }
 .profile-statistics-point:hover { r: 7; }
 .profile-statistics-point { cursor: pointer; }
+.profile-statistics-bar { cursor: pointer; opacity: .88; transition: opacity .15s ease; }
+.profile-statistics-bar:hover { opacity: 1; }
 .profile-statistics-guide { stroke: var(--button-color); stroke-dasharray: 3 4; opacity: .65; pointer-events: none; }
 .profile-statistics-tooltip { position: absolute; z-index: 2; min-width: 180px; padding: 11px 13px; transform: translate(-50%, 10px); border: 1px solid var(--tooltip-border-section); border-radius: 10px; background: var(--tooltip-background-section); box-shadow: var(--shadow); color: var(--titre-color); pointer-events: none; font-size: .8rem; line-height: 1.65; }
 .profile-statistics-tooltip strong { display: block; margin-bottom: 3px; }
@@ -45,6 +47,12 @@
 .profile-statistics-legend { margin-top: 14px; }
 .profile-statistics-legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--titre-color); font-size: .82rem; }
 .profile-statistics-legend i { width: 10px; height: 10px; border-radius: 50%; }
+.profile-statistics-totals { margin-top: 18px; padding: 14px; border: 1px solid var(--card-border-color); border-radius: 10px; background: var(--background-color); }
+.profile-statistics-total-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.profile-statistics-total-card { display: flex; min-width: 150px; flex: 1 1 150px; flex-direction: column; gap: 5px; padding: 10px 12px; border-radius: 8px; background: var(--above); }
+.profile-statistics-total-card span { display: flex; align-items: center; gap: 6px; color: var(--main-text-color); font-size: .8rem; }
+.profile-statistics-total-card span i { width: 9px; height: 9px; border-radius: 50%; }
+.profile-statistics-total-card strong { color: var(--titre-color); font-size: 1.05rem; }
 .profile-statistics-content-list { margin-top: 18px; padding: 14px; border: 1px solid var(--card-border-color); border-radius: 10px; background: var(--background-color); }
 .profile-statistics-content-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; color: var(--titre-color); }
 .profile-statistics-content-list-heading button { padding: 5px 9px; border: 1px solid var(--card-border-color); border-radius: 6px; background: transparent; color: var(--titre-color); cursor: pointer; }
